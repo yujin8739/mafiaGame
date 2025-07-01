@@ -107,7 +107,18 @@
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-mail</artifactId>
-		    <version>3.5.3</version>
+		</dependency>
+		
+		<!-- 소켓 통신 -->
+		<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        
+        <!-- gson  -->
+        <dependency>
+		    <groupId>com.google.code.gson</groupId>
+		    <artifactId>gson</artifactId>
 		</dependency>
 		
 	</dependencies>
