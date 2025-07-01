@@ -1,0 +1,93 @@
+/* 기본 배경 및 폰트 설정 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0b0b0b; /* 거의 검정 */
+    color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* 로고 스타일 */
+.logo {
+	width: 500px;
+	height: auto;
+	align-items: center;
+    filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5)); /* 붉은빛 그림자 */
+}
+
+/* 로그인 박스 */
+.login-container {
+    background-color: #1a1a1a;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+    width: 320px;
+    text-align: center;
+    border: 1px solid #333;
+}
+
+/* 제목 */
+.login-container h1 {
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #ff3b3b;
+    letter-spacing: 1px;
+}
+
+/* 입력 그룹 */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #111;
+    color: #eee;
+    font-size: 14px;
+}
+
+/* 버튼 */
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background-color: #ff3b3b;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.login-btn:hover {
+    background-color: #cc2e2e;
+}
+
+/* Register 버튼은 약간 어두운 색상 */
+.login-btn:nth-of-type(2) {
+    background-color: #333;
+    color: #eee;
+}
+
+.login-btn:nth-of-type(2):hover {
+    background-color: #444;
+}

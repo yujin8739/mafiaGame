@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>이메일 인증 결과</title>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link rel="stylesheet" th:href="@{/css/member/verifyResult.css}" />
+</head>
+
+<body>
+
+	<div class="container">
+		<img src="/images/godFatherLogo.png" alt="godFather 로고" class="logo" />
+		<h2 th:text="${message}">[인증 결과 메시지]</h2>
+
+		<input id="email" name="email" type="hidden" th:value="${email}" />
+		<input id="userName" name="userName" type="hidden" th:value="${userName}" />
+
+		<!-- 인증 성공 -->
+		<div th:if="${message} == '이메일 인증이 완료되었습니다.'">
+			<a href="/login/view" class="btn-sky">로그인하러 가기</a>
+		</div>
+
+		<!-- 인증 실패 + 조건 만족 시 -->
+		<div th:if="${message != '이메일 인증이 완료되었습니다.'}">
+			<button id="resendEmailBtn" class="btn-sky">인증 메일 재발송</button>
+			<button id="changeEmailBtn" class="btn-sky">이메일 변경</button>
+		</div>
+	</div>
+
+	<!-- 이메일 변경 모달 -->
+	<div id="emailChangeModal" class="modal" style="display: none;">
+		<div class="modal-content">
+			<h3>이메일 변경</h3>
+			<input type="email" id="newEmail" placeholder="새 이메일 입력" />
+			<br />
+			<button id="confirmEmailChange" class="btn-sky">변경</button>
+			<button id="closeModal" class="btn-sky" style="background-color: #aaa;">취소</button>
+		</div>
+	</div>
+
+	<script>
+		$('#resendEmailBtn').click(function () {
+			const email = $('#email').val().trim();
+			const userName = $('#userName').val().trim();
+			const mailUUID = crypto.randomUUID();
+
+			$.post('/login/sendEmail', {
+				mailUUID: mailUUID,
+				email: email,
+				userName: userName
+			})
+			.done(() => alert('메일 인증을 다시 보냈습니다.'))
+			.fail(() => alert('메일 발송에 실패했습니다.'));
+		});
+
+		$('#changeEmailBtn').click(function () {
+			$('#emailChangeModal').fadeIn();
+		});
+
+		$('#closeModal').click(function () {
+			$('#emailChangeModal').fadeOut();
+		});
+
+		$('#confirmEmailChange').click(function () {
+			const newEmail = $('#newEmail').val().trim();
+			const userName = $('#userName').val().trim();
+			if (!newEmail) return alert('새 이메일을 입력해주세요.');
+
+			const mailUUID = crypto.randomUUID();
+
+			$.post('/login/sendEmail', {
+				mailUUID: mailUUID,
+				email: newEmail,
+				userName: userName
+			})
+			.done(() => {
+				alert('새 이메일로 인증 메일을 보냈습니다.');
+				$('#email').val(newEmail);
+				$('#emailChangeModal').fadeOut();
+				
+				$.post('/login/updateEmail', {
+					email: newEmail,
+					userName: userName
+				}).fail(() => alert('이메일 변경 실패. 다시 시도해주세요.'));
+			})
+			.fail(() => alert('이메일 변경 실패. 다시 시도해주세요.'));
+		});
+	</script>
+
+</body>
+</html>

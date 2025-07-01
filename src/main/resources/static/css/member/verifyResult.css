@@ -1,0 +1,89 @@
+body {
+	font-family: 'Noto Sans KR', sans-serif;
+	background-color: #f0f4f8;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+}
+
+.container {
+	max-width: 500px;
+	margin: 100px auto;
+	padding: 40px;
+	background-color: #ffffff;
+	border-radius: 16px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.logo {
+	width: 200px;
+	margin-bottom: 30px;
+}
+
+h2 {
+	color: #333;
+	font-size: 22px;
+	margin-bottom: 30px;
+}
+
+.btn-sky {
+	display: inline-block;
+	padding: 12px 24px;
+	background-color: #00bcd4;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	font-size: 16px;
+	font-weight: 500;
+	cursor: pointer;
+	margin: 10px;
+	box-shadow: 0 4px 12px rgba(0, 188, 212, 0.2);
+	transition: background-color 0.3s ease;
+}
+
+.btn-sky:hover {
+	background-color: #0097a7;
+}
+
+.modal {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(4px);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+.modal-content {
+	background-color: #fff;
+	padding: 30px 20px;
+	border-radius: 10px;
+	width: 90%;
+	max-width: 320px;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+	margin-bottom: 15px;
+	color: #222;
+	font-size: 18px;
+}
+
+.modal input[type="email"] {
+	width: 90%;
+	padding: 10px;
+	margin: 10px 0 20px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	font-size: 14px;
+}
+
+.hidden-input {
+	display: none;
+}

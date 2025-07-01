@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="memberMapper">
+	<resultMap type="Member" id="memberResultMap">
+		<result property="nickName" column="NICKNAME"/>
+		<result property="userName" column="USERNAME"/>
+		<result property="password" column="PASSWORD"/>
+		<result property="email" column="EMAIL"/>
+		<result property="status" column="STATUS"/>
+		<result property="phone" column="PHONE"/>
+	</resultMap>
+	
+	<select id="loginDo" resultType="Member" resultMap="memberResultMap">
+		SELECT USERNAME, NICKNAME, PASSWORD, EMAIL, STATUS, PHONE
+		FROM USER_INFO 
+		WHERE USERNAME = #{userName}
+	</select>
+	
+	<select id="countByUsername" resultType="_int">
+		SELECT COUNT(*) 
+		FROM USER_INFO
+		WHERE USERNAME = #{userName}
+	</select>
+	
+	<select id="countByEmail" resultType="_int">
+		SELECT COUNT(*)
+		FROM USER_INFO
+		WHERE EMAIL = #{email}
+	</select>
+	
+	<insert id="insertMember">
+		INSERT INTO USER_INFO 
+		(USERNAME, PASSWORD, NICKNAME, EMAIL, STATUS) 
+		VALUES (#{userName}, #{password}, #{nickName}, #{email}, 'N')
+	</insert>
+	
+	<update id="allowMailToken">
+		UPDATE USER_INFO 
+		SET STATUS = 'Y' 
+		WHERE EMAIL = #{email}
+	</update>
+	
+	<update id="mailUpdate">
+		UPDATE USER_INFO
+		SET EMAIL = #{email}
+		WHERE USERNAME = #{userName}
+	</update>
+	
+</mapper>

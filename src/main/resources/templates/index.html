@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>GodFather 0805 - 홈</title>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="icon" href="/favicon.ico">
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <div th:replace="common/header :: header"></div>
+
+    
+    <div th:replace="common/footer :: footer"></div>
+    
+	<script>
+	    $('#banner-area').load('/fragment/banner');
+	</script>
+</body>
+</html>
