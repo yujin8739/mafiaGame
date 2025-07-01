@@ -16,7 +16,7 @@ body {
 	width: 500px;
 	height: auto;
 	align-items: center;
-    filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5)); /* 붉은 그림자 효과 */
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
 }
 
 /* 회원가입 폼 전체 컨테이너 */
@@ -55,6 +55,8 @@ body {
 .form-group input {
     width: 100%;
     padding: 10px;
+    padding-right: 10px;
+	box-sizing: border-box;
     border-radius: 6px;
     border: 1px solid #444;
     background-color: #111;

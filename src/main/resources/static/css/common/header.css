@@ -6,8 +6,8 @@ body {
 }
 
 .header {
-	margin-top: 40px;
-	margin-bottom: 40px;
+	margin-top: 90px;
+	margin-bottom: 50px;
 	background-color: #0b0b0b;
 	padding: 10px 10px;
 	display: flex;
@@ -20,11 +20,11 @@ body {
 	position: absolute;
 	left: 50%;
 	transform: translateX(-50%);
-	filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5)); /* 붉은빛 그림자 */
+	filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)); 
 }
 
 .logo img {
-	height: 100px;
+	height: 200px;
 }
 
 .nav-links {
@@ -66,13 +66,15 @@ body {
 }
 
 .top-bar {
+	margin-left:40px;
 	background-color: #0b0b0b;
 	padding: 8px 20px;
 	display: flex;
-	gap: 15px;
+	gap: 5px;
 }
 
 .top-bar a {
+	padding: 10px 5px;
 	color: white;
 	text-decoration: none;
 	font-size: 14px;
