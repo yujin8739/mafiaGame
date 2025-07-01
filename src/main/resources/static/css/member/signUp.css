@@ -1,0 +1,101 @@
+/* 기본 스타일 */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #0b0b0b; /* 어두운 배경 */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* 로고 */
+.logo {
+	width: 500px;
+	height: auto;
+	align-items: center;
+    filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5)); /* 붉은 그림자 효과 */
+}
+
+/* 회원가입 폼 전체 컨테이너 */
+.signup-container {
+    background-color: #1a1a1a;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+    width: 350px;
+    border: 1px solid #333;
+}
+
+/* 제목 */
+.signup-container h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #ff3b3b;
+    letter-spacing: 1px;
+}
+
+/* 입력 그룹 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #111;
+    color: #eee;
+    font-size: 14px;
+}
+
+/* 중복확인 메시지 */
+.id-check-result,
+.email-check-result {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+/* 회원가입 버튼 */
+.signup-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background-color: #ff3b3b;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.signup-btn:hover {
+    background-color: #cc2e2e;
+}
+
+/* 반응형 (선택) */
+@media screen and (max-width: 420px) {
+    .signup-container {
+        width: 90%;
+        padding: 30px 20px;
+    }
+
+    .logo {
+        width: 150px;
+    }
+}

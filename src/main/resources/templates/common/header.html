@@ -1,0 +1,32 @@
+<!-- templates/etc/header.html -->
+<div th:fragment="header">
+	<!-- 헤더 -->
+	<div class="header">
+		<div class="nav-links"></div>
+
+		<div class="logo">
+			<a href="/"> <img src="/images/godFatherLogo.png" alt="GodFather 로고">
+			</a>
+		</div>
+		
+		<div th:if="${loginUser == null}">
+		   	<div class="auth-buttons">
+				<a href="/login/view">로그인</a> <a href="/login/register">회원가입</a>
+			</div>
+		</div>
+		<div th:if="${loginUser != null}">
+			<div class="auth-buttons">
+		    	<span th:text="${loginUser.nickName} + '님 환영합니다!'"></span>  
+		    	<a href="/logout">로그아웃</a>
+		    </div>
+		</div>
+
+	</div>
+
+	<!-- 상단 메뉴 -->
+	<div class="top-bar">
+		<a href="/">게임찾기</a> 
+		<a href="/">게임생성</a> 
+		<a href="/">랭크게임</a>
+	</div>
+</div>

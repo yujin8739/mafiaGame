@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Sign Up Page</title>
+	<link rel="stylesheet" th:href="@{/css/member/signUp.css}" />
+
+</head>
+
+<body>
+	<img src="/images/godFatherLogo.png" alt="godFather 로고" class="logo" />
+	<div class="signup-container">
+		<form action="/login/sign-up" method="POST">
+			<h1>Sign Up</h1>
+			<div class="form-group">
+				<label for="userName">userName</label>
+				<input type="text" id="userName" name="userName" required>
+				<text class="id-check-result" style="color: red; font-size: 12px;"></text>
+			</div>
+			<div class="form-group">
+				<label for="email">Email</label>
+				<input type="email" id="email" name="email" required>
+				<text class="email-check-result" style="color: red; font-size: 12px;"></text>
+			</div>
+			<div class="form-group">
+				<label for="nickName">UserName</label>
+				<input type="nickName" id="nickName" name="nickName" required>
+			</div>
+			<div class="form-group">
+				<label for="password">Password</label>
+				<input type="password" id="password" name="password" required>
+			</div>
+			<div class="form-group">
+				<label for="confirm-password">Confirm Password</label>
+				<input type="password" id="confirm-password" name="confirm-password" required>
+			</div>
+			<button type="submit" class="signup-btn">Sign Up</button>
+		</form>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/additional-methods.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script>
+
+		// 아이디 중복 확인 버튼 클릭 이벤트
+		// AJAX 요청을 통해 서버에 중복 확인 요청		
+		$('#userName').on('blur', function () {
+			const userName = $('#userName').val();
+			if (userName) {
+				$.ajax({
+					url: '/login/check-username',
+					type: 'GET',
+					data: {username: userName}, // 파라미터명은 username이어야 함 (Controller와 일치)
+					success: function (data) {
+						const result = $('.id-check-result');
+						if (data.available) {
+							result.text('사용가능한 아이디입니다.').css('color', 'green');
+						} else {
+							result.text('중복된 아이디가 있습니다.').css('color', 'red');
+						}
+					},
+					error: function (xhr, status, error) {
+						console.error('AJAX 오류:', error);
+						$('.id-check-result').text('아이디 중복 확인에 실패했습니다.').css('color', 'red');
+					}
+				});
+			} else {
+				alert('아이디를 입력해주세요.');
+			}
+		});
+		
+		//이메일 입력후 중복 확인
+		$('#email').on('blur', function () {
+		    const email = $(this).val().trim();
+
+		    if (email !== '') {
+		        $.ajax({
+		            url: '/login/check-email',
+		            type: 'GET',
+		            data: { email: email },
+		            success: function (data) {
+						const result = $('.email-check-result');
+		                if (data.available) {
+		                    result.text('사용가능한 이메일입니다.').css('color', 'green');
+		                } else {
+		                    result.text('중복된 이메일입니다.').css('color', 'red');
+		                }
+		            },
+		            error: function () {
+						console.error('AJAX 오류:', error);
+						$('.email-check-result').text('이메일 중복 확인에 실패했습니다.').css('color', 'red');
+		            }
+		        });
+		    } else { 
+				alert('이메일을 입력해주세요.');
+			}
+		});
+
+		// 폼 제출 전 비밀번호 확인
+		document.querySelector('form').addEventListener('submit', function (event) {
+			if (document.getElementById('userName').value === '' && document.querySelector('.id-check-result').textContent === '중복된 아이디가 있습니다.') {
+				alert('아이디 중복 확인을 먼저 해주세요.');
+				event.preventDefault(); // 폼 제출 방지
+			} else if (document.getElementById('email').value === '') {
+				alert('이메일을 입력해주세요.');
+				event.preventDefault(); // 폼 제출 방지
+			} else if (document.getElementById('nickName').value === '') {
+				alert('사용자명을 입력해주세요.');
+				event.preventDefault(); // 폼 제출 방지
+			} else if (document.getElementById('password').value === '') {
+				alert('비밀번호를 입력해주세요.');
+				event.preventDefault(); // 폼 제출 방지
+			} else if (document.getElementById('confirm-password').value === '') {
+				alert('비밀번호 확인을 입력해주세요.');
+				event.preventDefault(); // 폼 제출 방지
+			} else if (!validateForm()) {
+				alert('비밀번호가 일치하지 않습니다.');
+				event.preventDefault(); // 폼 제출 방지
+			} else {
+				// 모든 필드가 올바르게 입력된 경우, 폼이 제출됩니다.
+				const email = $('#email').val().trim();
+				const userName = $('#userName').val().trim();
+				const mailUUID = crypto.randomUUID();
+				$.ajax({
+					url:'/login/sendEmail',
+					data:{
+						mailUUID:mailUUID,
+						email: email,
+						userName: userName
+					},
+					success:{
+						function(data) {
+							alert('회원가입이 완료되었습니다. \n 메일을 인증을 완료해주세요')
+						}
+					},
+					error:{
+						function() {
+							alert('인증메일 발송에 실패 했습니다');
+						}
+					}
+				});
+			}
+
+		});
+
+		// 비밀번호 확인 함수
+		function validateForm() {
+			const password = document.getElementById('password').value;
+			const confirmPassword = document.getElementById('confirm-password').value;
+
+			if (password !== confirmPassword) {
+				alert('Passwords do not match!');
+				return false;
+			}
+			return true;
+		}
+
+	</script>
+
+</html>

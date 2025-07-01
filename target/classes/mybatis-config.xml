@@ -5,8 +5,8 @@
 
 <configuration>
 	<typeAliases>
-		<typeAlias type="com.fanvide.boots.member.model.vo.Member" alias="Member"/>
-		<typeAlias type="com.fanvide.boots.common.model.vo.Banner" alias="Banner"/>
-		<typeAlias type="com.fanvide.boots.etc.model.vo.HlsVideo" alias="HlsVideo"/>
+		<typeAlias type="com.mafia.game.member.model.vo.Member" alias="Member"/>
+		<typeAlias type="com.mafia.game.common.model.vo.Banner" alias="Banner"/>
+		<typeAlias type="com.mafia.game.etc.model.vo.HlsVideo" alias="HlsVideo"/>
 	</typeAliases>
 </configuration>
