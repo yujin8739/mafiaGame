@@ -21,6 +21,7 @@ public class BoardController {
 		
 	}
 	
+	//07/02 푸쉬 테스트
 	
 	
 	
