@@ -18,4 +18,7 @@ public interface MemberService {
 	int allowMailToken(String email);
 
 	void updateEmail(String email, String userName);
+	
+	//최신 정보 조회
+	Member getMemberByUserName(String userName);
 }

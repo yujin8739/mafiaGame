@@ -40,5 +40,12 @@ public class MemberDao {
 
 		sqlSession.update("memberMapper.mailUpdate", param);
 	}
+	
+	//회원 조회
+	public Member getMemberByUserName(SqlSessionTemplate sqlSession, String userName) {
+		return sqlSession.selectOne("memberMapper.getMemberByUserName", userName);
+	}
 
+	
+	
 }

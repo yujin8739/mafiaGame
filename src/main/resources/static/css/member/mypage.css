@@ -1,0 +1,228 @@
+body {
+    background-color: #0b0b0b;
+    color: #f5f5f5;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+/* 마이페이지 컨테이너 */
+.mypage-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 40px;
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+    border: 1px solid #333;
+}
+
+/* 제목 */
+.mypage-title {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #ff3b3b;
+    letter-spacing: 1px;
+}
+
+/* 프로필 섹션 */
+.profile-section {
+    margin-bottom: 40px;
+    padding: 30px;
+    background-color: #222;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.profile-section h3 {
+    color: #ff3b3b;
+    margin-bottom: 20px;
+    font-size: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+}
+
+/* 정보 아이템 */
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #333;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: bold;
+    color: #ccc;
+    min-width: 100px;
+}
+
+.info-value {
+    color: #f5f5f5;
+    flex: 1;
+    text-align: right;
+}
+
+/* 버튼 스타일 - header.css의 auth-buttons 스타일과 동일 */
+.mypage-btn {
+    padding: 8px 16px;
+    background-color: transparent;
+    color: white;
+    text-decoration: none;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.mypage-btn:hover {
+    color: #ff3b3b;
+    border-color: #ff3b3b;
+}
+
+.mypage-btn.primary {
+    background-color: #ff3b3b;
+    border-color: #ff3b3b;
+}
+
+.mypage-btn.primary:hover {
+    background-color: #cc2e2e;
+    border-color: #cc2e2e;
+    color: white;
+}
+
+.mypage-btn.delete {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.mypage-btn.delete:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: white;
+}
+
+/* 액션 버튼들 */
+.action-buttons {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid #333;
+}
+
+.action-buttons .mypage-btn {
+    margin: 0 10px;
+}
+
+/* 모달 스타일 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+    border: 1px solid #333;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80%;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 1px solid #333;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #ff3b3b;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.close {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: #ff3b3b;
+}
+
+/* 폼 스타일 */
+#editForm {
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #111;
+    color: #eee;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #ff3b3b;
+}
+
+.form-group input:readonly {
+    background-color: #222;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* 모달 버튼들 */
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+}
