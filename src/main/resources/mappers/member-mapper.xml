@@ -48,4 +48,11 @@
 		WHERE USERNAME = #{userName}
 	</update>
 	
+	<select id="getMemberByUserName" resultType="Member" resultMap="memberResultMap">
+        SELECT USERNAME, NICKNAME, PASSWORD, EMAIL, STATUS, PHONE
+        FROM USER_INFO 
+        WHERE USERNAME = #{userName}
+        AND STATUS = 'Y'
+    </select>
+	
 </mapper>

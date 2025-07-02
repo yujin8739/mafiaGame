@@ -52,4 +52,13 @@ public class MemberServiceImpl implements MemberService {
 	public void updateEmail(String email, String userName) {
 		dao.updateEmail(sqlSession, email, userName);
 	}
+	
+	//회원조회
+	@Override
+	public Member getMemberByUserName(String userName) {
+		// TODO Auto-generated method stub
+		return dao.getMemberByUserName(sqlSession, userName);
+	}
+	
+	
 }
