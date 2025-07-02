@@ -8,10 +8,13 @@
     <link rel="icon" href="/favicon.ico">
 </head>
 <body>
-
+    <div th:if="${msg}">
+	    <script th:inline="javascript">
+	        alert( /*[[${msg}]]*/ '회원 정보가 수정되었습니다.');
+	    </script>
+	</div>
     <!-- 헤더 -->
     <div th:replace="common/header :: header"></div>
-
     
     <div th:replace="common/footer :: footer"></div>
     

@@ -11,6 +11,11 @@
 </head>
 <body>
 
+    <div th:if="${msg}">
+	    <script th:inline="javascript">
+	        alert( /*[[${msg}]]*/ '회원 정보가 수정되었습니다.');
+	    </script>
+	</div>
     <!-- 헤더 -->
     <div th:replace="common/header :: header"></div>
 
@@ -48,13 +53,13 @@
     </div>
 
     <!-- 프로필 수정 모달 -->
-    <div id="editModal" class="modal" style="display: none;">
+    <div id="editModal" class="modal" style="display: none;" >
         <div class="modal-content">
             <div class="modal-header">
                 <h3>프로필 수정</h3>
                 <span class="close" onclick="closeEditModal()">&times;</span>
             </div>
-            <form id="editForm" action="/mypage/update" method="POST">
+            <form id="editForm" action="/mypage/update" method="POST" onsubmit="return validateForm()">
                 <div class="form-group">
                     <label for="editUserName">사용자명 (변경불가)</label>
                     <input type="text" id="editUserName" name="userName" th:value="${member.userName}" readonly>
@@ -64,6 +69,18 @@
                     <input type="text" id="editNickName" name="nickName" th:value="${member.nickName}" required>
                 </div>
                 <div class="form-group">
+                    <label for="beforePassword">이전비밀번호</label>
+                    <input type="text" id="beforePassword" name="beforePassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPassword">비밀번호</label>
+                    <input type="text" id="editPassword" name="password">
+                </div>
+                <div class="form-group">
+                    <label for="editPasswordCheck">비밀번호 확인</label>
+                    <input type="text" id="editPasswordCheck" name="passWordCheck">
+                </div>
+                <div class="form-group">
                     <label for="editEmail">이메일</label>
                     <input type="email" id="editEmail" name="email" th:value="${member.email}" required>
                 </div>
@@ -71,6 +88,8 @@
                     <button type="submit" class="mypage-btn primary">저장</button>
                     <button type="button" onclick="closeEditModal()" class="mypage-btn">취소</button>
                 </div>
+                <input type="hidden" id="hiddenPassword" name="hiddenPassword" th:value="${member.password}" required>
+               	<input type="hidden" id="beforeEmail" name="beforeEmail" th:value="${member.email}" required>
             </form>
         </div>
     </div>
@@ -112,6 +131,19 @@
                 $('.alert').fadeOut('slow');
             }, 3000);
         });
+        
+        function validateForm() {
+            const password = document.getElementById("passWord").value;
+            const passwordCheck = document.getElementById("passWordCheck").value;
+            
+            if (password !== passwordCheck) {
+                alert("비밀번호가 일치하지 않습니다.");
+                return false; // 폼 제출 막기
+            }
+
+            return true; // 폼 제출 허용
+        }
+        
 
         /*]]>*/
     </script>
