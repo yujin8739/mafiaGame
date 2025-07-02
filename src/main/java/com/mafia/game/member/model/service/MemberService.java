@@ -21,4 +21,6 @@ public interface MemberService {
 	
 	//최신 정보 조회
 	Member getMemberByUserName(String userName);
+
+	int updateMember(Member m);
 }

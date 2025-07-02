@@ -54,5 +54,11 @@
         WHERE USERNAME = #{userName}
         AND STATUS = 'Y'
     </select>
-	
+	<update id="updateMember">
+		UPDATE USER_INFO
+		SET PASSWORD = #{password},
+		EMAIL = #{email},
+		STATUS = #{status}
+		WHERE USERNAME = #{userName}
+	</update>
 </mapper>
