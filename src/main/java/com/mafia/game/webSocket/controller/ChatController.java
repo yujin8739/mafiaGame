@@ -1,4 +1,4 @@
-package com.mafia.game.webSockert.controller;
+package com.mafia.game.webSocket.controller;
 
 import java.util.Date;
 import java.util.List;
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.mafia.game.webSockert.model.service.ChatService;
-import com.mafia.game.webSockert.model.vo.GameRoom;
-import com.mafia.game.webSockert.model.vo.Message;
+import com.mafia.game.webSocket.model.service.ChatService;
+import com.mafia.game.webSocket.model.vo.GameRoom;
+import com.mafia.game.webSocket.model.vo.Message;
 
 @Controller
 @RequestMapping("/chat")

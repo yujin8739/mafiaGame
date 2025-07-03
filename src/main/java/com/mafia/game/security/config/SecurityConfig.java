@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/")
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**").permitAll()
+                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**","/homeChat/**").permitAll()
                 .anyRequest().authenticated()
             );
         
