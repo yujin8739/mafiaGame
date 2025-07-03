@@ -21,6 +21,9 @@ public interface MemberService {
 	
 	//최신 정보 조회
 	Member getMemberByUserName(String userName);
-
+	
 	int updateMember(Member m);
+	
+	//회원 탈퇴
+	int deleteMember(String userName);
 }
