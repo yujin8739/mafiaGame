@@ -14,12 +14,55 @@
 	    </script>
 	</div>
     <!-- 헤더 -->
-    <div th:replace="common/header :: header"></div>
+    <div th:replace="~{common/header :: header}"></div>
+    <div th:replace="~{chat/homeChat :: homeChat}"></div>
+    <div th:replace="~{common/footer :: footer}"></div>
     
-    <div th:replace="common/footer :: footer"></div>
-    
-	<script>
-	    $('#banner-area').load('/fragment/banner');
-	</script>
+<script>
+
+	var socket;
+	
+	document.addEventListener('DOMContentLoaded', function() {
+		var url = 'ws://localhost/homeChat';
+		socket = new WebSocket(url);
+		console.log("WebSocket 연결시도");
+		socket.onopen = function() {
+			console.log("WebSocket 연결됨");
+			connect();
+		};
+		
+		socket.onerror = function(err) {
+			console.error("WebSocket 오류 발생", err);
+		};
+
+		socket.onclose = function(e) {
+			console.warn("WebSocket 연결 종료됨", e);
+		};
+	});
+	
+	function connect() {
+		socket.onmessage = function(message) {
+			var div = document.querySelector("#chatArea");
+			var newDiv = document.createElement("div");
+			newDiv.textContent = message.data;
+			div.appendChild(newDiv);
+		}
+	}
+	
+	function send() {
+		var msg = document.querySelector("#chat");
+		if (socket && socket.readyState === WebSocket.OPEN) {
+			socket.send(msg.value);
+			msg.value = "";
+		} else {
+			alert("WebSocket 연결 전입니다.");
+		}
+	}
+	
+	function disconnect() {
+		socket.close();
+	}
+	
+</script>
 </body>
 </html>

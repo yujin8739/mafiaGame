@@ -1,9 +1,9 @@
-package com.mafia.game.webSockert.model.service;
+package com.mafia.game.webSocket.model.service;
 
 import java.util.List;
 
-import com.mafia.game.webSockert.model.vo.GameRoom;
-import com.mafia.game.webSockert.model.vo.Message;
+import com.mafia.game.webSocket.model.vo.GameRoom;
+import com.mafia.game.webSocket.model.vo.Message;
 
 public interface ChatService {
 
