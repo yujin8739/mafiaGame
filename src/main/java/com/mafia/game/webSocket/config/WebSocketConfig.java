@@ -26,6 +26,7 @@ public class WebSocketConfig implements WebSocketConfigurer{
 		System.out.println("basicServer() 빈 생성");
 		return new HomeChatServer();
 	}
+	
 	@Bean 
 	public WebSocketHandler gameMainServer() {
 		return new GameMainServer();
