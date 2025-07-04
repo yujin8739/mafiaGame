@@ -12,6 +12,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import com.mafia.game.security.handler.CustomAuthFailureHandler;
 import com.mafia.game.security.handler.CustomAuthSuccessHandler;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -39,9 +41,21 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/")
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**").permitAll()
+                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**","/homeChat/**").permitAll()
                 .anyRequest().authenticated()
-            );
+            ).exceptionHandling(exceptionHandling -> 
+            exceptionHandling
+            .authenticationEntryPoint((request, response, authException) -> {
+                if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                } else {
+                    response.sendRedirect("/login/view");
+                }
+            })
+            .accessDeniedHandler((request, response, accessDeniedException) -> {
+                response.sendRedirect("/access-denied");
+            })
+    );
         
         return http.build();
     }

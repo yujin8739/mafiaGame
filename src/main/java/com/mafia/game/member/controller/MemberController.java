@@ -70,4 +70,63 @@ public class MemberController {
 		
 		return "redirect:/mypage";
 	}
+
+
+
+	@GetMapping("/delete")
+	public String deleteAccountPage(HttpSession session, Model model) {
+		Member loginUser = (Member) session.getAttribute("loginUser");
+
+		if (loginUser == null) {
+			return "redirect:/login/view";
+		}
+
+		model.addAttribute("loginUser", loginUser);
+		return "member/deleteAccount";
+	}
+
+	@PostMapping("/delete")
+	public String deleteAccount(@RequestParam String userName, @RequestParam String password,
+			@RequestParam(required = false) String reason, @RequestParam(required = false) String reasonDetail,
+			HttpSession session, RedirectAttributes redirectAttributes) {
+
+		Member loginUser = (Member) session.getAttribute("loginUser");
+
+		if (loginUser == null) {
+			return "redirect:/login/view";
+		}
+
+		// 현재 로그인한 사용자와 요청한 사용자가 같은지 확인
+		if (!loginUser.getUserName().equals(userName)) {
+			redirectAttributes.addFlashAttribute("error", "잘못된 접근입니다.");
+			return "redirect:/mypage";
+		}
+
+		// 비밀번호 확인
+		if (!bcrypt.matches(password, loginUser.getPassword())) {
+			redirectAttributes.addFlashAttribute("error", "비밀번호가 일치하지 않습니다.");
+			return "redirect:/mypage/delete";
+		}
+
+		try {
+			// 회원 탈퇴 처리
+			int result = ms.deleteMember(userName);
+
+			if (result > 0) {
+				// 세션 무효화
+				session.invalidate();
+				redirectAttributes.addFlashAttribute("message", "회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.");
+				return "redirect:/";
+			} else {
+				redirectAttributes.addFlashAttribute("error", "회원 탈퇴 처리 중 오류가 발생했습니다.");
+				return "redirect:/mypage/delete";
+			}
+
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("error", "회원 탈퇴 처리 중 오류가 발생했습니다.");
+			return "redirect:/mypage/delete";
+		}
+	}
 }
+
+

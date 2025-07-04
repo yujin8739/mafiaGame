@@ -1,4 +1,4 @@
-package com.mafia.game.webSockert.model.vo;
+package com.mafia.game.webSocket.model.vo;
 
 import java.util.Date;
 
