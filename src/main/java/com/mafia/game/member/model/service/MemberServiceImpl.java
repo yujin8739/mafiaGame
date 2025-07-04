@@ -59,6 +59,18 @@ public class MemberServiceImpl implements MemberService {
 		// TODO Auto-generated method stub
 		return dao.getMemberByUserName(sqlSession, userName);
 	}
+
+	@Override
+	public int updateMember(Member m) {
+		// TODO Auto-generated method stub
+		return dao.updateMember(sqlSession, m);
+	}
+
+	@Override
+	public int deleteMember(String userName) {
+		
+		return dao.deleteMember(sqlSession, userName);
+	}
 	
 	
 }

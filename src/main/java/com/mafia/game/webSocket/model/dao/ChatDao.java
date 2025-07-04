@@ -1,7 +1,7 @@
-package com.mafia.game.webSockert.model.dao;
+package com.mafia.game.webSocket.model.dao;
 
-import com.mafia.game.webSockert.model.vo.GameRoom;
-import com.mafia.game.webSockert.model.vo.Message;
+import com.mafia.game.webSocket.model.vo.GameRoom;
+import com.mafia.game.webSocket.model.vo.Message;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
