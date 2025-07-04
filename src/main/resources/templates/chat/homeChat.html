@@ -1,10 +1,15 @@
-<body>
 <div th:fragment="homeChat">
-	<div id="chatArea">
-		<input type="text" id="chat">
-		<button onclick="send();">전송</button>
-	</div>
-</div>
 
-</body>
-</html>
+  <!-- 오른쪽 채팅 영역 -->
+  <div class="home-chat-panel">
+    <div id="chatArea"></div>
+    <div class="chat-input-container">
+		<input type="text" id="chat" placeholder="메시지를 입력하세요" />
+		<input type="file" id="imageInput" accept="image/*" style="display: none;" />
+		<label for="imageInput" class="image-button" title="이미지 전송">📷</label>
+		<button id="sendBtn" onclick="send()">전송</button>
+	</div>
+
+  </div>
+
+</div>
