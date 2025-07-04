@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "Http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="boardMapper">
+	
+	
+	<!-- 라운지 게시글 개수 조회용 -->
+	<!-- 전체 게시글 조회면 type값 null임 -->
+	<!-- 직업 탭만 누르면(직업 전체) type값 lounge_job임 -->
+	<select id="listCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM BOARD
+		JOIN BOARD_TYPE USING(TYPENO)
+		<choose>
+			<when test="type == null || type ==''">
+				WHERE TYPENAME LIKE 'lounge%'
+			</when>
+			<when test="type == 'lounge_job'">
+				WHERE TYPENAME LIKE 'lounge_job%'
+			</when>
+			<otherwise>
+				WHERE TYPENAME LIKE #{type}
+			</otherwise>
+		</choose>
+		<if test="condition != ''">
+			<choose>
+				<when test="condition == 'title'">
+					AND TITLE LIKE '%'||#{keyword}||'%'
+				</when>
+				<when test="condition == 'writer'">
+					AND USERNAME LIKE '%'||#{keyword}||'%'				
+				</when>
+				<otherwise>
+					AND DETAIL LIKE '%'||#{keyword}||'%'
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+	
+	<!-- 라운지 게시글 목록 조회용 -->
+	<select id="boardList" resultType="Board">
+		SELECT *
+		FROM BOARD
+		JOIN BOARD_TYPE USING(TYPENO)
+		<choose>
+			<when test="type == null || type ==''">
+				WHERE TYPENAME LIKE 'lounge%'
+			</when>
+			<when test="type == 'lounge_job'">
+				WHERE TYPENAME LIKE 'lounge_job%'
+			</when>
+			<otherwise>
+				WHERE TYPENAME LIKE #{type}
+			</otherwise>
+		</choose>
+		<if test="condition != ''">
+			<choose>
+				<when test="condition == 'title'">
+					AND TITLE LIKE '%'||#{keyword}||'%'
+				</when>
+				<when test="condition == 'writer'">
+					AND USERNAME LIKE '%'||#{keyword}||'%'				
+				</when>
+				<otherwise>
+					AND DETAIL LIKE '%'||#{keyword}||'%'
+				</otherwise>
+			</choose>
+		</if>
+		ORDER BY CREATEDATE DESC
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>
