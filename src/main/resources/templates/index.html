@@ -5,6 +5,8 @@
     <title>GodFather 0805 - 홈</title>
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/chat/homeChat.css}" />
+     <link rel="stylesheet" th:href="@{/css/index.css}" />
     <link rel="icon" href="/favicon.ico">
 </head>
 <body>
@@ -15,12 +17,24 @@
 	</div>
     <!-- 헤더 -->
     <div th:replace="~{common/header :: header}"></div>
-    <div th:replace="~{chat/homeChat :: homeChat}"></div>
+    <div class="home-wrapper">
+    	<!-- 게임 영역 style="flex: 2;" 꼭 넣기 -->
+    	<!-- 왼쪽 영역 (예시) -->
+		<div class="game-room-content" style="flex: 2;">
+		  <h2>게임 영역</h2>
+		  <p>여기에 게임이나 다른 콘텐츠를 넣으세요.</p>
+		</div>
+    	<div th:replace="~{chat/homeChat :: homeChat}"></div>
+    </div>
     <div th:replace="~{common/footer :: footer}"></div>
     
-<script>
-
+<script th:inline="javascript">
 	var socket;
+	var tColor;
+	let nickName = /*[[${loginUser != null ? loginUser.nickName : "익명3242342"}]]*/ '익명';
+	if(nickName === '익명3242342'){
+		nickName = '익명' + Math.floor(1000 + Math.random() * 9000);
+	}
 	
 	document.addEventListener('DOMContentLoaded', function() {
 		var url = 'ws://localhost/homeChat';
@@ -38,22 +52,71 @@
 		socket.onclose = function(e) {
 			console.warn("WebSocket 연결 종료됨", e);
 		};
+		
+		
+		const input = document.querySelector("#chat");
+		input.addEventListener("keydown", function (e) {
+			if (e.key === "Enter") {
+				send();
+			}
+		});
+		
+		tColor = getRandomColor();
 	});
 	
 	function connect() {
 		socket.onmessage = function(message) {
-			var div = document.querySelector("#chatArea");
-			var newDiv = document.createElement("div");
-			newDiv.textContent = message.data;
-			div.appendChild(newDiv);
-		}
+			const chatArea = document.querySelector("#chatArea");
+		    const msgData = JSON.parse(message.data);
+
+		    const div = document.createElement("div");
+		    div.classList.add("chat-bubble");
+
+		    if (msgData.sender === nickName) {
+		      div.classList.add("right");
+		    } else {
+		      div.classList.add("left");
+		    }
+
+		    // 보낸 사람 이름
+		    const senderDiv = document.createElement("div");
+		    senderDiv.classList.add("chat-sender");
+		    senderDiv.textContent = msgData.sender;
+		    div.appendChild(senderDiv);
+
+		    // 내용
+		    if (msgData.type === "image") {
+				const img = document.createElement("img");
+				img.src = msgData.content;
+				img.style.maxWidth = "200px"; // 크기 제한
+				img.style.borderRadius = "8px";
+				div.appendChild(img);
+			} else {
+				const contentDiv = document.createElement("div");
+				contentDiv.textContent = msgData.content;
+				div.appendChild(contentDiv);
+			}
+
+		    chatArea.appendChild(div);
+		    chatArea.scrollTop = chatArea.scrollHeight;
+		};
 	}
 	
 	function send() {
-		var msg = document.querySelector("#chat");
+		const msgInput = document.querySelector("#chat");
+
+
+		const messageObj = {
+			type: "chat",
+			sender: nickName,
+			content: msgInput.value.trim()
+		};
+
+		if (messageObj.content === "") return; // 공백 메시지 방지
+
 		if (socket && socket.readyState === WebSocket.OPEN) {
-			socket.send(msg.value);
-			msg.value = "";
+			socket.send(JSON.stringify(messageObj));
+			msgInput.value = "";
 		} else {
 			alert("WebSocket 연결 전입니다.");
 		}
@@ -62,7 +125,32 @@
 	function disconnect() {
 		socket.close();
 	}
+
+	function getRandomColor() {
+		let h = Math.floor(Math.random() * 360);
+		let s = 70 + Math.random() * 40;
+		let l = 35 + Math.random() * 40;
+		return `hsl(${h}, ${s}%, ${l}%)`;
+	}
 	
+	
+	document.getElementById('imageInput').addEventListener('change', function () {
+		  const file = this.files[0];
+		  if (file) {
+		    const reader = new FileReader();
+		    reader.onload = function () {
+		      const base64Image = reader.result;
+		      const messageObj = {
+		        type: "image",
+		        sender: nickName,
+		        content: base64Image
+		      };
+
+		      socket.send(JSON.stringify(messageObj));
+		    };
+		    reader.readAsDataURL(file);
+		  }
+		});
 </script>
 </body>
 </html>
