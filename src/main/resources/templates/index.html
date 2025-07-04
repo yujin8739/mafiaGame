@@ -104,8 +104,6 @@
 	
 	function send() {
 		const msgInput = document.querySelector("#chat");
-
-
 		const messageObj = {
 			type: "chat",
 			sender: nickName,
@@ -125,32 +123,24 @@
 	function disconnect() {
 		socket.close();
 	}
-
-	function getRandomColor() {
-		let h = Math.floor(Math.random() * 360);
-		let s = 70 + Math.random() * 40;
-		let l = 35 + Math.random() * 40;
-		return `hsl(${h}, ${s}%, ${l}%)`;
-	}
-	
 	
 	document.getElementById('imageInput').addEventListener('change', function () {
-		  const file = this.files[0];
-		  if (file) {
-		    const reader = new FileReader();
+		const file = this.files[0];
+		if (file) {
+			const reader = new FileReader();
 		    reader.onload = function () {
-		      const base64Image = reader.result;
-		      const messageObj = {
-		        type: "image",
-		        sender: nickName,
-		        content: base64Image
-		      };
-
-		      socket.send(JSON.stringify(messageObj));
+		    	const base64Image = reader.result;
+		    	const messageObj = {
+		    		type: "image",
+		        	sender: nickName,
+		        	content: base64Image
+		      	};
+		    	
+				socket.send(JSON.stringify(messageObj));
 		    };
 		    reader.readAsDataURL(file);
-		  }
-		});
+		}
+	});
 </script>
 </body>
 </html>
