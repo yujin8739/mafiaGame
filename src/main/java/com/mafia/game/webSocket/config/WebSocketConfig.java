@@ -50,8 +50,8 @@ public class WebSocketConfig implements WebSocketConfigurer{
                     ServerContainer serverContainer = (ServerContainer) ctx.getAttribute("jakarta.websocket.server.ServerContainer");
 
                     if (serverContainer instanceof WsServerContainer wsContainer) {
-                        wsContainer.setDefaultMaxTextMessageBufferSize(10240 * 10240); // 1MB
-                        wsContainer.setDefaultMaxBinaryMessageBufferSize(10240 * 10240); // 1MB
+                        wsContainer.setDefaultMaxTextMessageBufferSize(1024 * 1024 * 5); // 5MB
+                        wsContainer.setDefaultMaxBinaryMessageBufferSize(1024 * 1024 * 5); // 5MB
                     }
                 }, null);
             }
