@@ -129,15 +129,15 @@
         <div th:utext="${board.detail}">
           게시글 내용 출력 부분 (HTML 포함 가능)
         </div>
-
+		
         <div class="attachments" th:if="${board.fileList[0].fileNo != 0}"> <!-- 첨부파일 있을때만 보여주기 -->
           <hr />
           <h6>첨부파일</h6>
           <ul>
             <li th:each="file : ${board.fileList}">
-              <a th:href="@{/uploadImage/{fileName}(fileName=${file.changeName})}" 
+              <a th:href="@{/uploadImage/${file.changeName}}" 
                  th:text="${file.originName}" 
-                 th:download="${file.originName}"></a>
+                 ></a>
             </li>
           </ul>
         </div>

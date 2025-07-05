@@ -102,11 +102,12 @@ public class BoardController {
 			if(file != null) {
 				saveFile(uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
 			}
-			session.setAttribute("alertMsg", "게시글이 정상적으로 등록되었습니다");
+			redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
+			
 
 		} else { // 게시글 등록 실패
 
-			session.setAttribute("alertMsg", "게시글 등록에 실패하였습니다");
+			redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
 
 		}
 
@@ -115,7 +116,7 @@ public class BoardController {
 	}
 
 	@GetMapping("/lounge/detail/{boardNo}") // 라운지 게시글 상세보기
-	public String loungeDetail(@PathVariable int boardNo, Model model,HttpSession session) {
+	public String loungeDetail(@PathVariable int boardNo, Model model,RedirectAttributes redirectAttributes) {
 		
 		int result = service.increaseCount(boardNo); //게시글 들어가면 조회수 1증가시키기
 		
@@ -124,7 +125,7 @@ public class BoardController {
 			
 			model.addAttribute("board", board);
 		}else { //조회수 증가 실패ㅠㅠ
-			session.setAttribute("alertMsg", "게시글이 정상적으로 조회되지 않았습니다");
+			redirectAttributes.addFlashAttribute("msg","게시글이 정상적으로 조회되지 않았습니다.");
 			return "redirect:/board/lounge";
 		}
 
