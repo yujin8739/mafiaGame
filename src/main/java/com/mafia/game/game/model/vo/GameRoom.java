@@ -1,4 +1,4 @@
-package com.mafia.game.webSocket.model.vo;
+package com.mafia.game.game.model.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

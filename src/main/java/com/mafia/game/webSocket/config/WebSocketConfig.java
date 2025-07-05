@@ -36,9 +36,9 @@ public class WebSocketConfig implements WebSocketConfigurer{
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		System.out.println("확인==================================");
-		registry.addHandler(basicServer(), "/homeChat")
+		registry.addHandler(basicServer(), "/chat/homeChat")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
-		registry.addHandler(gameMainServer(), "/gameMainChat")
+		registry.addHandler(gameMainServer(), "/chat/gameMainChat")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
 	

@@ -6,7 +6,7 @@
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
     <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
-     <link rel="stylesheet" th:href="@{/css/index.css}" />
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
     <link rel="icon" href="/favicon.ico">
 </head>
 <body>
@@ -37,7 +37,7 @@
 	}
 	
 	document.addEventListener('DOMContentLoaded', function() {
-		var url = 'ws://localhost/homeChat';
+		var url = 'ws://localhost/chat/homeChat';
 		socket = new WebSocket(url);
 		console.log("WebSocket 연결시도");
 		socket.onopen = function() {
@@ -60,8 +60,6 @@
 				send();
 			}
 		});
-		
-		tColor = getRandomColor();
 	});
 	
 	function connect() {
