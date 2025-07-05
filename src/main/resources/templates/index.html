@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta charset="UTF-8">
     <title>GodFather 0805 - 홈</title>
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
@@ -141,6 +142,27 @@
 		    reader.readAsDataURL(file);
 		}
 	});
+	
+	
 </script>
+<script>
+	$(document).ready(function() {
+	    //const userList = ["player1", "player2", "player3", "player4", "player5"];
+	
+	    $.ajax({
+	        url: '/job/employment',
+	        method: 'GET',
+	        //contentType: 'application/json',
+	        //data: JSON.stringify(userList),
+	        success: function(response) {
+	            console.log('서버 응답:', response);
+	        },
+	        error: function(xhr, status, error) {
+	            console.error('요청 실패:', error);
+	        }
+	    });
+	});
+</script>
+
 </body>
 </html>

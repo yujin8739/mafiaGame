@@ -1,0 +1,43 @@
+.playerPanel {
+    width: 400px;
+    max-height: 1200px;
+    background-color: black;
+    display: flex;
+    justify-content: center; /* 내부를 가로 중앙 정렬 */
+    align-items: flex-start; /* 세로는 위부터 정렬 */
+    box-shadow: 0px 0px 10px 2px white;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    column-gap: 20px; /* 아이템 간격 */
+    row-gap: 20px;
+    justify-content: center; /* 가로 중앙 정렬 */
+    padding-top: 30px;
+}
+
+.panels {
+    width: 100px;
+    height: 100px;
+    background-color: grey;
+}
+
+.player-name {
+    margin-top: 10px;
+    color: white;
+    font-size: 14px;
+    text-align: center;
+}
+
+.skillDiv{
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.skillBtn{
+	background-color: grey;
+	color: white;
+}
