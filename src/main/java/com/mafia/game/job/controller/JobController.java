@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -23,8 +24,8 @@ public class JobController {
 	
 	//플레이어 정보를 받아와 랜덤하게 직업 부여
 	@ResponseBody
-	@RequestMapping(value = "/employment",
-					produces = "text/html;charset=UTF-8")
+	@GetMapping(value = "/employment",
+				produces = "text/html;charset=UTF-8")
 	public String jobEmployment(HttpSession session) {
 		//플레이어 명단(리스트)
 		List<String> pList = new ArrayList<>();
@@ -68,7 +69,7 @@ public class JobController {
 			jobList.add(ojList.get(i));
 		}
 		Collections.shuffle(jobList);
-		
+		System.out.println((String)jobList.toString());
 		return "직업 랜덤 부여 성공";
 	}
 	

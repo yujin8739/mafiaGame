@@ -5,7 +5,25 @@
 
 <mapper namespace="jobMapper">
 
-
+	<select id="essentialJob6" resultType="int">
+		SELECT JOBNO
+		FROM JOB
+		WHERE OPTIONAL = 'N'
+	</select>
+	
+	<select id="optionalJob6" resultType="int">
+		SELECT JOBNO
+		FROM JOB
+		WHERE OPTIONAL = 'Y'
+		AND JOBCLASS &lt; 3
+	</select>
+	
+	<select id="neutralJob6" resultType="int">
+		SELECT JOBNO
+		FROM JOB
+		WHERE JOBCLASS = 3
+	</select>
+	
 
 </mapper>
 

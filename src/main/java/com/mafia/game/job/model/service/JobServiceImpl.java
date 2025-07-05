@@ -20,20 +20,17 @@ public class JobServiceImpl implements JobService{
 
 	@Override
 	public List<Integer> essentialJob6() {
-		// TODO Auto-generated method stub
-		return null;
+		return dao.essentialJob6(sqlSession);
 	}
 
 	@Override
 	public List<Integer> optionalJob6() {
-		// TODO Auto-generated method stub
-		return null;
+		return dao.optionalJob6(sqlSession);
 	}
 
 	@Override
 	public List<Integer> neutralJob6() {
-		// TODO Auto-generated method stub
-		return null;
+		return dao.neutralJob6(sqlSession);
 	}
 	
 }
