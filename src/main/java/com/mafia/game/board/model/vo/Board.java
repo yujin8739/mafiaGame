@@ -1,6 +1,7 @@
 package com.mafia.game.board.model.vo;
 
 import java.sql.Date;
+import java.util.ArrayList;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,5 +23,7 @@ public class Board { //일반 게시글, 사진 게시글, 동영상 게시글
 	private String typeName; // 게시판 타입 db명
 	private String displayName; //사용자에게 보여지는 게시판 타입명
 	
+	//[Collection용] 첨부파일 담을 변수
+	private ArrayList<BoardFile> fileList;
 	
 }

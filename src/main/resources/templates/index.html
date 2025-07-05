@@ -6,17 +6,14 @@
     <title>GodFather 0805 - 홈</title>
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/chat/homeChat.css}" />
     <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
     <link rel="stylesheet" th:href="@{/css/index.css}" />
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
 </head>
 <body>
-    <div th:if="${msg}">
-	    <script th:inline="javascript">
-	        alert( /*[[${msg}]]*/ '회원 정보가 수정되었습니다.');
-	    </script>
-	</div>
+    
     <!-- 헤더 -->
     <div th:replace="~{common/header :: header}"></div>
     <div class="home-wrapper">

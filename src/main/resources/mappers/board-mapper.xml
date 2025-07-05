@@ -43,6 +43,7 @@
 		SELECT *
 		FROM BOARD
 		JOIN BOARD_TYPE USING(TYPENO)
+<!-- 		JOIN USER_INFO USING(USERNAME) -->
 		<choose>
 			<when test="type == null || type ==''">
 				WHERE TYPENAME LIKE 'lounge%'
@@ -69,6 +70,78 @@
 		</if>
 		ORDER BY CREATEDATE DESC
 	</select>
+	
+	<resultMap type="Board" id="boardDetailResultMap">
+		<result property="boardNo" column="BOARDNO"/>
+		<result property="userName" column="USERNAME"/>
+		<result property="typeNo" column="TYPENO"/>
+		<result property="title" column="TITLE"/>
+		<result property="detail" column="DETAIL"/>
+		<result property="status" column="STATUS"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="viewCount" column="VIEWCOUNT"/>
+		<result property="displayName" column="DISPLAYNAME"/>
+		<collection property="fileList" ofType="BoardFile">
+			<result property="fileNo" column="FILENO"/>
+			<result property="boardNo" column="BOARDNO"/>
+			<result property="fileUrl" column="FILEURL"/>
+			<result property="type" column="TYPE"/>
+			<result property="originName" column="ORIGINNAME"/>
+			<result property="changeName" column="CHANGENAME"/>
+			<result property="uploadDate" column="UPLOADDATE"/>
+			<result property="isDeleted" column="ISDELETED"/>
+		</collection>
+	</resultMap>
+	
+	<update id="increaseCount">
+		UPDATE BOARD
+		SET VIEWCOUNT = VIEWCOUNT + 1
+		WHERE BOARDNO = #{BOARDNO}
+	</update>
+	
+	<select id="loungeBoardDetail" resultMap="boardDetailResultMap">
+		SELECT *
+		FROM BOARD
+		LEFT JOIN BOARD_FILE USING(BOARDNO)
+		JOIN BOARD_TYPE USING(TYPENO)
+		WHERE BOARDNO=#{boardNo}
+	</select>
+	
+	<select id="getBoardNo" resultType="_int">
+		SELECT SEQ_BNO.NEXTVAL
+		FROM DUAL
+	</select>
+	
+	<insert id="writeLoungeBoard"> <!-- 라운지 게시글 등록 -->
+		INSERT INTO BOARD(BOARDNO
+						 ,USERNAME
+						 ,TYPENO
+						 ,TITLE
+						 ,DETAIL
+						 )
+					     VALUES(#{boardNo}
+				   			   ,#{userName}
+					   		   ,#{typeNo}
+					   		   ,#{title}
+					   		   ,#{detail}
+					   		    )
+	</insert>
+	
+	<insert id="insertFile">
+		INSERT INTO BOARD_FILE(FILENO
+							  ,BOARDNO
+							  ,TYPE
+							  ,ORIGINNAME
+							  ,CHANGENAME)
+					VALUES(SEQ_FNO.NEXTVAL
+						   ,#{boardNo}
+						   ,#{type}
+						   ,#{originName}
+						   ,#{changeName})
+							  
+	</insert>
+	
+
 	
 	
 	
