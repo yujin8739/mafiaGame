@@ -20,8 +20,8 @@
     <script th:inline="javascript">
         // 닉네임 초기화
         let nickName = /*[[${loginUser.nickName}]]*/ '익명';
-
         const roomNo = /*[[${roomNo}]]*/ 0;   
+        const input = document.querySelector("#chat");
 
         let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
 
@@ -36,7 +36,35 @@
         socket.onclose = function () {
             console.warn("WebSocket 연결 종료");
         };
+        
+		input.addEventListener("keydown", function (e) {
+			if (e.key === "Enter") {
+				send();
+			}
+		});
+		
+	    const messages = /*[[${messages}]]*/ [];
+	    const chatArea = document.querySelector("#chatArea");
 
+	    messages.forEach(msg => {
+	        const div = document.createElement("div");
+	        div.classList.add("chat-bubble");
+	        div.classList.add(msg.userName === nickName ? "right" : "left");
+
+	        const senderDiv = document.createElement("div");
+	        senderDiv.classList.add("chat-sender");
+	        senderDiv.textContent = msg.userName;
+	        div.appendChild(senderDiv);
+
+	        const contentDiv = document.createElement("div");
+	        contentDiv.textContent = msg.msg;
+	        div.appendChild(contentDiv);
+
+	        chatArea.appendChild(div);
+	    });
+
+	    chatArea.scrollTop = chatArea.scrollHeight;
+		
         socket.onmessage = function (message) {
             const chatArea = document.querySelector("#chatArea");
             const msgData = JSON.parse(message.data);
@@ -70,9 +98,10 @@
             if (content === "") return;
 
             const messageObj = {
-                type: "chat",
-                sender: nickName,
-                content: content
+				type: "chat",
+				userName: nickName,
+				msg: content,
+				roomNo : roomNo
             };
 
             if (socket.readyState === WebSocket.OPEN) {
