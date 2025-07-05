@@ -2,17 +2,20 @@ package com.mafia.game.job.controller;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.mafia.game.job.model.service.JobService;
-
-import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/job")
@@ -24,19 +27,15 @@ public class JobController {
 	
 	//플레이어 정보를 받아와 랜덤하게 직업 부여
 	@ResponseBody
-	@GetMapping(value = "/employment",
-				produces = "text/html;charset=UTF-8")
-	public String jobEmployment(HttpSession session) {
+	@PostMapping("/employment")
+	public String jobEmployment(@RequestBody Map<String, String> playerList, Model model) {
 		//플레이어 명단(리스트)
-		List<String> pList = new ArrayList<>();
-		pList.add("player1");
-		pList.add("player2");
-		pList.add("player3");
-		pList.add("player4");
-		pList.add("player5");
-		pList.add("player6");
+		List<String> pList = new ArrayList<>(playerList.values());
+        
 		//플레이어 수
 		int pCount = pList.size();
+		System.out.println(pList.toString());
+		System.out.println(pCount);
 		
 		//플레이어 수에 따라 분기(6, 8, 10)
 		//각 플레이어 수에 맞는 직업 테이블에서 필수 직업과 선택 직업 조회
@@ -70,7 +69,7 @@ public class JobController {
 		}
 		Collections.shuffle(jobList);
 		System.out.println((String)jobList.toString());
-		return "직업 랜덤 부여 성공";
+		return "job/playerPanel :: playerPanelFragment";
 	}
 	
 	
