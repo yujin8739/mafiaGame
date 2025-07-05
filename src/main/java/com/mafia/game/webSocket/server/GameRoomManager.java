@@ -14,8 +14,10 @@ import org.springframework.web.socket.WebSocketSession;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.member.model.vo.Member;
 
 /**
@@ -26,6 +28,9 @@ public class GameRoomManager {
 
 	@Autowired
 	private GameRoomService gameRoomService;
+	
+	@Autowired
+	private ChatService chatService;
 	
 	//현존하는 게임방의 객체 (vo)
     private final Map<Integer, GameRoom> gameRoomMap = new ConcurrentHashMap<>();
@@ -119,4 +124,8 @@ public class GameRoomManager {
     public GameRoom getRoom(int roomNo) {
         return gameRoomMap.get(roomNo);
     }
+
+	public void sendMessage(Message msg) {
+		chatService.sendMessage(msg);
+	}
 }
