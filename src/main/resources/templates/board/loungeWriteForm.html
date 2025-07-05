@@ -107,13 +107,14 @@
 <body>
 
   <!-- 헤더 -->
-  <div th:replace="common/header :: header"></div>
+  <div th:replace="~{/common/header :: header}"></div>
 
   <!-- 본문 -->
   <div class="container">
     <h1>라운지 게시글 작성</h1>
 
-    <form action="/board/create" method="post" enctype="multipart/form-data">
+    <form action="/board/lounge/write" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="userName" th:value="${loginUser.userName}">
       <div class="form-group">
         <label for="category">카테고리</label>
         <select name="typeNo" id="category" required>
@@ -131,6 +132,7 @@
 
       <div class="form-group">
         <label for="editor">내용</label>
+        <textarea name="detail" id="hiddenContent" style="display:none"></textarea>
         <div id="editor-toolbar"></div>
         <div id="editor"></div>
       </div>
@@ -164,10 +166,16 @@
       placeholder: '내용을 입력하세요...',
       theme: 'snow'
     });
+    
+    // 폼 제출 전에 quill 내용을 textarea에 복사
+    document.querySelector("form").addEventListener("submit", function () {
+      const html = quill.root.innerHTML;
+      document.querySelector("#hiddenContent").value = html;
+    });
   </script>
 
   <!-- 푸터 -->
-  <div th:replace="common/footer :: footer"></div>
+  <div th:replace="~{common/footer :: footer}"></div>
 
 </body>
 </html>
