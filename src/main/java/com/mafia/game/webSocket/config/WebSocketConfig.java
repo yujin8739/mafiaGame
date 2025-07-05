@@ -11,6 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
+import com.mafia.game.webSocket.server.GameMainServer;
 import com.mafia.game.webSocket.server.HomeChatServer;
 
 import jakarta.websocket.server.ServerContainer;
@@ -18,13 +19,7 @@ import jakarta.websocket.server.ServerContainer;
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer{
-	static {
-        System.out.println("WebSocketConfig 클래스 로딩됨");
-    }
-
-    public WebSocketConfig() {
-        System.out.println("WebSocketConfig 클래스 생성됨");
-    }
+	
 	//각 웹소켓 서버 Bean으로 등록
 	@Bean
 	public WebSocketHandler basicServer() {
@@ -32,11 +27,18 @@ public class WebSocketConfig implements WebSocketConfigurer{
 		return new HomeChatServer();
 	}
 	
+	@Bean 
+	public WebSocketHandler gameMainServer() {
+		return new GameMainServer();
+	}
+	
 	//요청 매핑주소와 웹소켓 서버 연결하는 핸들러 처리 
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		System.out.println("확인==================================");
-		registry.addHandler(basicServer(), "/homeChat")
+		registry.addHandler(basicServer(), "/chat/homeChat")
+				.addInterceptors(new HttpSessionHandshakeInterceptor());
+		registry.addHandler(gameMainServer(), "/chat/gameMainChat")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
 	

@@ -1,19 +1,15 @@
-package com.mafia.game.webSocket.model.dao;
-
-import com.mafia.game.webSocket.model.vo.GameRoom;
-import com.mafia.game.webSocket.model.vo.Message;
+package com.mafia.game.game.model.dao;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
+
+import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Message;
 
 import java.util.List;
 
 @Repository
 public class ChatDao {
-
-    public List<GameRoom> selectAllRooms(SqlSessionTemplate sqlSession) {
-        return sqlSession.selectList("chatMapper.selectAllRooms");
-    }
 
     public GameRoom selectRoomById(SqlSessionTemplate sqlSession, int roonNo) {
         return sqlSession.selectOne("chatMapper.selectRoomById", roonNo);
@@ -23,8 +19,8 @@ public class ChatDao {
         sqlSession.insert("chatMapper.insertMessage", message);
     }
 
-    public List<Message> selectMessagesByRoom(SqlSessionTemplate sqlSession, int roonNo) {
-        return sqlSession.selectList("chatMapper.selectMessagesByRoom", roonNo);
+    public List<Message> selectMessagesByRoom(SqlSessionTemplate sqlSession, int roomNo) {
+        return sqlSession.selectList("chatMapper.selectMessagesByRoom", roomNo);
     }
 
     public void insertRoom(SqlSessionTemplate sqlSession, GameRoom room) {

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+	<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+	<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
+	<link rel="stylesheet" th:href="@{/css/index.css}" />
+	<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+	<title>GOD Father 0805 마피아 게임룸</title>
+</head>
+<body>
+	<div th:replace="~{common/header :: header}"></div>
+	<div class="home-wrapper">
+		<div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
+		<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
+	</div>
+	<div th:replace="~{common/footer :: footer}"></div>
+	
+    <script th:inline="javascript">
+        // 닉네임 초기화
+        let nickName = /*[[${loginUser.nickName}]]*/ '익명';
+
+        const roomNo = /*[[${roomNo}]]*/ 0;   
+
+        let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
+
+        socket.onopen = function () {
+            console.log("WebSocket 연결됨");
+        };
+
+        socket.onerror = function (err) {
+            console.error("WebSocket 오류", err);
+        };
+
+        socket.onclose = function () {
+            console.warn("WebSocket 연결 종료");
+        };
+
+        socket.onmessage = function (message) {
+            const chatArea = document.querySelector("#chatArea");
+            const msgData = JSON.parse(message.data);
+
+            const div = document.createElement("div");
+            div.classList.add("chat-bubble");
+
+            if (msgData.sender === nickName) {
+                div.classList.add("right");
+            } else {
+                div.classList.add("left");
+            }
+
+            const senderDiv = document.createElement("div");
+            senderDiv.classList.add("chat-sender");
+            senderDiv.textContent = msgData.sender;
+            div.appendChild(senderDiv);
+
+            const contentDiv = document.createElement("div");
+            contentDiv.textContent = msgData.content;
+            div.appendChild(contentDiv);
+
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        };
+
+        function send() {
+            const msgInput = document.querySelector("#chat");
+            const content = msgInput.value.trim();
+
+            if (content === "") return;
+
+            const messageObj = {
+                type: "chat",
+                sender: nickName,
+                content: content
+            };
+
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(messageObj));
+                msgInput.value = "";
+            } else {
+                alert("서버 연결이 끊어졌습니다.");
+            }
+        }
+    </script>
+</body>
+</html>

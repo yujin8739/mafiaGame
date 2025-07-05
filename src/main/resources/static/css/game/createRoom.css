@@ -1,0 +1,85 @@
+
+/* 헤더와 푸터는 건들지 마세요! */
+
+form.container {
+  flex: 1; /* 남은 공간 다 차지 */
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 수직 중앙 정렬 */
+  align-items: center;
+
+  width: 80vw;
+  max-width: 700px;
+
+  margin: 0 auto 40px; /* 좌우 중앙정렬 + 아래 마진 */
+  padding: 40px 60px;
+
+  background-color: #222;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+
+  box-sizing: border-box;
+  color: #fff;
+}
+
+/* 레이블 및 입력 */
+form.container label {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+form.container input[type="text"],
+form.container input[type="number"],
+form.container select {
+  width: 50%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background-color: #333;
+  color: #eee;
+  font-size: 1.1rem;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.7);
+  transition: background-color 0.3s ease;
+}
+
+form.container input[type="text"]:focus,
+form.container input[type="number"]:focus,
+form.container select:focus {
+  outline: none;
+  background-color: #444;
+  box-shadow: 0 0 8px #e52d27;
+  color: #fff;
+}
+
+/* 버튼 */
+form.container button[type="submit"] {
+  margin-top: 30px;
+  padding: 16px 0;
+  width: 40%;
+  background: linear-gradient(90deg, #e52d27, #b31217);
+  border: none;
+  border-radius: 30px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(229,45,39,0.7);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+form.container button[type="submit"]:hover {
+  background: linear-gradient(90deg, #b31217, #e52d27);
+  box-shadow: 0 6px 20px rgba(229,45,39,1);
+}
+
+.msg {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #f44;
+  text-align: center;
+}

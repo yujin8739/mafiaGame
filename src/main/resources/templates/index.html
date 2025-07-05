@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta charset="UTF-8">
     <title>GodFather 0805 - 홈</title>
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
     <link rel="stylesheet" th:href="@{/css/chat/homeChat.css}" />
+    <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
     <link rel="stylesheet" th:href="@{/css/index.css}" />
     <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
 </head>
 <body>
     <div th:if="${msg}">
@@ -23,6 +26,7 @@
 		<div class="game-room-content" style="flex: 2;">
 		  <h2>게임 영역</h2>
 		  <p>여기에 게임이나 다른 콘텐츠를 넣으세요.</p>
+		  <div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
 		</div>
     	<div th:replace="~{chat/homeChat :: homeChat}"></div>
     </div>
@@ -37,7 +41,7 @@
 	}
 	
 	document.addEventListener('DOMContentLoaded', function() {
-		var url = 'ws://localhost/homeChat';
+		var url = 'ws://localhost/chat/homeChat';
 		socket = new WebSocket(url);
 		console.log("WebSocket 연결시도");
 		socket.onopen = function() {
@@ -60,7 +64,6 @@
 				send();
 			}
 		});
-		
 	});
 	
 	function connect() {
@@ -143,5 +146,31 @@
 	
 	
 </script>
+<script>
+	$(document).ready(function() {
+		const userList = {
+	            name1: "1번 플레이어",
+	            name2: "2번 플레이어",
+	            name3: "3번 플레이어",
+	            name4: "4번 플레이어",
+	            name5: "5번 플레이어",
+	            name6: "6번 플레이어",
+	        };
+	
+	    $.ajax({
+	        url: '/job/employment',
+	        method: 'POST',
+	        contentType: 'application/json',
+	        data: JSON.stringify(userList),
+	        success: function(response) {
+	            console.log('서버 응답:', response);
+	        },
+	        error: function(xhr, status, error) {
+	            console.error('요청 실패:', error);
+	        }
+	    });
+	});
+</script>
+
 </body>
 </html>
