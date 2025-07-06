@@ -16,10 +16,16 @@
     <select id="selectMessagesByRoom" parameterType="int" resultType="Message">
         SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} ORDER BY CHATDATE ASC
     </select>
-
-    <insert id="insertRoom" parameterType="GameRoom">
-        INSERT INTO GAME_ROOM (ROOMNO, ROOMNAME, USERLIST, MAX, MIN, PASSWORD, STATUS)
-        VALUES (#{roomNo}, #{roomName}, #{userList}, #{max}, #{min}, #{password}, #{status})
-    </insert>
+    
+    <select id="selectEvent" resultType="String" parameterType="map">
+        SELECT
+            '{' ||
+            '"eventNo": ' || EVENT_NO || ',' ||
+            '"content": "' || REPLACE(CONTENT, '!!!!', #{userName}) || '",' ||
+            '"imageUrl": "' || IMAGE_URL || '"' ||
+            '}' AS JSON_RESULT
+        FROM GAME_EVENT
+        WHERE EVENT_NO = #{eventNo}
+    </select>
 
 </mapper>

@@ -12,5 +12,7 @@ public interface ChatService {
 	List<Message> getMessages(int roonNo);
 
 	void createRoom(GameRoom room);
+	
+	String selectEvent(int eventNo, String userName);
 
 }

@@ -36,4 +36,9 @@ public class ChatServiceImpl implements ChatService {
     public void createRoom(GameRoom room) {
     	chatDao.insertRoom(sqlSession, room);
     }
+
+	@Override
+	public String selectEvent(int eventNo, String userName) {
+		return chatDao.selectEvent(sqlSession, eventNo, userName);
+	}
 }
