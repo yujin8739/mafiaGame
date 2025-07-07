@@ -17,7 +17,8 @@
 		<div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
 		<div>
 			<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
-			<button onclick="sendEvent('6');"></button>
+			<button onclick="sendEvent('6');">임시</button>
+			<button onclick="ready()"> </button>
 		</div>
 	</div>
 	<div th:replace="~{common/footer :: footer}"></div>
@@ -50,7 +51,8 @@
 
 		const messages = /*[[${messages}]]*/[];
 		const chatArea = document.querySelector("#chatArea");
-
+		
+		// 초기 설정
 		messages.forEach(msgData => {
 			const div = document.createElement("div");
 			div.classList.add("chat-bubble");
@@ -100,7 +102,8 @@
 		});
 
 		chatArea.scrollTop = chatArea.scrollHeight;
-
+		
+		//채팅 도착
 		socket.onmessage = function (message) {
 			const chatArea = document.querySelector("#chatArea");
 			const msgData = JSON.parse(message.data);
@@ -153,7 +156,7 @@
 			chatArea.scrollTop = chatArea.scrollHeight;
 		};
 
-
+		//채팅 발송
 		function send() {
 			const msgInput = document.querySelector("#chat");
 			const content = msgInput.value.trim();
@@ -175,6 +178,7 @@
 			}
 		}
 
+		//이벤트 발생
 		function sendEvent(eventNo) {
 
 			$.ajax({
@@ -205,6 +209,12 @@
 
 				}
 			});
+		}
+		
+		function ready() {
+			$.ajax({
+				url: '/room/ready'
+			})
 		}
 	</script>
 </body>
