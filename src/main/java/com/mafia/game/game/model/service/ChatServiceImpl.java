@@ -2,6 +2,7 @@ package com.mafia.game.game.model.service;
 
 import java.util.List;
 
+import org.apache.ibatis.session.RowBounds;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,8 +29,8 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<Message> getMessages(int roonNo) {
-        return chatDao.selectMessagesByRoom(sqlSession, roonNo);
+    public List<Message> getMessages(int roomNo, RowBounds rowBounds) {
+        return chatDao.selectMessagesByRoom(sqlSession, roomNo, rowBounds);
     }
 
     @Override

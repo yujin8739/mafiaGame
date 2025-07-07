@@ -2,13 +2,13 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<meta charset="UTF-8">
-	<link rel="stylesheet" th:href="@{/css/common/header.css}" />
-	<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-	<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
-	<link rel="stylesheet" th:href="@{/css/index.css}" />
-	<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
-	<title>GOD Father 0805 마피아 게임룸</title>
+<meta charset="UTF-8">
+<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
+<link rel="stylesheet" th:href="@{/css/index.css}" />
+<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+<title>GOD Father 0805 마피아 게임룸</title>
 </head>
 
 <body>
@@ -18,17 +18,38 @@
 		<div>
 			<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
 			<button onclick="sendEvent('6');">임시</button>
-			<button onclick="ready()"> </button>
+			<button onclick="ready()"></button>
 		</div>
 	</div>
 	<div th:replace="~{common/footer :: footer}"></div>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script th:inline="javascript">
+		//블록검색용
+		let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
+		const pageSize = 20; // 한 블록에 몇 개의 메시지를 가져올지
+		let isLoading = false;
+		let isLastPage = false;
+		let isFirstLoad = true;
+		
 		// 닉네임 초기화
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
+		var job = 'citizen';
+		var isNight = false;
 
+
+		const sendBtn = document.getElementById('sendBtn');
+		const chatInput = document.getElementById('chat');
+
+		if (isNight && job!=='mafia') {
+			sendBtn.disabled = true;
+			sendBtn.classList.add('disabled-btn');
+
+			chatInput.disabled = true;
+			chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+		}
+		
 		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
 
 		socket.onopen = function () {
@@ -51,87 +72,206 @@
 
 		const messages = /*[[${messages}]]*/[];
 		const chatArea = document.querySelector("#chatArea");
-		
-		// 초기 설정
-		messages.forEach(msgData => {
+		chatLoad();
+		function chatLoad() {
+		    if (isLoading || isLastPage) return;
+		    isLoading = true;
+
+		    $.ajax({
+		        url: '/room/loadMessage',
+		        type: 'GET',
+		        data: {
+		            roomNo: roomNo,
+		            page: currentPage,
+		            size: pageSize
+		        },
+		        success: function (messages) {
+		            if (messages.length === 0) {
+		                isLastPage = true;  // 더 이상 불러올 메시지 없음
+		                return;
+		            }
+		            currentPage++;
+
+		            // 불러오기 전 스크롤 위치 저장 (스크롤 아래로부터 거리)
+		            const scrollBefore = chatArea.scrollHeight - chatArea.scrollTop;
+
+		            messages.forEach(msgData => {
+		                const div = document.createElement("div");
+
+		                if (msgData.type === "death") {
+		                    if (job !== "ghost" && job !== "mafiaGhost" && job !== "spiritualists") {
+		                        return;
+		                    } else {
+		                        const typeDiv = document.createElement("div");
+		                        typeDiv.classList.add("type-Text");
+		                        typeDiv.textContent = "『사망자』";
+		                        div.appendChild(typeDiv);
+		                    }
+		                } else if (msgData.type === "mafia") {
+		                    if (job !== "mafia") {
+		                        return;
+		                    } else {
+		                        const typeDiv = document.createElement("div");
+		                        typeDiv.classList.add("type-Text");
+		                        typeDiv.textContent = "『마피아』";
+		                        div.appendChild(typeDiv);
+		                    }
+		                }
+
+		                reciveMsg(msgData, div);
+
+		                // 메시지를 기존 채팅창 맨 위에 삽입
+		                chatArea.insertBefore(div, chatArea.firstChild);
+		            });
+
+		            // 이미지가 있으면 모두 로드될 때까지 대기 후 스크롤 위치 보정
+		            if(isFirstLoad){
+		            	isFirstLoad=false;
+		            	scrollToBottomAfterImagesLoad(chatArea);
+		            }
+
+		            // 불러오기 후 스크롤 위치 보정: 추가된 메시지 높이만큼 스크롤 내리기
+		            const scrollAfter = chatArea.scrollHeight;
+		            chatArea.scrollTop = scrollAfter - scrollBefore;
+		        },
+		        complete: function () {
+		            isLoading = false;
+		        }
+		    });
+		}
+
+		chatArea.addEventListener("scroll", function () {
+			if (chatArea.scrollTop === 0 && !isLastPage && !isLoading) {
+		        chatLoad();
+		    }
+		});
+		/* //초기설정
+		messages.forEach(msgData => {	
 			const div = document.createElement("div");
-			div.classList.add("chat-bubble");
-
-			if (msgData.userName === nickName) {
-				div.classList.add("right");
-			} else {
-				div.classList.add("left");
-			}
-
-			// 메시지 타입에 따라 처리 분기
-			if (msgData.type === "chat") {
-				// 일반 채팅 메시지
-				const senderDiv = document.createElement("div");
-				senderDiv.classList.add("chat-sender");
-				senderDiv.textContent = msgData.userName;
-				div.appendChild(senderDiv);
-
-				const contentDiv = document.createElement("div");
-				contentDiv.textContent = msgData.msg;
-				div.appendChild(contentDiv);
-			} else {
-				// 이벤트 메시지 (서버에서 JSON 문자열로 content 전달됨)
-				try {
-					const eventData = JSON.parse(msgData.msg); // content는 JSON 문자열
-
-					const img = document.createElement("img");
-					img.src = eventData.imageUrl;
-					img.alt = "event image";
-					img.classList.add("event-image");
-
-					const contentDiv = document.createElement("div");
-					contentDiv.classList.add("event-text");
-					contentDiv.textContent = eventData.content;
-
-					div.appendChild(img);
-					div.appendChild(contentDiv);
-				} catch (e) {
-					// 예외 발생 시 fallback
-					const fallback = document.createElement("div");
-					fallback.textContent = msgData.content;
-					div.appendChild(fallback);
+			
+			if (msgData.type === "death") {
+				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『사망자』";
+					div.appendChild(typeDiv);
+				}
+			} else if (msgData.type === "mafia"){
+				if(job !== "mafia") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『마피아』";
+					div.appendChild(typeDiv);
 				}
 			}
+			
+			reciveMsg(msgData, div);
+		}); */
+		
+		
+		function scrollToBottomAfterImagesLoad(container) {
+			const images = container.querySelectorAll("img");
+			let remaining = images.length;
 
-			chatArea.appendChild(div);
-		});
+			if (remaining === 0) {
+				container.scrollTop = container.scrollHeight;
+				return;
+			}
 
-		chatArea.scrollTop = chatArea.scrollHeight;
+			let completed = 0;
+			images.forEach(img => {
+				if (img.complete) {
+					completed++;
+					if (completed === remaining) {
+						container.scrollTop = container.scrollHeight;
+					}
+				} else {
+					img.onload = img.onerror = () => {
+						completed++;
+						if (completed === remaining) {
+							container.scrollTop = container.scrollHeight;
+						}
+					};
+				}
+			});
+		}
+
+		// ▶ 현재 스크롤이 바닥 근처인지 체크
+		function isScrolledToBottom(element, threshold = 20) {
+			return (element.scrollHeight - element.scrollTop - element.clientHeight) < threshold;
+		}
+
+		// ▶ 스크롤이 바닥에 있을 때만 자동 스크롤
+		function scrollIfNeeded(wasAtBottom) {
+			if (wasAtBottom) {
+				scrollToBottomAfterImagesLoad(chatArea);
+			}
+		}
 		
 		//채팅 도착
 		socket.onmessage = function (message) {
-			const chatArea = document.querySelector("#chatArea");
+			const wasAtBottom = isScrolledToBottom(chatArea);
 			const msgData = JSON.parse(message.data);
-
 			const div = document.createElement("div");
-			div.classList.add("chat-bubble");
-
-			if (msgData.sender === nickName) {
+			
+			if (msgData.type === "death") {
+				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『사망자』";
+					div.appendChild(typeDiv);
+				}
+			} else if (msgData.type === "mafia"){
+				if(job !== "mafia") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『마피아』";
+					div.appendChild(typeDiv);
+				}
+			}	
+			
+			reciveMsg(msgData, div);
+			
+			scrollIfNeeded(wasAtBottom);
+		};
+		
+		//채팅방에 메시지 보여주기
+		function reciveMsg(msgData, div) {
+			// 방향에 따른 클래스 추가
+			if (msgData.userName === nickName) {
 				div.classList.add("right");
-			} else {
+			} else {     
 				div.classList.add("left");
 			}
 
-			// 메시지 타입에 따라 처리 분기
+			// 메시지 타입에 따라 처리
 			if (msgData.type === "chat") {
-				// 일반 채팅 메시지
-				const senderDiv = document.createElement("div");
-				senderDiv.classList.add("chat-sender");
-				senderDiv.textContent = msgData.sender;
-				div.appendChild(senderDiv);
-
-				const contentDiv = document.createElement("div");
-				contentDiv.textContent = msgData.content;
-				div.appendChild(contentDiv);
+				// 일반 채팅
+				div.classList.add("chat-bubble");
+				insertMsg(msgData, div);
+			} else if (msgData.type === "death") {
+				// 사망자 메시지
+				div.classList.add("death-bubble"); // 흐린 배경용 클래스
+				insertMsg(msgData, div);
+			} else if (msgData.type === "mafia") {
+				// 마피아 메시지
+				div.classList.add("mafia-bubble"); // 흐린 배경용 클래스
+				insertMsg(msgData, div);
 			} else {
-				// 이벤트 메시지 (서버에서 JSON 문자열로 content 전달됨)
+				// 이벤트 메시지 - 이미지 + 텍스트 + 엑자 스타일
 				try {
-					const eventData = JSON.parse(msgData.content); // content는 JSON 문자열
+					const eventData = JSON.parse(msgData.msg); // msg는 JSON 문자열
+
+					const wrapper = document.createElement("div");
+					wrapper.classList.add("event-wrapper");
 
 					const img = document.createElement("img");
 					img.src = eventData.imageUrl;
@@ -142,31 +282,38 @@
 					contentDiv.classList.add("event-text");
 					contentDiv.textContent = eventData.content;
 
-					div.appendChild(img);
-					div.appendChild(contentDiv);
+					wrapper.appendChild(img);
+					wrapper.appendChild(contentDiv);
+					div.appendChild(wrapper);
 				} catch (e) {
-					// 예외 발생 시 fallback
+					// 파싱 실패 시 fallback
 					const fallback = document.createElement("div");
-					fallback.textContent = msgData.content;
+					fallback.textContent = msgData.msg;
 					div.appendChild(fallback);
 				}
 			}
 
 			chatArea.appendChild(div);
-			chatArea.scrollTop = chatArea.scrollHeight;
-		};
+		}
 
 		//채팅 발송
 		function send() {
 			const msgInput = document.querySelector("#chat");
-			const content = msgInput.value.trim();
-
-			if (content === "") return;
+			const msg = msgInput.value.trim();
+			var type = "chat"
+			
+			if (msg === "") return;
+			
+			if(job === "ghost") {
+				type = "death";
+			} else if(job === "mafia" && isNight) {
+				type = "mafia";
+			}
 
 			const messageObj = {
-				type: "chat",
+				type: type,
 				userName: nickName,
-				msg: content,
+				msg: msg,
 				roomNo: roomNo
 			};
 
@@ -188,13 +335,13 @@
 					eventNo: eventNo,
 					userName: nickName //원래 여기에 마피아가 선택하거나 능력 사용하여 선택한 닉네임이 들어가야 하지만 임시 처리
 				},
-				success: function (content) {
-					if (content === "") return;
+				success: function (msg) {
+					if (msg === "") return;
 
 					const messageObj = {
 						type: "event",
 						userName: '시스템',
-						msg: content,
+						msg: msg,
 						roomNo: roomNo
 					};
 
@@ -209,6 +356,17 @@
 
 				}
 			});
+		}
+		
+		function insertMsg(msgData, div) {
+			const senderDiv = document.createElement("div");
+			senderDiv.classList.add("chat-sender");
+			senderDiv.textContent = msgData.userName;
+			div.appendChild(senderDiv);
+
+			const contentDiv = document.createElement("div");
+			contentDiv.textContent = msgData.msg;
+			div.appendChild(contentDiv);
 		}
 		
 		function ready() {

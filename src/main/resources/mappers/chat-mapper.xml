@@ -14,7 +14,7 @@
     </insert>
 
     <select id="selectMessagesByRoom" parameterType="int" resultType="Message">
-        SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} ORDER BY CHATDATE ASC
+        SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} ORDER BY CHATDATE DESC
     </select>
     
     <select id="selectEvent" resultType="String" parameterType="map">
