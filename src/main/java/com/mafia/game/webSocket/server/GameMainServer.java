@@ -52,8 +52,9 @@ public class GameMainServer extends TextWebSocketHandler {
         int roomNo = msg.getRoomNo();
         
         Map<String, Object> payload = new HashMap<>();
-        payload.put("sender", msg.getUserName()); // nickName
-        payload.put("content", msg.getMsg());     // 메시지 본문
+        payload.put("userName", msg.getUserName()); // nickName
+        payload.put("msg", msg.getMsg());     // 메시지 본문
+        payload.put("type", msg.getType());
 
         String json = mapper.writeValueAsString(payload);
 

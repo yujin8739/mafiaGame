@@ -14,6 +14,25 @@
 </head>
 <body>
 	<div th:replace="common/header :: header"></div>
+	<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>일러스트 상점</h2>
+    <a href="/artshop/uploadForm" class="btn btn-primary">상품 등록</a>
+  </div>
+  
+  <div class="row">
+    <div th:each="item : ${shopList}" class="col-md-4 mb-3">
+      <div class="card">
+        <img th:src="@{${item.imagePath}}" class="card-img-top" alt="작품 이미지" />
+        <div class="card-body">
+          <h5 class="card-title" th:text="${item.title}">작품 제목</h5>
+          <p class="card-text" th:text="${item.description}">설명</p>
+          <p class="card-text text-right font-weight-bold" th:text="${item.price} + ' 원'">가격</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 	
 	
 	
