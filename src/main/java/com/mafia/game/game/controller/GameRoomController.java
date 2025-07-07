@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody; // ← 🆕 추가된 import
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -34,6 +35,8 @@ public class GameRoomController {
     
 	@Autowired
     private ChatService chatService;
+    
+    private final ObjectMapper objectMapper = new ObjectMapper(); 
 
     @GetMapping("/createRoom")
     public String createRoomForm() {
@@ -41,18 +44,57 @@ public class GameRoomController {
     }
 
     @PostMapping("/create")
-    public String createRoom(@ModelAttribute GameRoom room, Model model) {
+    public String createRoom(@ModelAttribute GameRoom room, Model model, RedirectAttributes redirectAttributes) {
+        
+        if (room.getRoomName() == null || room.getRoomName().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("msg", "방 이름을 입력해주세요.");
+            return "redirect:/room/createRoom";
+        }
+        
+        if (room.getHeadCount() < 6 || room.getHeadCount() > 15) {
+            redirectAttributes.addFlashAttribute("msg", "인원수는 6~15명 사이여야 합니다.");
+            return "redirect:/room/createRoom";
+        }
+        
         int result = gameRoomService.createRoom(room);
-
-        return "redirect:/chat/room/"+room.getRoomNo();
+        
+        if (result > 0) {
+            redirectAttributes.addFlashAttribute("msg", "방이 성공적으로 생성되었습니다!");
+            return "redirect:/";
+        } else {
+            redirectAttributes.addFlashAttribute("msg", "방 생성에 실패했습니다.");
+            return "redirect:/room/createRoom";
+        }
     }
     
     @GetMapping("/listRoom")
     public String listRooms(Model model) {
-        model.addAttribute("rooms", gameRoomService.getAllRooms());
+        List<GameRoom> rooms = gameRoomService.getAllRooms();
+        
+        if (rooms == null) {
+            rooms = new ArrayList<>();
+        }
+
+        for (GameRoom room : rooms) {
+            int userCount = 0;
+            if (room.getUserList() != null && !room.getUserList().isEmpty() && !room.getUserList().equals("[]")) {
+                try {
+                    List<String> users = objectMapper.readValue(room.getUserList(), new TypeReference<List<String>>() {});
+                    userCount = users.size();
+                } catch (Exception e) {
+                    System.err.println("JSON 파싱 실패 - 방번호: " + room.getRoomNo() + 
+                                      ", userList: " + room.getUserList() + 
+                                      ", 에러: " + e.getMessage());
+                    userCount = 0;
+                }
+            }
+            room.setCurrentUserCount(userCount); // ← 🎯 setSetCurrentUserCount에서 변경
+        }
+        
+        model.addAttribute("rooms", rooms);
         return "chat/roomList";
     }
-
+    
     @GetMapping("/{roomNo}/{password}")
     public String enterRoom(@PathVariable int roomNo, 
     						@PathVariable String password, 
@@ -66,24 +108,28 @@ public class GameRoomController {
             return "redirect:/";
         }
         
-        //방에 비밀번호가 존재할때 비밀번호 확인 
+
         //비밀번호가 틀리면 홈으로 이동
         if(room.getPassword() != null 
-        		&& !room.getPassword().isEmpty()
-        		&& !room.getPassword().equals(password)) {
+        		&& !room.getPassword().trim().isEmpty() // ← 🔧 trim() 추가
+        		&& !room.getPassword().trim().equals(password.trim())) { // ← 🔧 양쪽 trim()
         	 redirectAttributes.addFlashAttribute("msg","게임방의 비밀번호가 틀렸습니다.");
             return "redirect:/";
         }
 
         // 현재 로그인한 사용자 정보
         Member loginUser = (Member) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            redirectAttributes.addFlashAttribute("msg", "로그인이 필요합니다.");
+            return "redirect:/login/view";
+        }
         String userName = loginUser.getUserName();
 
         // userList 파싱
         List<String> users = new ArrayList<>();
         try {
             if (room.getUserList() != null && !room.getUserList().isEmpty()) {
-                users = new ObjectMapper().readValue(room.getUserList(), new TypeReference<List<String>>() {});
+                users = objectMapper.readValue(room.getUserList(), new TypeReference<List<String>>() {});
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -104,6 +150,5 @@ public class GameRoomController {
         model.addAttribute("messages", messages);
         return "game/gameRoom";
     }
-
 
 }
