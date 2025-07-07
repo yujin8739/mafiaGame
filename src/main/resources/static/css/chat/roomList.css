@@ -1,0 +1,400 @@
+
+/* 메인 컨테이너 */
+.game-room-list-container {
+    flex: 2;
+    background-color: #1a1a1a;
+    color: #f5f5f5;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    max-height: calc(90vh - 40px);
+}
+
+/* 헤더 */
+.room-list-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #333;
+}
+
+.room-list-header h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff3b3b;
+    margin: 0;
+}
+
+.create-room-btn {
+    background-color: #ff3b3b;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.create-room-btn:hover {
+    background-color: #cc2e2e;
+    transform: translateY(-1px);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 테이블 섹션 */
+.room-table-section {
+    background-color: #222;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 테이블 스타일 */
+.room-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #222;
+}
+
+.room-table thead {
+    background-color: #333;
+}
+
+.room-table th {
+    padding: 15px 12px;
+    text-align: center;
+    font-weight: bold;
+    color: #fff;
+    border-bottom: 2px solid #444;
+    font-size: 14px;
+}
+
+.room-table td {
+    padding: 15px 12px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    color: #f5f5f5;
+}
+
+.room-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.room-table tbody tr:hover {
+    background-color: #2a2a2a;
+}
+
+.room-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 방 제목 */
+.room-title {
+    text-align: left !important;
+    font-weight: 600;
+    position: relative;
+}
+
+.lock-icon {
+    margin-left: 8px;
+    color: #ff3b3b;
+    font-size: 14px;
+}
+
+/* 인원수 */
+.room-count {
+    font-weight: 600;
+}
+
+.current-count {
+    color: #4CAF50;
+}
+
+.max-count {
+    color: #ccc;
+}
+
+/* 방 종류 */
+.room-type {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.room-type.normal {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.room-type.friendly {
+    background-color: #2196F3;
+    color: white;
+}
+
+.room-type.rank {
+    background-color: #FF9800;
+    color: white;
+}
+
+/* 방 상태 */
+.room-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.room-status.waiting {
+    background-color: #FFC107;
+    color: #333;
+}
+
+.room-status.playing {
+    background-color: #f44336;
+    color: white;
+}
+
+/* 입장 버튼 */
+.enter-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 13px;
+}
+
+.enter-btn:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+}
+
+/* 빈 방 메시지 */
+.no-rooms {
+    text-align: center !important;
+    padding: 60px 20px !important;
+}
+
+.empty-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    color: #888;
+}
+
+.empty-message div {
+    font-size: 16px;
+    color: #ccc;
+}
+
+/* 모달 스타일 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 0;
+    min-width: 400px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color: #f5f5f5;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #333;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+}
+
+.close {
+    color: #888;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: #fff;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-body p {
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+.modal-body input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: #fff;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-body input:focus {
+    outline: none;
+    border-color: #ff3b3b;
+    box-shadow: 0 0 0 2px rgba(255, 59, 59, 0.3);
+}
+
+.error-message {
+    color: #ff3b3b;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 20px 24px;
+    border-top: 1px solid #333;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.cancel-btn {
+    background-color: #444;
+    color: #fff;
+}
+
+.cancel-btn:hover {
+    background-color: #555;
+}
+
+.modal-buttons .enter-btn {
+    background-color: #ff3b3b;
+    color: white;
+}
+
+.modal-buttons .enter-btn:hover {
+    background-color: #cc2e2e;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .game-room-list-container {
+        padding: 15px;
+        margin: 5px;
+    }
+
+    .room-list-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .room-table th,
+    .room-table td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    .room-table th:nth-child(1),
+    .room-table td:nth-child(1) {
+        display: none; /* 방 번호 숨김 */
+    }
+
+    .modal-content {
+        min-width: 90%;
+        margin: 0 5%;
+    }
+
+    .room-title {
+        font-size: 13px;
+    }
+
+    .enter-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .room-table th:nth-child(4),
+    .room-table td:nth-child(4),
+    .room-table th:nth-child(5),
+    .room-table td:nth-child(5) {
+        display: none; /* 방 종류, 상태 숨김 */
+    }
+}
+
+/* 스크롤바 스타일 */
+.game-room-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.game-room-list-container::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+.game-room-list-container::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.game-room-list-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.room-table tbody tr {
+    animation: fadeIn 0.3s ease-out;
+}
