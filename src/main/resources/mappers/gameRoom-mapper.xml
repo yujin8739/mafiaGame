@@ -44,7 +44,9 @@
 	</select>
 	
 	<select id="selectAllRooms" resultType="GameRoom">
-        SELECT * FROM GAME_ROOM
-    </select>
+	    SELECT ROOMNO, ROOMNAME, USERLIST, HEADCOUNT, PASSWORD, TYPE
+	    FROM GAME_ROOM
+	    ORDER BY ROOMNO
+	</select>
 	
 </mapper>

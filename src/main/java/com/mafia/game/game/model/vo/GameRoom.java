@@ -14,5 +14,7 @@ public class GameRoom {
 	private int headCount;//방 인원(해당 인원 되야 시작 가능)
 	private String password;//방 비밀번호
 	private String type;//방종류(랭크,일반,친선)
+    private int currentUserCount; //현재 접속 인원
+	
 }
  
