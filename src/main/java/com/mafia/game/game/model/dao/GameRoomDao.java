@@ -30,6 +30,6 @@ public class GameRoomDao {
     }
 
     public List<GameRoom> selectAllRooms(SqlSessionTemplate sqlSession) {
-        return sqlSession.selectList("chatMapper.selectAllRooms");
+    	return sqlSession.selectList("gameRoomMapper.selectAllRooms");
     }
 }

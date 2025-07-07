@@ -1,4 +1,4 @@
-<!-- src/main/resources/templates/game/gameRoomList.html -->
+
 <div th:fragment="roomListFragment" style="flex: 2;">
     <div class="game-room-list-container">
         <!-- 헤더 -->
@@ -15,23 +15,22 @@
                         <th>방 제목</th>
                         <th>인원</th>
                         <th>방 종류</th>
-                        <th>상태</th>
+                        <th>현재상태</th>
                         <th>입장</th>
                     </tr>
                 </thead>
                 <tbody>
                     <!-- 방이 있을 때 -->
-                    <tr th:each="room : ${rooms}" th:if="${rooms != null and not #lists.isEmpty(rooms)}">
+                    <tr th:each="room : ${rooms}">
                         <td th:text="${room.roomNo}">1</td>
                         <td class="room-title">
                             <span th:text="${room.roomName}">게임방 이름</span>
                             <span th:if="${room.password != null and !#strings.isEmpty(room.password)}" class="lock-icon">🔒</span>
                         </td>
                         <td class="room-count">
-                            <span class="current-count" th:text="${room.userList != null ? #strings.length(room.userList.split(',')) : 0}">0</span>
-                            /
-                            <span class="max-count" th:text="${room.headCount}">8</span>
-                        </td>
+						    <span class="current-count" th:text="${room.currentUserCount}">0</span>						 
+						    <span class="max-count" th:text="${room.headCount}">12</span>
+						</td>
                         <td>
                             <span class="room-type" th:text="${room.type}" 
                                   th:classappend="${room.type == '랭크' ? ' rank' : (room.type == '친선' ? ' friendly' : ' normal')}">일반</span>
@@ -39,12 +38,12 @@
                         <td>
                             <span class="room-status waiting">대기중</span>
                         </td>
-                        <td>
-                            <button class="enter-btn" 
-                                    th:onclick="'enterRoom(' + ${room.roomNo} + ', \'' + ${room.password != null ? room.password : ''} + '\')'">
-                                입장
-                            </button>
-                        </td>
+						<td>
+						    <button class="enter-btn" 
+						            onclick="enterRoom(room.roomNo, room.password)">
+						        입장
+						    </button>
+						</td>
                     </tr>
                     
                     <!-- 방이 없을 때 -->
@@ -95,7 +94,7 @@ function enterRoom(roomNo, password) {
         document.getElementById('roomPassword').focus();
     } else {
         // 비밀번호가 없는 방
-        window.location.href = '/room/' + roomNo + '/';
+    	window.location.href = '/room/' + roomNo + "/00000";
     }
 }
 
