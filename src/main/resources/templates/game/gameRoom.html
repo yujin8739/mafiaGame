@@ -35,7 +35,7 @@
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
-		var job = 'citizen';
+		var job = 'sss';
 		var isNight = false;
 
 
@@ -304,7 +304,7 @@
 			
 			if (msg === "") return;
 			
-			if(job === "ghost") {
+			if(job === 'ghost') {
 				type = "death";
 			} else if(job === "mafia" && isNight) {
 				type = "mafia";
@@ -357,6 +357,30 @@
 				}
 			});
 		}
+		
+		$(document).ready(function() {
+			const userList = {
+		            name1: "1번 플레이어",
+		            name2: "2번 플레이어",
+		            name3: "3번 플레이어",
+		            name4: "4번 플레이어",
+		            name5: "5번 플레이어",
+		            name6: "6번 플레이어",
+		        };
+		
+		    $.ajax({
+		        url: '/job/employment',
+		        method: 'POST',
+		        contentType: 'application/json',
+		        data: JSON.stringify(userList),
+		        success: function(response) {
+		            console.log('서버 응답:', response);
+		        },
+		        error: function(xhr, status, error) {
+		            console.error('요청 실패:', error);
+		        }
+		    });
+		});
 		
 		function insertMsg(msgData, div) {
 			const senderDiv = document.createElement("div");
