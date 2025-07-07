@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class ChatDao {
@@ -25,5 +27,13 @@ public class ChatDao {
 
     public void insertRoom(SqlSessionTemplate sqlSession, GameRoom room) {
         sqlSession.insert("chatMapper.insertRoom", room);
+    }
+    
+    public String selectEvent(SqlSessionTemplate sqlSession, int eventNo, String userName) {
+    	Map<String, Object> param = new HashMap<>();
+    	param.put("eventNo", eventNo);
+    	param.put("userName", userName);
+
+    	return sqlSession.selectOne("chatMapper.selectEvent", param);
     }
 }

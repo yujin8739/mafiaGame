@@ -152,6 +152,18 @@
   cursor: pointer;
 }
 
+.event-image {
+    width: 100px;
+    height: auto;
+    margin-bottom: 5px;
+}
+
+.event-text {
+    font-size: 1em;
+    font-style: italic;
+}
+
+
 #sendBtn:hover {
   background-color: #c0392b;
 }
