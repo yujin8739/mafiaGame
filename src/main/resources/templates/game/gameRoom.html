@@ -2,13 +2,13 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<meta charset="UTF-8">
-	<link rel="stylesheet" th:href="@{/css/common/header.css}" />
-	<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-	<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
-	<link rel="stylesheet" th:href="@{/css/index.css}" />
-	<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
-	<title>GOD Father 0805 마피아 게임룸</title>
+<meta charset="UTF-8">
+<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
+<link rel="stylesheet" th:href="@{/css/index.css}" />
+<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+<title>GOD Father 0805 마피아 게임룸</title>
 </head>
 
 <body>
@@ -18,18 +18,25 @@
 		<div>
 			<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
 			<button onclick="sendEvent('6');">임시</button>
-			<button onclick="ready()"> </button>
+			<button onclick="ready()"></button>
 		</div>
 	</div>
 	<div th:replace="~{common/footer :: footer}"></div>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script th:inline="javascript">
+		//블록검색용
+		let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
+		const pageSize = 20; // 한 블록에 몇 개의 메시지를 가져올지
+		let isLoading = false;
+		let isLastPage = false;
+		let isFirstLoad = true;
+		
 		// 닉네임 초기화
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
 		var job = 'citizen';
-		var isNight = true;
+		var isNight = false;
 
 
 		const sendBtn = document.getElementById('sendBtn');
@@ -65,8 +72,80 @@
 
 		const messages = /*[[${messages}]]*/[];
 		const chatArea = document.querySelector("#chatArea");
-		
-		//초기설정
+		chatLoad();
+		function chatLoad() {
+		    if (isLoading || isLastPage) return;
+		    isLoading = true;
+
+		    $.ajax({
+		        url: '/room/loadMessage',
+		        type: 'GET',
+		        data: {
+		            roomNo: roomNo,
+		            page: currentPage,
+		            size: pageSize
+		        },
+		        success: function (messages) {
+		            if (messages.length === 0) {
+		                isLastPage = true;  // 더 이상 불러올 메시지 없음
+		                return;
+		            }
+		            currentPage++;
+
+		            // 불러오기 전 스크롤 위치 저장 (스크롤 아래로부터 거리)
+		            const scrollBefore = chatArea.scrollHeight - chatArea.scrollTop;
+
+		            messages.forEach(msgData => {
+		                const div = document.createElement("div");
+
+		                if (msgData.type === "death") {
+		                    if (job !== "ghost" && job !== "mafiaGhost" && job !== "spiritualists") {
+		                        return;
+		                    } else {
+		                        const typeDiv = document.createElement("div");
+		                        typeDiv.classList.add("type-Text");
+		                        typeDiv.textContent = "『사망자』";
+		                        div.appendChild(typeDiv);
+		                    }
+		                } else if (msgData.type === "mafia") {
+		                    if (job !== "mafia") {
+		                        return;
+		                    } else {
+		                        const typeDiv = document.createElement("div");
+		                        typeDiv.classList.add("type-Text");
+		                        typeDiv.textContent = "『마피아』";
+		                        div.appendChild(typeDiv);
+		                    }
+		                }
+
+		                reciveMsg(msgData, div);
+
+		                // 메시지를 기존 채팅창 맨 위에 삽입
+		                chatArea.insertBefore(div, chatArea.firstChild);
+		            });
+
+		            // 이미지가 있으면 모두 로드될 때까지 대기 후 스크롤 위치 보정
+		            if(isFirstLoad){
+		            	isFirstLoad=false;
+		            	scrollToBottomAfterImagesLoad(chatArea);
+		            }
+
+		            // 불러오기 후 스크롤 위치 보정: 추가된 메시지 높이만큼 스크롤 내리기
+		            const scrollAfter = chatArea.scrollHeight;
+		            chatArea.scrollTop = scrollAfter - scrollBefore;
+		        },
+		        complete: function () {
+		            isLoading = false;
+		        }
+		    });
+		}
+
+		chatArea.addEventListener("scroll", function () {
+			if (chatArea.scrollTop === 0 && !isLastPage && !isLoading) {
+		        chatLoad();
+		    }
+		});
+		/* //초기설정
 		messages.forEach(msgData => {	
 			const div = document.createElement("div");
 			
@@ -91,12 +170,51 @@
 			}
 			
 			reciveMsg(msgData, div);
-		});
+		}); */
+		
+		
+		function scrollToBottomAfterImagesLoad(container) {
+			const images = container.querySelectorAll("img");
+			let remaining = images.length;
 
-		chatArea.scrollTop = chatArea.scrollHeight;
+			if (remaining === 0) {
+				container.scrollTop = container.scrollHeight;
+				return;
+			}
+
+			let completed = 0;
+			images.forEach(img => {
+				if (img.complete) {
+					completed++;
+					if (completed === remaining) {
+						container.scrollTop = container.scrollHeight;
+					}
+				} else {
+					img.onload = img.onerror = () => {
+						completed++;
+						if (completed === remaining) {
+							container.scrollTop = container.scrollHeight;
+						}
+					};
+				}
+			});
+		}
+
+		// ▶ 현재 스크롤이 바닥 근처인지 체크
+		function isScrolledToBottom(element, threshold = 20) {
+			return (element.scrollHeight - element.scrollTop - element.clientHeight) < threshold;
+		}
+
+		// ▶ 스크롤이 바닥에 있을 때만 자동 스크롤
+		function scrollIfNeeded(wasAtBottom) {
+			if (wasAtBottom) {
+				scrollToBottomAfterImagesLoad(chatArea);
+			}
+		}
 		
 		//채팅 도착
 		socket.onmessage = function (message) {
+			const wasAtBottom = isScrolledToBottom(chatArea);
 			const msgData = JSON.parse(message.data);
 			const div = document.createElement("div");
 			
@@ -122,7 +240,7 @@
 			
 			reciveMsg(msgData, div);
 			
-			chatArea.scrollTop = chatArea.scrollHeight;
+			scrollIfNeeded(wasAtBottom);
 		};
 		
 		//채팅방에 메시지 보여주기
@@ -130,7 +248,7 @@
 			// 방향에 따른 클래스 추가
 			if (msgData.userName === nickName) {
 				div.classList.add("right");
-			} else {
+			} else {     
 				div.classList.add("left");
 			}
 
