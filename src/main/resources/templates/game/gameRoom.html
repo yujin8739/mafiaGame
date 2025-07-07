@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+	<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+	<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
+	<link rel="stylesheet" th:href="@{/css/index.css}" />
+	<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+	<title>GOD Father 0805 마피아 게임룸</title>
+</head>
+
+<body>
+	<div th:replace="~{common/header :: header}"></div>
+	<div class="home-wrapper">
+		<div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
+		<div>
+			<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
+			<button onclick="sendEvent('6');">임시</button>
+			<button onclick="ready()"> </button>
+		</div>
+	</div>
+	<div th:replace="~{common/footer :: footer}"></div>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script th:inline="javascript">
+		// 닉네임 초기화
+		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
+		const roomNo = /*[[${roomNo}]]*/ 0;
+		const input = document.querySelector("#chat");
+		var job = 'citizen';
+		var isNight = true;
+
+
+		const sendBtn = document.getElementById('sendBtn');
+		const chatInput = document.getElementById('chat');
+
+		if (isNight && job!=='mafia') {
+			sendBtn.disabled = true;
+			sendBtn.classList.add('disabled-btn');
+
+			chatInput.disabled = true;
+			chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+		}
+		
+		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
+
+		socket.onopen = function () {
+			console.log("WebSocket 연결됨");
+		};
+
+		socket.onerror = function (err) {
+			console.error("WebSocket 오류", err);
+		};
+
+		socket.onclose = function () {
+			console.warn("WebSocket 연결 종료");
+		};
+
+		input.addEventListener("keydown", function (e) {
+			if (e.key === "Enter") {
+				send();
+			}
+		});
+
+		const messages = /*[[${messages}]]*/[];
+		const chatArea = document.querySelector("#chatArea");
+		
+		//초기설정
+		messages.forEach(msgData => {	
+			const div = document.createElement("div");
+			
+			if (msgData.type === "death") {
+				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『사망자』";
+					div.appendChild(typeDiv);
+				}
+			} else if (msgData.type === "mafia"){
+				if(job !== "mafia") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『마피아』";
+					div.appendChild(typeDiv);
+				}
+			}
+			
+			reciveMsg(msgData, div);
+		});
+
+		chatArea.scrollTop = chatArea.scrollHeight;
+		
+		//채팅 도착
+		socket.onmessage = function (message) {
+			const msgData = JSON.parse(message.data);
+			const div = document.createElement("div");
+			
+			if (msgData.type === "death") {
+				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『사망자』";
+					div.appendChild(typeDiv);
+				}
+			} else if (msgData.type === "mafia"){
+				if(job !== "mafia") {
+					return;
+				} else {
+					const typeDiv = document.createElement("div");
+					typeDiv.classList.add("type-Text");
+					typeDiv.textContent = "『마피아』";
+					div.appendChild(typeDiv);
+				}
+			}	
+			
+			reciveMsg(msgData, div);
+			
+			chatArea.scrollTop = chatArea.scrollHeight;
+		};
+		
+		//채팅방에 메시지 보여주기
+		function reciveMsg(msgData, div) {
+			// 방향에 따른 클래스 추가
+			if (msgData.userName === nickName) {
+				div.classList.add("right");
+			} else {
+				div.classList.add("left");
+			}
+
+			// 메시지 타입에 따라 처리
+			if (msgData.type === "chat") {
+				// 일반 채팅
+				div.classList.add("chat-bubble");
+				insertMsg(msgData, div);
+			} else if (msgData.type === "death") {
+				// 사망자 메시지
+				div.classList.add("death-bubble"); // 흐린 배경용 클래스
+				insertMsg(msgData, div);
+			} else if (msgData.type === "mafia") {
+				// 마피아 메시지
+				div.classList.add("mafia-bubble"); // 흐린 배경용 클래스
+				insertMsg(msgData, div);
+			} else {
+				// 이벤트 메시지 - 이미지 + 텍스트 + 엑자 스타일
+				try {
+					const eventData = JSON.parse(msgData.msg); // msg는 JSON 문자열
+
+					const wrapper = document.createElement("div");
+					wrapper.classList.add("event-wrapper");
+
+					const img = document.createElement("img");
+					img.src = eventData.imageUrl;
+					img.alt = "event image";
+					img.classList.add("event-image");
+
+					const contentDiv = document.createElement("div");
+					contentDiv.classList.add("event-text");
+					contentDiv.textContent = eventData.content;
+
+					wrapper.appendChild(img);
+					wrapper.appendChild(contentDiv);
+					div.appendChild(wrapper);
+				} catch (e) {
+					// 파싱 실패 시 fallback
+					const fallback = document.createElement("div");
+					fallback.textContent = msgData.msg;
+					div.appendChild(fallback);
+				}
+			}
+
+			chatArea.appendChild(div);
+		}
+
+		//채팅 발송
+		function send() {
+			const msgInput = document.querySelector("#chat");
+			const msg = msgInput.value.trim();
+			var type = "chat"
+			
+			if (msg === "") return;
+			
+			if(job === "ghost") {
+				type = "death";
+			} else if(job === "mafia" && isNight) {
+				type = "mafia";
+			}
+
+			const messageObj = {
+				type: type,
+				userName: nickName,
+				msg: msg,
+				roomNo: roomNo
+			};
+
+			if (socket.readyState === WebSocket.OPEN) {
+				socket.send(JSON.stringify(messageObj));
+				msgInput.value = "";
+			} else {
+				alert("서버 연결이 끊어졌습니다.");
+			}
+		}
+
+		//이벤트 발생
+		function sendEvent(eventNo) {
+
+			$.ajax({
+				url: '/chat/selectEvent',
+				type: 'GET',
+				data: {
+					eventNo: eventNo,
+					userName: nickName //원래 여기에 마피아가 선택하거나 능력 사용하여 선택한 닉네임이 들어가야 하지만 임시 처리
+				},
+				success: function (msg) {
+					if (msg === "") return;
+
+					const messageObj = {
+						type: "event",
+						userName: '시스템',
+						msg: msg,
+						roomNo: roomNo
+					};
+
+					if (socket.readyState === WebSocket.OPEN) {
+						socket.send(JSON.stringify(messageObj));
+						msgInput.value = "";
+					} else {
+						alert("이벤트를 불러오지 못했습니다.");
+					}
+				},
+				error: function () {
+
+				}
+			});
+		}
+		
+		function insertMsg(msgData, div) {
+			const senderDiv = document.createElement("div");
+			senderDiv.classList.add("chat-sender");
+			senderDiv.textContent = msgData.userName;
+			div.appendChild(senderDiv);
+
+			const contentDiv = document.createElement("div");
+			contentDiv.textContent = msgData.msg;
+			div.appendChild(contentDiv);
+		}
+		
+		function ready() {
+			$.ajax({
+				url: '/room/ready'
+			})
+		}
+	</script>
+</body>
+
+</html>

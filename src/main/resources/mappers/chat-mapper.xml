@@ -4,26 +4,28 @@
 
 <mapper namespace="chatMapper">
 
-    <select id="selectAllRooms" resultType="GameRoom">
-        SELECT * FROM GAME_ROOM
-    </select>
-
     <select id="selectRoomById" parameterType="int" resultType="GameRoom">
-        SELECT * FROM GAME_ROOM WHERE ROONNO = #{roonNo}
+        SELECT * FROM GAME_ROOM WHERE ROOMNO = #{roomNo}
     </select>
 
     <insert id="insertMessage" parameterType="Message">
-        INSERT INTO MESSAGE (ROONNO, MSGNO, TYPE, MSG, USERNAME, CHATDATE)
-        VALUES (#{roonNo}, #{msgNo}, #{type}, #{msg}, #{userName}, #{chatDate})
+        INSERT INTO MESSAGE (ROOMNO, MSGNO, TYPE, MSG, USERNAME, CHATDATE)
+        VALUES (#{roomNo}, #{msgNo}, #{type}, #{msg}, #{userName}, #{chatDate})
     </insert>
 
     <select id="selectMessagesByRoom" parameterType="int" resultType="Message">
-        SELECT * FROM MESSAGE WHERE ROONNO = #{roonNo} ORDER BY CHATDATE ASC
+        SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} ORDER BY CHATDATE ASC
     </select>
-
-    <insert id="insertRoom" parameterType="GameRoom">
-        INSERT INTO GAME_ROOM (ROONNO, ROOMNAME, USERLIST, MAX, MIN, PASSWORD, STATUS)
-        VALUES (#{roonNo}, #{roomName}, #{userList}, #{max}, #{min}, #{password}, #{status})
-    </insert>
+    
+    <select id="selectEvent" resultType="String" parameterType="map">
+        SELECT
+            '{' ||
+            '"eventNo": ' || EVENT_NO || ',' ||
+            '"content": "' || REPLACE(CONTENT, '!!!!', #{userName}) || '",' ||
+            '"imageUrl": "' || IMAGE_URL || '"' ||
+            '}' AS JSON_RESULT
+        FROM GAME_EVENT
+        WHERE EVENT_NO = #{eventNo}
+    </select>
 
 </mapper>

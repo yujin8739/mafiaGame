@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>방 만들기</title>
+	<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+	<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+	<link rel="stylesheet" th:href="@{/css/game/createRoom.css}" />
+</head>
+<body>
+	<div th:replace="~{common/header :: header}"></div>
+
+    <form class="container" th:action="@{/room/create}" method="post">
+        <label>방 이름: <input type="text" name="roomName" required></label><br>
+        <label>인원 수: <input type="number" name="headCount" min="8" max="15" required></label><br>
+		<label>방 종류:
+		            <select name="type">
+		                <option value="일반">일반</option>
+		                <option value="친선">친선</option>
+		            </select>
+		        </label><br>
+        <label id="passwordLabel" style="display: none;">방 비밀번호 (선택): <input type="text" name="password"></label><br>
+
+        <input type="hidden" name="userList" value="[]">
+
+        <button type="submit">방 생성</button>
+    </form>
+
+    <div th:if="${msg}">
+        <p th:text="${msg}" style="color: red;"></p>
+    </div>
+    
+    <div th:replace="~{common/footer :: footer}"></div>
+	<script>
+	    document.querySelector('select[name="type"]').addEventListener('change', function () {
+	        const showPassword = this.value === '친선'; // '친선' 선택 시 보이게
+	        const passwordLabel = document.getElementById("passwordLabel");
+
+	        passwordLabel.style.display = showPassword ? '' : 'none';
+	    });
+	</script>
+</body>
+</html>
