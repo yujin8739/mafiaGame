@@ -14,5 +14,7 @@ public class Player {
 	private int playerNo;
 	private int jobNo;
 	private int roomNo;
+	private String userName;
+	private String status;
 	
 }
