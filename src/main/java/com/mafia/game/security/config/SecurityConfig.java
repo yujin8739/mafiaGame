@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/")
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**","/chat/**").permitAll()
+                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**","/chat/**" ).permitAll()
                 .anyRequest().authenticated()
             ).exceptionHandling(exceptionHandling -> 
             exceptionHandling
