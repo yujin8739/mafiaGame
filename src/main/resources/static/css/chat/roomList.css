@@ -163,6 +163,7 @@
 }
 
 /* 입장 버튼 */
+.enter-btn-bypass,
 .enter-btn {
     background-color: #4CAF50;
     color: white;
