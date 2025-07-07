@@ -28,9 +28,21 @@
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
-		const job = 'citizen';
-		const isNight = true;
+		var job = 'citizen';
+		var isNight = true;
 
+
+		const sendBtn = document.getElementById('sendBtn');
+		const chatInput = document.getElementById('chat');
+
+		if (isNight && job!=='mafia') {
+			sendBtn.disabled = true;
+			sendBtn.classList.add('disabled-btn');
+
+			chatInput.disabled = true;
+			chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+		}
+		
 		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
 
 		socket.onopen = function () {
