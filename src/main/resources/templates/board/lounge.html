@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>자유게시판</title>
 
-  <!-- 부트스트랩 4.5.2 -->
+  <!-- Bootstrap 4.5.2 + jQuery -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+  <!-- 공통 CSS -->
   <link rel="stylesheet" th:href="@{/css/common/header.css}" />
   <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
 
@@ -43,14 +44,14 @@
       border-color: #c82e38;
     }
 
-    .sub-tabs, .job-tabs {
+    .sub-tabs, .team-tabs, .role-tabs {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin: 25px 0;
+      margin: 20px 0;
     }
 
-    .sub-tabs a, .job-tabs a {
+    .sub-tabs a, .team-tabs a, .role-tabs a {
       padding: 6px 18px;
       border-radius: 20px;
       background-color: #f1f1f1;
@@ -60,22 +61,9 @@
       transition: all 0.2s;
     }
 
-    .sub-tabs a.active, .job-tabs a.active {
+    .sub-tabs a.active, .team-tabs a.active, .role-tabs a.active {
       background-color: #c82e38;
       color: #fff;
-    }
-
-    .job-tabs a:hover {
-      background-color: #222;
-      color: #c82e38;
-    }
-
-    .job-tabs a[data-team="citizen"] {
-      background-color: #dfe6e9;
-    }
-
-    .job-tabs a[data-team="mafia"] {
-      background-color: #ffeaa7;
     }
 
     .search-bar {
@@ -86,8 +74,7 @@
       margin-bottom: 20px;
     }
 
-    .search-bar select,
-    .search-bar input {
+    .search-bar select, .search-bar input {
       border: 1px solid #ccc;
       padding: 7px 14px;
       border-radius: 25px;
@@ -132,8 +119,7 @@
       margin-bottom: 20px;
     }
 
-    table.board-table th,
-    table.board-table td {
+    table.board-table th, table.board-table td {
       padding: 14px;
       text-align: center;
       font-size: 14px;
@@ -192,6 +178,10 @@
       border-color: #c82e38;
       color: #fff !important;
     }
+
+    .team-tabs, .role-tabs {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -200,7 +190,7 @@
 
   <div class="board-wrapper">
     <div class="main-tabs mb-4" th:object="${filterMap}">
-      <a th:href="@{/board/lounge}" th:class="*{type == null || type == '' || (type != null && type.contains('lounge'))? 'active' : ''}">라운지</a>
+      <a th:href="@{/board/lounge}" th:class="*{type == null || type == '' || type.contains('lounge') ? 'active' : ''}">라운지</a>
       <a th:href="@{/board/photo}">갤러리</a>
       <a th:href="@{/board/video}">하이라이트 영상</a>
     </div>
@@ -212,29 +202,45 @@
       <a th:href="@{/board/lounge(type='lounge_job')}" th:class="*{type == 'lounge_job' ? 'active' : ''}">직업</a>
     </div>
 
-    <th:block th:object="${filterMap}">
-      <div class="job-tabs" th:style="*{type != null && type.contains('lounge_job')? '' : 'display: none;'}">
-        <a th:href="@{/board/lounge(type='lounge_job')}" data-job="전체">전체</a>
-        <a href="#" data-job="마피아" data-team="mafia">마피아</a>
-        <a href="#" data-job="시민" data-team="citizen">시민</a>
-        <a href="#" data-job="경찰" data-team="citizen">경찰</a>
-        <a href="#" data-job="의사" data-team="citizen">의사</a>
-      </div>
-    </th:block>
+    <!-- 직업 탭 선택 시 표시될 팀 탭 -->
+    <div id="teamTabs" class="team-tabs">
+      <a href="#" class="team-tab active" data-team="all">전체</a>
+      <a href="#" class="team-tab" data-team="mafia">팀 마피아</a>
+      <a href="#" class="team-tab" data-team="citizen">팀 시민</a>
+      <a href="#" class="team-tab" data-team="third">팀 제3세력</a>
+    </div>
 
+    <!-- 각 팀별 직업 탭 -->
+    <div id="roleTabs-mafia" class="role-tabs">
+      <a href="#" data-job="mafia">마피아</a>
+    </div>
+
+    <div id="roleTabs-citizen" class="role-tabs">
+      <a href="#" data-job="police">경찰</a>
+      <a href="#" data-job="doctor">의사</a>
+      <a href="#" data-job="spiritualist">영매사</a>
+    </div>
+
+    <div id="roleTabs-third" class="role-tabs">
+      <a href="#" data-job="disruptor">훼방꾼</a>
+    </div>
+
+    <!-- 검색창 -->
     <form class="search-bar" method="get" th:action="@{/board/lounge}" th:object="${filterMap}">
       <select name="condition">
         <option value="title" th:selected="*{condition == 'title'}">제목</option>
         <option value="writer" th:selected="*{condition == 'writer'}">작성자</option>
         <option value="content" th:selected="*{condition == 'content'}">내용</option>
       </select>
-      <input type="text" name="keyword" placeholder="검색어 입력" th:value=*{keyword}>
-      <input type="hidden" name="type" th:value=*{type}>
+      <input type="text" name="keyword" placeholder="검색어 입력" th:value="*{keyword}">
+      <input type="hidden" name="type" th:value="*{type}">
       <button type="submit">검색</button>
     </form>
 
+    <!-- 글쓰기 버튼 -->
     <button class="write-btn" onclick="location.href='/board/lounge/write'">글쓰기</button>
 
+    <!-- 게시판 리스트 -->
     <table class="board-table">
       <thead>
         <tr>
@@ -246,29 +252,69 @@
         </tr>
       </thead>
       <tbody>
+        <tr th:if="${#lists.isEmpty(boardList)}">
+          <td colspan="5">조회된 게시물이 없습니다</td>
+        </tr>
         <tr th:each="b : ${boardList}">
-          <td>
-          	<span class="board-tag" th:text="${b.displayName}"></span>
-          </td>
-          <td style="text-align: left;">
-            <a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}" class="post-title" th:text="${b.title}"></a>
-          </td>
-          <td th:text="${b.userName}"></td>
+          <td><span class="board-tag" th:text="${b.displayName}"></span></td>
+          <td style="text-align: left;"><a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}" class="post-title" th:text="${b.title}"></a></td>
+          <td th:text="${b.nickName}"></td>
           <td th:text="${b.createDate}"></td>
-          <td th:text=${b.viewCount}></td>
+          <td th:text="${b.viewCount}"></td>
         </tr>
       </tbody>
     </table>
 
-    <ul class="pagination">
-      <th:block th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:object="${filterMap}">
-        <li th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">
-          <a class="page-link" th:href="@{/board/lounge(currentPage=${i},type=*{type},condition=*{condition},keyword=*{keyword})}" th:text="${i}"></a>
-        </li>
-      </th:block>
+    <!-- 페이지네이션 -->
+    <ul class="pagination" th:if="${pi.endPage != 0}">
+      <li th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">
+        <a class="page-link" th:href="@{/board/lounge(currentPage=${i},type=*{type},condition=*{condition},keyword=*{keyword})}" th:text="${i}"></a>
+      </li>
     </ul>
   </div>
 
   <div th:replace="common/footer :: footer"></div>
+
+  <script>
+    $(function () {
+      // 직업 탭이면 팀 탭 보여줌
+      const isJobTabActive = window.location.href.includes("type=lounge_job");
+      if (isJobTabActive) {
+        $("#teamTabs").show();
+      }
+
+      $(".sub-tabs a").on("click", function () {
+        if ($(this).attr("href").includes("lounge_job")) {
+          $("#teamTabs").fadeIn(200);
+        } else {
+          $("#teamTabs").fadeOut(200);
+          $(".role-tabs").hide();
+        }
+      });
+
+      $(".team-tab").on("click", function (e) {
+        e.preventDefault();
+        $(".team-tab").removeClass("active");
+        $(this).addClass("active");
+
+        const team = $(this).data("team");
+        $(".role-tabs").hide();
+        if (team === "mafia") $("#roleTabs-mafia").fadeIn(200);
+        else if (team === "citizen") $("#roleTabs-citizen").fadeIn(200);
+        else if (team === "third") $("#roleTabs-third").fadeIn(200);
+      });
+
+      $(".role-tabs a").on("click", function (e) {
+        e.preventDefault();
+        $(".role-tabs a").removeClass("active");
+        $(this).addClass("active");
+
+        const selectedJob = $(this).data("job");
+        const url = new URL(window.location.href);
+        url.searchParams.set("job", selectedJob);
+        window.location.href = url.toString();
+      });
+    });
+  </script>
 </body>
 </html>
