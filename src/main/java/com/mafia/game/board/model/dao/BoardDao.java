@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 
 @Repository
@@ -44,6 +45,35 @@ public class BoardDao {
 	public int increaseCount(SqlSessionTemplate sqlSession,int boardNo) {
 		return sqlSession.update("boardMapper.increaseCount",boardNo);
 	}
+
+	public int getFileNo(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectOne("boardMapper.getFileNo");
+	}
+
+	public int uploadFileOfReply(SqlSessionTemplate sqlSession, BoardFile file) {
+		return sqlSession.insert("boardMapper.uploadFileOfReply",file);
+	}
+
+	public int uploadReply(SqlSessionTemplate sqlSession, Reply reply) {
+		return sqlSession.insert("boardMapper.uploadReply",reply);
+	}
+
+	public ArrayList<Reply> getReplyList(SqlSessionTemplate sqlSession, int boardNo) {
+		return (ArrayList)sqlSession.selectList("boardMapper.getReplyList", boardNo);
+	}
+
+	public Reply selectReply(SqlSessionTemplate sqlSession, int replyNo) {
+		return sqlSession.selectOne("boardMapper.selectReply", replyNo);
+	}
+
+	public int deleteReply(SqlSessionTemplate sqlSession, Reply reply) {
+		return sqlSession.update("boardMapper.deleteReply", reply);
+	}
+
+	public int deleteFileOfReply(SqlSessionTemplate sqlSession, Reply reply) {
+		return sqlSession.update("boardMapper.deleteFileOfReply", reply);
+	}
+
 
 	
 }
