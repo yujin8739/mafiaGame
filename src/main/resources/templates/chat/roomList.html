@@ -1,0 +1,151 @@
+
+<div th:fragment="roomListFragment" style="flex: 2;">
+    <div class="game-room-list-container">
+        <!-- 헤더 -->
+        <div class="room-list-header">
+            <h2>게임방 목록</h2>
+        </div>
+
+        <!-- 게임방 목록 테이블 -->
+        <div class="room-table-section">
+            <table class="room-table">
+                <thead>
+                    <tr>
+                        <th>방 번호</th>
+                        <th>방 제목</th>
+                        <th>인원</th>
+                        <th>방 종류</th>
+                        <th>현재상태</th>
+                        <th>입장</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 방이 있을 때 -->
+                    <tr th:each="room : ${rooms}">
+                        <td th:text="${room.roomNo}">1</td>
+                        <td class="room-title">
+                            <span th:text="${room.roomName}">게임방 이름</span>
+                            <span th:if="${room.password != null and !#strings.isEmpty(room.password)}" class="lock-icon">🔒</span>
+                        </td>
+                        <td class="room-count">
+						    <span class="current-count" th:text="${room.currentUserCount}">0</span>						 
+						    <span class="max-count" th:text="${room.headCount}">12</span>
+						</td>
+                        <td>
+                            <span class="room-type" th:text="${room.type}" 
+                                  th:classappend="${room.type == '랭크' ? ' rank' : (room.type == '친선' ? ' friendly' : ' normal')}">일반</span>
+                        </td>
+                        <td>
+                            <span class="room-status waiting">대기중</span>
+                        </td>
+						<td>
+							<button class="enter-btn"
+							        th:attr="data-roomno=${room.roomNo}, data-password=${room.password}">
+							    입장
+							</button>
+						</td>
+                    </tr>
+                    
+                    <!-- 방이 없을 때 -->
+                    <tr th:if="${rooms == null or #lists.isEmpty(rooms)}">
+                        <td colspan="6" class="no-rooms">
+                            <div class="empty-message">
+                                <div>현재 생성된 게임방이 없습니다.</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+<!-- 비밀번호 입력 모달 -->
+<div id="passwordModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>비밀번호 입력</h3>
+            <span class="close" onclick="closePasswordModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>이 방은 비밀번호가 설정되어 있습니다.</p>
+            <input type="password" id="roomPassword" placeholder="비밀번호를 입력하세요">
+            <div id="passwordError" class="error-message" style="display: none;">
+                비밀번호가 올바르지 않습니다.
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="enter-btn-bypass" onclick="confirmEnterRoom()">입장</button>
+            <button class="cancel-btn" onclick="closePasswordModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script>
+	let selectedRoomNo = null;
+
+	document.querySelectorAll('.enter-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+		    const roomNo = btn.dataset.roomno;
+		    const password = btn.dataset.password || '';
+		    enterRoom(roomNo, password);
+		});
+	});
+	
+	// 방 입장 함수
+	function enterRoom(roomNo, password) {
+	    selectedRoomNo = roomNo;
+	    
+	    if (password && password.trim() !== '') {
+	        // 비밀번호가 있는 방
+	        document.getElementById('passwordModal').style.display = 'flex';
+	        document.getElementById('roomPassword').focus();
+	    } else {
+	        // 비밀번호가 없는 방
+	    	window.location.href = '/room/' + roomNo + "/00000";
+	    }
+	}
+	
+	// 비밀번호 확인 후 입장
+	function confirmEnterRoom() {
+	    const inputPassword = document.getElementById('roomPassword').value;
+	    
+	    if (!inputPassword) {
+	        document.getElementById('passwordError').textContent = '비밀번호를 입력해주세요.';
+	        document.getElementById('passwordError').style.display = 'block';
+	        return;
+	    }
+	    
+	    // 서버로 이동 (비밀번호 검증은 서버에서)
+	    window.location.href = '/room/' + selectedRoomNo + '/' + encodeURIComponent(inputPassword);
+	}
+	
+	// 모달 닫기
+	function closePasswordModal() {
+	    document.getElementById('passwordModal').style.display = 'none';
+	    document.getElementById('roomPassword').value = '';
+	    document.getElementById('passwordError').style.display = 'none';
+	    selectedRoomNo = null;
+	}
+	
+	// 모달 외부 클릭 시 닫기
+	window.onclick = function(event) {
+	    const modal = document.getElementById('passwordModal');
+	    if (event.target === modal) {
+	        closePasswordModal();
+	    }
+	}
+	
+	// 엔터키로 비밀번호 입력
+	document.addEventListener('DOMContentLoaded', function() {
+	    const passwordInput = document.getElementById('roomPassword');
+	    if (passwordInput) {
+	        passwordInput.addEventListener('keypress', function(e) {
+	            if (e.key === 'Enter') {
+	                confirmEnterRoom();
+	            }
+	        });
+	    }
+	});
+</script>
+</div>

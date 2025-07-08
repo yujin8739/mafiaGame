@@ -1,5 +1,7 @@
 package com.mafia.game.shop.model.service;
 
-public class ShopService {
+import com.mafia.game.shop.model.vo.Shop;
 
+public interface ShopService {
+    int insertArtwork(Shop shop);
 }

@@ -16,18 +16,14 @@ public class ImageController {
 
     private static String IMAGE_FOLDER = "C:/godDaddy_uploadImage";
 
-    @GetMapping("/{fileName:.+}")
+    @GetMapping("/{type}/{fileName:.+}")
     public ResponseEntity<InputStreamResource> getEventImage(
+    		@PathVariable String type,
             @PathVariable String fileName,
             HttpServletResponse response) throws IOException {
     	
-    	if(fileName.contains("&")) {
-    		String[] fileNameArr = fileName.split("&");
-    		IMAGE_FOLDER = IMAGE_FOLDER + "/" +fileNameArr[0];
-    		fileName = fileNameArr[1];
-    	}
 
-		File file = new File(IMAGE_FOLDER, fileName);
+		File file = new File(IMAGE_FOLDER + "/" +type, fileName);
         if (!file.exists()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }

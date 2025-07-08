@@ -1,5 +1,6 @@
 package com.mafia.game.game.model.dao;
 
+import org.apache.ibatis.session.RowBounds;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -21,8 +22,8 @@ public class ChatDao {
         sqlSession.insert("chatMapper.insertMessage", message);
     }
 
-    public List<Message> selectMessagesByRoom(SqlSessionTemplate sqlSession, int roomNo) {
-        return sqlSession.selectList("chatMapper.selectMessagesByRoom", roomNo);
+    public List<Message> selectMessagesByRoom(SqlSessionTemplate sqlSession, int roomNo, RowBounds rowBounds) {
+        return sqlSession.selectList("chatMapper.selectMessagesByRoom", roomNo, rowBounds);
     }
 
     public void insertRoom(SqlSessionTemplate sqlSession, GameRoom room) {
