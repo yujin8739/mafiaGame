@@ -26,7 +26,6 @@
 		  
 		<!-- 게입방 목록 -->	
 		  <div th:replace="~{chat/roomList :: roomListFragment}"></div>
-		  <div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
 		</div>
     	<div th:replace="~{chat/homeChat :: homeChat}"></div>
     </div>
@@ -145,31 +144,6 @@
 	});
 	
 	
-</script>
-<script>
-	$(document).ready(function() {
-		const userList = {
-	            name1: "1번 플레이어",
-	            name2: "2번 플레이어",
-	            name3: "3번 플레이어",
-	            name4: "4번 플레이어",
-	            name5: "5번 플레이어",
-	            name6: "6번 플레이어",
-	        };
-	
-	    $.ajax({
-	        url: '/job/employment',
-	        method: 'POST',
-	        contentType: 'application/json',
-	        data: JSON.stringify(userList),
-	        success: function(response) {
-	            console.log('서버 응답:', response);
-	        },
-	        error: function(xhr, status, error) {
-	            console.error('요청 실패:', error);
-	        }
-	    });
-	});
 </script>
 
 </body>

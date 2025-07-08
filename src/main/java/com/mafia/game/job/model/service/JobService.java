@@ -4,10 +4,14 @@ import java.util.List;
 
 public interface JobService {
 
-	List<Integer> essentialJob6();
+	List<String> essentialJob8();
 
-	List<Integer> optionalJob6();
+	List<String> optionalJob8();
 
-	List<Integer> neutralJob6();
+	List<String> neutralJob8();
+
+	String playerList(int roomNo);
+
+	String userNickName(String userName);
 
 }
