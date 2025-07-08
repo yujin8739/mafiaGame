@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>게시글 수정</title>
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+  <!-- font-awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Quill 에디터 스타일 -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+  <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+
+  <style>
+	  body {
+	  background-color: #0b0b0b;
+	  color: #f5f5f5;
+	  font-family: 'Noto Sans KR', sans-serif;
+	  padding: 40px 5%;
+	  min-height: 100vh;
+	  }
+	
+	  .card {
+	    background-color: #1e1e1e;
+	    border: none;
+	    border-radius: 12px;
+	    box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+	    max-width: 960px;
+	    margin: 0 auto;
+	    padding-bottom: 30px;
+	    min-height: 800px;
+	  }
+	
+	  .card-header {
+	    background-color: transparent;
+	    border-bottom: 1px solid #333;
+	    font-size: 24px;
+	    font-weight: bold;
+	    color: #fff;
+	  }
+	
+	  .form-group label {
+	    color: #ccc;
+	  }
+	
+	  .form-control, .custom-file-input {
+	    background-color: #2c2c2c;
+	    border: 1px solid #555;
+	    color: #f5f5f5;
+	  }
+	
+	  .form-control::placeholder {
+	    color: #888;
+	  }
+	
+	  .btn-custom {
+	    padding: 8px 18px;
+	    border: none;
+	    border-radius: 4px;
+	    font-weight: bold;
+	    color: #fff;
+	    transition: background-color 0.2s ease;
+	  }
+	
+	  .btn-update {
+	    background-color: #3498db;
+	  }
+	
+	  .btn-update:hover {
+	    background-color: #2980b9;
+	  }
+	
+	  .btn-cancel {
+	    background-color: #555;
+	  }
+	
+	  .btn-cancel:hover {
+	    background-color: #777;
+	  }
+	
+	  #editor {
+	    background-color: #fff;
+	    color: #000;
+	    height: 600px;
+	    border: 1px solid #ccc;
+	    border-radius: 4px;
+	  }
+	
+	  /* 퀼 툴바 드롭다운 텍스트 보이게 오버라이드 */
+	  .ql-snow .ql-picker {
+	    color: #000 !important;
+	  }
+	
+	  .ql-snow .ql-picker-options {
+	    background-color: #fff;
+	    color: #000;
+	    border: 1px solid #ccc;
+	  }
+	
+	  .ql-snow .ql-picker-label {
+	    color: #000 !important;
+	  }
+  </style>
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <div th:replace="~{common/header :: header}"></div>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">게시글 수정</div>
+      <div class="card-body">
+        <form th:action="@{/board/lounge/update}" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="boardNo" th:value="${board.boardNo}" />
+          <input type="hidden" name="detail" id="detailInput" />
+
+          <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" class="form-control" id="title" name="title" th:value="${board.title}" required />
+          </div>
+
+          <div class="form-group">
+            <label for="editor">내용</label>
+            <div id="editor"></div>
+          </div>
+
+          <div class="form-group">
+			  <label for="file">첨부파일</label>
+			  <input type="file" class="form-control-file" id="file" name="uploadFile" accept="image/*" />
+			
+			  <div class="mt-2" id="current-file-info" th:if="${board.fileList[0].fileNo != 0}">
+			    현재 파일: <span th:text="${board.fileList[0].originName}"></span>
+			    <button type="button" class="btn btn-sm btn-danger ml-2" id="deleteFileBtn">삭제</button>
+			  </div>
+			
+			  <input type="hidden" th:value="${board.fileList[0].changeName}" name="changeName">
+			  <!-- deleteFile hidden input은 JS로 동적으로 생성됨 -->
+		  </div>
+
+          <div class="text-right mt-4">
+            <button type="submit" class="btn btn-custom btn-update">수정하기</button>
+            <a href="javascript:history.back()" class="btn btn-custom btn-cancel">취소</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div th:replace="~{common/footer :: footer}"></div>
+
+  <!-- Quill -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+  <script th:inline="javascript">
+    const quill = new Quill('#editor', {
+      theme: 'snow'
+    });
+
+    // DB에서 받아온 HTML 내용 디코딩해서 넣기
+    const rawHtml = /*[[${board.detail}]]*/ '';
+    const decodedHtml = decodeHtmlEntities(rawHtml);
+    quill.root.innerHTML = decodedHtml;
+
+    function decodeHtmlEntities(str) {
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = str;
+      return textarea.value;
+    }
+
+    // 전송 전에 입력값을 숨은 input에 저장
+    document.querySelector('form').addEventListener('submit', function () {
+      document.getElementById('detailInput').value = quill.root.innerHTML;
+    });
+    
+    document.getElementById('deleteFileBtn')?.addEventListener('click', function () {
+        // 현재 파일 정보 숨김
+        const flag = confirm('등록한 첨부파일을 삭제하시겠습니까?');
+        if(flag){
+	        const fileInfo = document.getElementById('current-file-info');
+	        if (fileInfo) fileInfo.remove();
+	
+	        // deleteFile hidden input 추가
+	        const deleteInput = document.createElement('input');
+	        deleteInput.type = 'hidden';
+	        deleteInput.name = 'deleteFile';
+	        deleteInput.value = 'true';
+	
+	        document.querySelector('form').appendChild(deleteInput);
+        }
+      });
+  </script>
+</body>
+</html>

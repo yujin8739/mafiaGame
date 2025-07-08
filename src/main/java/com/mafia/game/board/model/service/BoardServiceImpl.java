@@ -76,6 +76,54 @@ public class BoardServiceImpl implements BoardService{
 	
 	@Override
 	@Transactional
+	public int deleteLoungeBoard(Board board) {
+		
+		int result = 1;
+		
+		ArrayList<Reply> replyList = board.getReplyList();
+		for(Reply reply : replyList) { //리뷰 및 리뷰에 올린 파일 삭제
+			if(reply.getFileNo() != 0) {
+				result *= dao.deleteFileOfReply(sqlSession, reply); 
+			}
+			result *= dao.deleteReply(sqlSession, reply);
+		}
+		
+		if(!board.getFileList().isEmpty()) {
+			result *= dao.deleteFileOfBoard(sqlSession,board);
+		}
+		
+		result *= dao.deleteLoungeBoard(sqlSession, board);
+		
+		return result; 
+	}
+	
+	@Override
+	@Transactional
+	public int updateLoungeBoard(Board board, BoardFile file, boolean deleteFile) {
+		
+	
+		
+		//게시글 삭제
+		int result = dao.updateLoungeBoard(sqlSession, board);
+		
+
+		if(file != null) {//변경한 파일 있다면
+			result *= dao.insertFile(sqlSession, file); //변경 파일 추가
+			
+			if(board.getChangeName() != null) { // 기존 파일 삭제
+				result *= dao.deleteFileOfBoard(sqlSession, board); 
+			}
+		}else if(deleteFile){//변경한 파일 없고, 기존파일 삭제버튼 눌렀다면
+			
+			result *= dao.deleteFileOfBoard(sqlSession, board);
+		}
+		
+		
+		return result;
+	}
+	
+	@Override
+	@Transactional
 	public int uploadReply(Reply reply, BoardFile file) {
 		
 		int result = 1;
@@ -133,6 +181,7 @@ public class BoardServiceImpl implements BoardService{
 		
 		return result;
 	}
+	
 	
 	
 
