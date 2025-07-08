@@ -17,7 +17,7 @@ public class BoardFile {
 	private String type;//	TYPE	VARCHAR2(10 BYTE)
 	private String originName;//	ORIGINNAME	VARCHAR2(255 BYTE)
 	private Date uploadDate;//	UPLOADDATE	DATE
-	private char isDeleted;//	ISDELETED	CHAR(1 BYTE)
+	private String status;//	status	CHAR(1 BYTE)
 	private String changeName;//	CHANGENAME	VARCHAR2(255 BYTE)
 	private int fileLevel;//	FILELEVEL	NUMBER(1,0)
 }

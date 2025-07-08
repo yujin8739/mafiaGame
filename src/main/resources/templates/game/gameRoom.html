@@ -24,6 +24,14 @@
 	<div th:replace="~{common/footer :: footer}"></div>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script th:inline="javascript">
+		// 닉네임 초기화
+		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
+		let userName = /*[[${loginUser.userName}]]*/ '';
+		const roomNo = /*[[${roomNo}]]*/ 0;
+		const input = document.querySelector("#chat");
+		var job = '무직';
+		var isNight = false;
+
 		//블록검색용
 		let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
 		const pageSize = 20; // 한 블록에 몇 개의 메시지를 가져올지
@@ -31,15 +39,6 @@
 		let isLastPage = false;
 		let isFirstLoad = true;
 		
-		// 닉네임 초기화
-		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
-		let userName = /*[[${loginUser.userName}]]*/ '';
-		const roomNo = /*[[${roomNo}]]*/ 0;
-		const input = document.querySelector("#chat");
-		var job = 'sss';
-		var isNight = false;
-
-
 		const sendBtn = document.getElementById('sendBtn');
 		const chatInput = document.getElementById('chat');
 
@@ -146,72 +145,8 @@
 		        chatLoad();
 		    }
 		});
-		/* //초기설정
-		messages.forEach(msgData => {	
-			const div = document.createElement("div");
-			
-			if (msgData.type === "death") {
-				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
-					return;
-				} else {
-					const typeDiv = document.createElement("div");
-					typeDiv.classList.add("type-Text");
-					typeDiv.textContent = "『사망자』";
-					div.appendChild(typeDiv);
-				}
-			} else if (msgData.type === "mafia"){
-				if(job !== "mafia") {
-					return;
-				} else {
-					const typeDiv = document.createElement("div");
-					typeDiv.classList.add("type-Text");
-					typeDiv.textContent = "『마피아』";
-					div.appendChild(typeDiv);
-				}
-			}
-			
-			reciveMsg(msgData, div);
-		}); */
-		
-		
-		function scrollToBottomAfterImagesLoad(container) {
-			const images = container.querySelectorAll("img");
-			let remaining = images.length;
+	
 
-			if (remaining === 0) {
-				container.scrollTop = container.scrollHeight;
-				return;
-			}
-
-			let completed = 0;
-			images.forEach(img => {
-				if (img.complete) {
-					completed++;
-					if (completed === remaining) {
-						container.scrollTop = container.scrollHeight;
-					}
-				} else {
-					img.onload = img.onerror = () => {
-						completed++;
-						if (completed === remaining) {
-							container.scrollTop = container.scrollHeight;
-						}
-					};
-				}
-			});
-		}
-
-		// ▶ 현재 스크롤이 바닥 근처인지 체크
-		function isScrolledToBottom(element, threshold = 20) {
-			return (element.scrollHeight - element.scrollTop - element.clientHeight) < threshold;
-		}
-
-		// ▶ 스크롤이 바닥에 있을 때만 자동 스크롤
-		function scrollIfNeeded(wasAtBottom) {
-			if (wasAtBottom) {
-				scrollToBottomAfterImagesLoad(chatArea);
-			}
-		}
 		
 		//채팅 도착
 		socket.onmessage = function (message) {
@@ -243,88 +178,6 @@
 			
 			scrollIfNeeded(wasAtBottom);
 		};
-		
-		//채팅방에 메시지 보여주기
-		function reciveMsg(msgData, div) {
-			// 방향에 따른 클래스 추가
-			if (msgData.userName === nickName) {
-				div.classList.add("right");
-			} else {     
-				div.classList.add("left");
-			}
-
-			// 메시지 타입에 따라 처리
-			if (msgData.type === "chat") {
-				// 일반 채팅
-				div.classList.add("chat-bubble");
-				insertMsg(msgData, div);
-			} else if (msgData.type === "death") {
-				// 사망자 메시지
-				div.classList.add("death-bubble"); // 흐린 배경용 클래스
-				insertMsg(msgData, div);
-			} else if (msgData.type === "mafia") {
-				// 마피아 메시지
-				div.classList.add("mafia-bubble"); // 흐린 배경용 클래스
-				insertMsg(msgData, div);
-			} else {
-				// 이벤트 메시지 - 이미지 + 텍스트 + 엑자 스타일
-				try {
-					const eventData = JSON.parse(msgData.msg); // msg는 JSON 문자열
-
-					const wrapper = document.createElement("div");
-					wrapper.classList.add("event-wrapper");
-
-					const img = document.createElement("img");
-					img.src = eventData.imageUrl;
-					img.alt = "event image";
-					img.classList.add("event-image");
-
-					const contentDiv = document.createElement("div");
-					contentDiv.classList.add("event-text");
-					contentDiv.textContent = eventData.content;
-
-					wrapper.appendChild(img);
-					wrapper.appendChild(contentDiv);
-					div.appendChild(wrapper);
-				} catch (e) {
-					// 파싱 실패 시 fallback
-					const fallback = document.createElement("div");
-					fallback.textContent = msgData.msg;
-					div.appendChild(fallback);
-				}
-			}
-
-			chatArea.appendChild(div);
-		}
-
-		//채팅 발송
-		function send() {
-			const msgInput = document.querySelector("#chat");
-			const msg = msgInput.value.trim();
-			var type = "chat"
-			
-			if (msg === "") return;
-			
-			if(job === 'ghost') {
-				type = "death";
-			} else if(job === "mafia" && isNight) {
-				type = "mafia";
-			}
-
-			const messageObj = {
-				type: type,
-				userName: nickName,
-				msg: msg,
-				roomNo: roomNo
-			};
-
-			if (socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify(messageObj));
-				msgInput.value = "";
-			} else {
-				alert("서버 연결이 끊어졌습니다.");
-			}
-		}
 
 		//이벤트 발생
 		function sendEvent(eventNo) {
@@ -359,6 +212,7 @@
 			});
 		}
 		
+
 		$(document).ready(function() {
 		    $.ajax({
 		        url: '/job/employment',
@@ -392,6 +246,7 @@
 			div.appendChild(contentDiv);
 		}
 		
+
 		function ready() {
 			$.ajax({
 				url: '/room/ready'
