@@ -33,6 +33,7 @@
 		
 		// 닉네임 초기화
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
+		let userName = /*[[${loginUser.userName}]]*/ '';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
 		var job = 'sss';
@@ -359,22 +360,20 @@
 		}
 		
 		$(document).ready(function() {
-			const userList = {
-		            name1: "1번 플레이어",
-		            name2: "2번 플레이어",
-		            name3: "3번 플레이어",
-		            name4: "4번 플레이어",
-		            name5: "5번 플레이어",
-		            name6: "6번 플레이어",
-		        };
-		
 		    $.ajax({
 		        url: '/job/employment',
 		        method: 'POST',
-		        contentType: 'application/json',
-		        data: JSON.stringify(userList),
+		        data: { roomNo: roomNo,
+		        		userName: userName},
 		        success: function(response) {
-		            console.log('서버 응답:', response);
+		        	$('.playerPanelArea').html(response);
+		        	
+		        	// HTML 삽입 이후에 DOM에서 job 값을 읽어옴
+		            var jobFromServer = $('#jobData').data('job');
+		            if (jobFromServer) {
+		                job = jobFromServer;
+		                console.log("직업 업데이트됨:", job);
+		            }
 		        },
 		        error: function(xhr, status, error) {
 		            console.error('요청 실패:', error);

@@ -8,16 +8,24 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JobDao {
 
-	public List<Integer> essentialJob6(SqlSessionTemplate sqlSession) {
-		return sqlSession.selectList("jobMapper.essentialJob6");
+	public List<String> essentialJob8(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("jobMapper.essentialJob8");
 	}
 
-	public List<Integer> optionalJob6(SqlSessionTemplate sqlSession) {
-		return sqlSession.selectList("jobMapper.optionalJob6");
+	public List<String> optionalJob8(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("jobMapper.optionalJob8");
 	}
 
-	public List<Integer> neutralJob6(SqlSessionTemplate sqlSession) {
-		return sqlSession.selectList("jobMapper.neutralJob6");
+	public List<String> neutralJob8(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("jobMapper.neutralJob8");
+	}
+
+	public String playerList(SqlSessionTemplate sqlSession, int roomNo) {
+		return sqlSession.selectOne("jobMapper.selectPlayer", roomNo);
+	}
+
+	public String userNickName(SqlSessionTemplate sqlSession, String userName) {
+		return sqlSession.selectOne("jobMapper.selectNickName", userName);
 	}
 
 }

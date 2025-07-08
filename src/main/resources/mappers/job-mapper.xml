@@ -5,25 +5,36 @@
 
 <mapper namespace="jobMapper">
 
-	<select id="essentialJob6" resultType="int">
-		SELECT JOBNO
+	<select id="essentialJob8" resultType="string">
+		SELECT JOBNAME
 		FROM JOB
 		WHERE OPTIONAL = 'N'
 	</select>
 	
-	<select id="optionalJob6" resultType="int">
-		SELECT JOBNO
+	<select id="optionalJob8" resultType="string">
+		SELECT JOBNAME
 		FROM JOB
 		WHERE OPTIONAL = 'Y'
 		AND JOBCLASS &lt; 3
 	</select>
 	
-	<select id="neutralJob6" resultType="int">
-		SELECT JOBNO
+	<select id="neutralJob8" resultType="string">
+		SELECT JOBNAME
 		FROM JOB
 		WHERE JOBCLASS = 3
 	</select>
 	
+	<select id="selectPlayer" resultType="string">
+		SELECT USERLIST
+		FROM GAME_ROOM
+		WHERE ROOMNO = #{roomNo}
+	</select>
+	
+	<select id="selectNickName" resultType="string">
+		SELECT NICKNAME
+		FROM USER_INFO
+		WHERE USERNAME = #{userName}
+	</select>
 
 </mapper>
 
