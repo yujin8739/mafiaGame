@@ -10,7 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
     <link rel="stylesheet" th:href="@{/css/index.css}" />
     <link rel="icon" href="/favicon.ico">
-    <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+<!--     <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" /> -->
 	<link rel="stylesheet" th:href="@{/css/chat/roomList.css}" />
 </head>
 <body>
@@ -21,12 +21,8 @@
     	<!-- 게임 영역 style="flex: 2;" 꼭 넣기 -->
     	<!-- 왼쪽 영역 (예시) -->
 		<div class="game-room-content" style="flex: 2;">
-		  <h2>게임 영역</h2>
-		  <p>여기에 게임이나 다른 콘텐츠를 넣으세요.</p>
-		  
 		<!-- 게입방 목록 -->	
 		  <div th:replace="~{chat/roomList :: roomListFragment}"></div>
-		  <div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
 		</div>
     	<div th:replace="~{chat/homeChat :: homeChat}"></div>
     </div>

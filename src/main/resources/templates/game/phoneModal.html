@@ -1,0 +1,17 @@
+<div id="phoneModal" class="phone-modal" th:fragment="phoneModal(userList)">
+    <div class="phone-notch"></div>
+
+    <div class="phone-screen">
+        <div class="phone-header">
+            <span>휴대폰</span>
+            <button type="button" id="closePhoneModalBtn">&times;</button>
+        </div>
+        <div class="phone-content">
+            <ul>
+                <li th:each="user : ${userList}" th:text="${user.nickName}">닉네임</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="phone-home-button"></div>
+</div>
