@@ -19,18 +19,28 @@ public class JobServiceImpl implements JobService{
 	
 
 	@Override
-	public List<Integer> essentialJob6() {
-		return dao.essentialJob6(sqlSession);
+	public List<String> essentialJob8() {
+		return dao.essentialJob8(sqlSession);
 	}
 
 	@Override
-	public List<Integer> optionalJob6() {
-		return dao.optionalJob6(sqlSession);
+	public List<String> optionalJob8() {
+		return dao.optionalJob8(sqlSession);
 	}
 
 	@Override
-	public List<Integer> neutralJob6() {
-		return dao.neutralJob6(sqlSession);
+	public List<String> neutralJob8() {
+		return dao.neutralJob8(sqlSession);
+	}
+	
+	@Override
+	public String playerList(int roomNo) {
+		return dao.playerList(sqlSession, roomNo);
+	}
+	
+	@Override
+	public String userNickName(String userName) {
+		return dao.userNickName(sqlSession, userName);
 	}
 	
 }

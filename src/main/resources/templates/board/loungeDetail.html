@@ -193,7 +193,38 @@
 	  background-color: #2980b9;
 	}
 	
-	    
+	.comment-actions {
+	  position: absolute;
+	  top: 10px;
+	  right: 12px;
+	  display: flex;
+	  gap: 10px;
+	}
+	
+	.comment-actions i {
+	  cursor: pointer;
+	  font-size: 14px;
+	  opacity: 0.7;
+	  transition: color 0.2s ease, opacity 0.2s ease;
+	}
+	
+	.comment-actions .like-btn {
+	  color: #e74c3c;
+	}
+	
+	.comment-actions .report-btn {
+	  color: #f1c40f;
+	}
+	
+	.comment-actions .delete-btn {
+	  color: #c0392b;
+	}
+	
+	.comment-actions i:hover {
+	  opacity: 1;
+	  transform: scale(1.1);
+	}
+		    
   </style>
 </head>
 <body>
@@ -224,7 +255,7 @@
 		  <div class="attachment-list">
 		    <div class="attachment-item" th:object="${board.fileList[0]}">
 		      <i class="fas fa-paperclip"></i>
-		      <a th:href="@{/godDaddy_uploadImage/{fileName}(fileName=*{changeName})}"
+		      <a th:href="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=*{changeName})}"
 		         th:text="*{originName}"
 		         th:download="*{originName}"></a>
 		    </div>
@@ -233,9 +264,12 @@
 
         <div class="btn-group-custom">
           <a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
-          <a th:href="@{/board/lounge/update/{boardNo}(boardNo=${board.boardNo})}" class="btn btn-custom btn-update">수정</a>
-          <a th:href="@{/board/lounge/delete/{boardNo}(boardNo=${board.boardNo})}" class="btn btn-custom btn-delete"
-             onclick="return confirm('정말 삭제하시겠습니까?');">삭제</a>
+          <th:block th:if="${loginUser.userName == board.userName}">
+          	<a th:href="@{/board/lounge/update/{boardNo}(boardNo=${board.boardNo})}" class="btn btn-custom btn-update">수정</a>
+          </th:block>
+          <th:block th:if="${loginUser.userName == board.userName}">
+          	<a th:href="@{/board/lounge/delete/{boardNo}(boardNo=${board.boardNo})}" class="btn btn-custom btn-delete" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</a>
+         	</th:block>
         </div>
         
         <!-- 댓글 영역 -->
@@ -251,9 +285,16 @@
 		  <!-- 댓글 작성 폼 -->
 		  <div class="comment-form mt-3">
 		    <textarea class="form-control" id="commentContent" rows="3" placeholder="댓글을 입력하세요..."></textarea>
-		    <div class="text-right mt-2">
-		      <button class="btn btn-primary btn-sm" id="submitComment">등록</button>
-		    </div>
+		    <!-- 이미지 파일 업로드 추가 -->
+		    <div class="mt-2">
+		    	<input type="file" id="commentImage" accept="image/*" class="form-control-file text-light">
+		  	</div>
+			  <img id="previewImage" style="max-width: 100px; margin-top: 10px; display: none;" />
+
+  			<div class="text-right mt-2">
+    			<button class="btn btn-primary btn-sm" id="submitComment">등록</button>
+  			</div>
+  			
 		  </div>
 		</div>
       </div>
@@ -261,20 +302,158 @@
   </div>
   
     <!-- 댓글 불러오기/등록 JS -->
-	<script>
+	<script th:inline="javascript">
+		
+	
+		function loadComments() {
+		      // 댓글 목록 불러오는 AJAX 작성 위치
+		      var loginUserName = /*[[${loginUser.userName}]]*/ '';
+		      
+		      $.ajax({
+		    	  url : '/board/lounge/getReplyList',
+		    	  data : {
+		    		  boardNo : /*[[${board.boardNo}]]*/ 0
+		          },
+		    	  success : function(replyList){
+		    		  $('#commentList').empty(); // 기존 댓글 지우고
+	
+		    		  replyList.forEach(function(reply) {
+			  			  const replyHtml = `
+			  				  <div class="comment-item position-relative">
+			  				  	<div class="comment-actions">
+				    			      <i class="fas fa-heart like-btn" title="좋아요"></i>
+				    			      <i class="fas fa-flag report-btn" title="신고"></i>
+				    			      <i class="fas fa-trash delete-btn" title="삭제"></i>
+					    			  <div style="display : none;" id="replyNo">${reply.replyNo}</div>
+				    			</div>
+			    			    <div style="display : none;" id="replyWriter">${reply.userName}</div>
+			  				    <div class="comment-author">${reply.nickName}</div>
+			  				    <div class="comment-date">${reply.createDate}</div>
+			  				    <div class="comment-text">${reply.replyContent}</div>
+			  				    ${reply.changeName ? `<img src="/godDaddy_uploadImage/replyImage/${reply.changeName}" style="max-width: 100px; margin-top: 10px;" />` : ''}
+			  				  </div>
+			  				`;
+		    		      $('#commentList').append(replyHtml);
+		    		      
+		    		  });
+		    		  
+		    		  var replyDivs= $('.comment-item.position-relative'); //리뷰 Div 영역들
+		    		  replyDivs.each(function(index,replyDiv){
+		    			  console.log($(this));
+		    			  if($(this).children("#replyWriter").text() !== loginUserName){ //로그인 아이디와 리뷰 아이디와 같지 않다면
+		    				  $(this).find(".report-btn").remove();
+		    				  $(this).find(".delete-btn").remove();
+		    			  }
+		    		  })
+	    		      if($('.comment-author').text() ){
+	    		    	  $('.comment-actions delete-btn').remove();
+	    		      }
+		    	  }
+		      });
+		    }  
+	
+	
 	  $(function () {
-	    // 댓글 불러오기 함수 호출
-	    loadComments();
+		  // 댓글 불러오기 함수 호출
+		  loadComments();
+		
+		  $('#commentImage').on('change', function (e) {
+			  const file = e.target.files[0];
+			  if (file) {
+			    const reader = new FileReader();
+			    reader.onload = function (event) {
+			      $('#previewImage').attr('src', event.target.result).show();
+			    };
+			    reader.readAsDataURL(file);
+			  } else {
+			    $('#previewImage').hide();
+			  }
+			});
+	    
 	
 	    // 댓글 등록 버튼 클릭
 	    $('#submitComment').click(function () {
-	      const content = $('#commentContent').val();
-	      // 댓글 등록 AJAX 작성 위치
-	    });
+			  const content = $('#commentContent').val();
+			  const imageFile = $('#commentImage')[0].files[0];
+			
+			  const formData = new FormData();
+			  formData.append('replyContent', content);
+			  formData.append('boardNo',/*[[${board.boardNo}]]*/ 0);
+			  formData.append('userName',/*[[${loginUser.userName}]]*/ '');
+			  if (imageFile) formData.append('image', imageFile);
+			
+			  $.ajax({
+			    url: '/board/lounge/uploadReply', 
+			    type: 'POST',
+			    data: formData,
+			    processData: false,
+			    contentType: false,
+			    success: function (result) {
+			      if(result > 0){
+				      $('#commentContent').val('');
+				      $('#commentImage').val('');
+				      $('#previewImage').hide();
+				      loadComments(); // 다시 불러오기
+			    	  
+			      }else{
+			    	  alert("댓글이 정상적으로 등록되지 않았습니다");
+			      }
+			      
+			    },
+			    error : function(){
+			    	alert("서버 오류가 발생하였습니다. 잠시 후 다시 시도해주세요");
+			    }
+			  	
+			  });
+		});
+	    
+	        $('#commentList').on('click', '.like-btn', function () {
+	    	  alert('좋아요 클릭됨');
+	    	  // TODO: Ajax 호출 등으로 좋아요 처리
+	    	});
+
+	    	$('#commentList').on('click', '.report-btn', function () {
+	    	  const confirmReport = confirm('이 댓글을 신고하시겠습니까?');
+	    	  if (confirmReport) {
+	    	    alert('신고 처리됨');
+	    	    // TODO: Ajax 호출로 신고 처리
+	    	  }
+	    	});
+
+	    	$('#commentList').on('click', '.delete-btn', function (e) {
+	    		
+	    	  const confirmDelete = confirm('이 댓글을 삭제하시겠습니까?');
+	    	  
+	    	  if (confirmDelete) {
+	    		  
+	    	    // TODO: Ajax 호출로 댓글 삭제 처리
+	    	    $.ajax({
+	        		url : "/board/lounge/deleteReply",
+	        		method : "post",
+	    			data : {
+	    				replyNo : $(e.target).next().text()
+	    			},
+	    			success : function(result){
+	    				if(result > 0){
+				    	    alert('댓글이 삭제 처리되었습니다');
+				    	    loadComments();
+				    		
+	    				}else{
+	    					alert('댓글이 정상적으로 삭제되지 않았습니다')
+	    				}
+	    			},
+	    			error : function(){
+	    				alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요');
+	    			}
+	    			
+   		  		});
+	    		  
+	    	    
+	    	  }
+	    	});
+
 	
-	    function loadComments() {
-	      // 댓글 목록 불러오는 AJAX 작성 위치
-	    }
+	    
 	  });
 	</script>
   
