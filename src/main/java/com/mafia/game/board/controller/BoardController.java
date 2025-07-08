@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.board.model.service.BoardService;
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.common.template.Pagination;
 
@@ -33,8 +35,17 @@ public class BoardController {
 	@Autowired
 	private BoardService service;
 	
-	@Value("${file.upload.path}")
-	private String filePath;
+	@Value("${file.uploadLoungImage.path}")
+	private String loungeImagePath;
+	
+	@Value("${file.uploadReplyImage.path}")
+	private String replyImagePath;
+	
+	@Value("${file.uploadGalleryImage.path}")
+	private String galleryImagePath;
+	
+	@Value("${file.deletedReplyImage.path}")
+	private String deletedReplyImagePath;
 	
 
 	@GetMapping("lounge") // 라운지 - 일반 게시판
@@ -100,7 +111,7 @@ public class BoardController {
 		if (result > 0) { // 게시글 등록 성공
 			
 			if(file != null) {
-				saveFile(uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
+				saveLoungeImage(uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
 			}
 			redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
 			
@@ -132,6 +143,68 @@ public class BoardController {
 
 		return "board/loungeDetail";
 	}
+	
+	@PostMapping("/lounge/uploadReply") // 댓글 DB 저장 + 이미지 저장 처리
+	@ResponseBody                   
+	public int uploadReply(Reply reply
+	                      ,MultipartFile image
+	                      ,HttpSession session) {
+		
+		System.out.println("댓글 : " + reply);
+		System.out.println("이미지 : " + image);
+		BoardFile file = null;
+		
+		if(image != null) {
+			String changeName = getChangedFileName(image);
+			file = BoardFile.builder()  
+						    .originName(image.getOriginalFilename())
+						    .changeName(changeName)
+						    .type("image")
+						    .build();
+		}
+		
+		int result = service.uploadReply(reply,file);
+		
+		if(result > 0) {
+			if(image != null) { //업로드한 파일 있을 경우 서버에 등록
+				saveReplyImage(image, file.getChangeName());
+			}
+		}
+		
+		return result;
+	}
+	
+	@GetMapping("/lounge/getReplyList")
+	@ResponseBody
+	public ArrayList<Reply> getReplyList(int boardNo){
+		
+		ArrayList<Reply> replyList = service.getReplyList(boardNo);
+		
+		return replyList;
+	}
+	
+	@PostMapping("/lounge/deleteReply")
+	@ResponseBody
+	public int deleteReply(int replyNo) {
+		
+		Reply reply = service.selectReply(replyNo);
+		String changeName = reply.getChangeName();
+		
+		int result = service.deleteReply(reply); // 댓글 삭제
+		if(result > 0) { //정상적으로 REPLY 및 BOARD_FILE 테이블에서 삭제 완료
+			if(changeName != null) { //파일 있을 경우 -> 삭제 폴더로 이동시키기
+				File originFile = new File(replyImagePath + changeName);
+				File deletedFile = new File(deletedReplyImagePath + changeName);
+				originFile.renameTo(deletedFile); 
+				
+			}
+		}
+		
+		
+		
+		return result;
+	}
+	
 
 	// 변경된 파일 이름 반환 메소드
 	public String getChangedFileName(MultipartFile uploadFile) {
@@ -162,15 +235,36 @@ public class BoardController {
 	}
 	
 	
-	public void saveFile(MultipartFile uploadFile,String changeName) {
+	public void saveLoungeImage(MultipartFile uploadFile,String changeName) {
 		try {
 			// application.properties에 정의했던 파일경로로 파일 저장
-			uploadFile.transferTo(new File(filePath + changeName));
+			uploadFile.transferTo(new File(loungeImagePath + changeName));
 		} catch (Exception e) {
 			
 			e.printStackTrace();
 		}
 	}
+	
+	public void saveReplyImage(MultipartFile uploadFile,String changeName) {
+		try {
+			// application.properties에 정의했던 파일경로로 파일 저장
+			uploadFile.transferTo(new File(replyImagePath + changeName));
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	public void saveGalleryImage(MultipartFile uploadFile,String changeName) {
+		try {
+			// application.properties에 정의했던 파일경로로 파일 저장
+			uploadFile.transferTo(new File(galleryImagePath + changeName));
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
 	
 	
 }

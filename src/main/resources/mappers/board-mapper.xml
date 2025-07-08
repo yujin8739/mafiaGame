@@ -36,6 +36,7 @@
 				</otherwise>
 			</choose>
 		</if>
+		AND BOARD.STATUS = 'Y'
 	</select>
 	
 	<!-- 라운지 게시글 목록 조회용 -->
@@ -68,6 +69,7 @@
 				</otherwise>
 			</choose>
 		</if>
+		AND BOARD.STATUS = 'Y'
 		ORDER BY CREATEDATE DESC
 	</select>
 	
@@ -141,6 +143,75 @@
 							  
 	</insert>
 	
+	<select id="getFileNo" resultType="_int">
+		SELECT SEQ_FNO.NEXTVAL
+		FROM DUAL
+	</select>
+	
+	<insert id="uploadFileOfReply">
+		INSERT INTO BOARD_FILE(FILENO
+							  ,TYPE
+							  ,ORIGINNAME
+							  ,CHANGENAME)
+					VALUES(#{fileNo}
+						   ,#{type}
+						   ,#{originName}
+						   ,#{changeName})
+	</insert>
+	
+	<insert id="uploadReply">
+		INSERT INTO REPLY(REPLYNO
+						 ,BOARDNO
+						 ,FILENO
+						 ,REPLYCONTENT
+						 ,USERNAME)
+					VALUES(SEQ_REPLYNO.NEXTVAL
+						  ,#{boardNo}
+						  <choose>
+						  	<when test="fileNo == 0">
+						  	,null
+						  	</when>
+						  	<otherwise>
+						  	,#{fileNo}
+						  	</otherwise>
+						  </choose>
+						  ,#{replyContent}
+						  ,#{userName})						 				
+	</insert>
+	
+	<select id="getReplyList" resultType="Reply">
+		SELECT *
+		FROM REPLY R
+		JOIN BOARD B ON (R.BOARDNO =  B.BOARDNO)
+		LEFT JOIN BOARD_FILE F ON (R.FILENO = F.FILENO)
+		JOIN USER_INFO U ON (R.USERNAME = U.USERNAME)
+		WHERE B.BOARDNO = #{boardNo}
+		AND R.STATUS ='Y'
+		ORDER BY R.CREATEDATE DESC
+	</select>
+	
+	<select id="selectReply" resultType="Reply">
+		SELECT *
+		FROM REPLY
+		LEFT JOIN BOARD_FILE USING(FILENO)
+		WHERE REPLYNO = #{replyNo}
+	</select>
+	
+	<update id="deleteReply">
+		UPDATE REPLY
+		SET STATUS = 'N'
+		WHERE REPLYNO = #{replyNo}
+	</update>
+	
+	<update id="deleteFileOfReply">
+		UPDATE BOARD_FILE
+		SET BOARD_FILE.STATUS = 'N'
+		WHERE FILENO = (SELECT R.FILENO
+						FROM REPLY R
+						LEFT JOIN BOARD_FILE F ON (R.FILENO = F.FILENO)
+						WHERE REPLYNO = #{replyNo}
+					   )		
+	</update>
 
 	
 	
