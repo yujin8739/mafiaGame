@@ -25,6 +25,9 @@ public class Board { //일반 게시글, 사진 게시글, 동영상 게시글
 	
 	private String nickName;
 	private String changeName;
+	private int rankPoint; //글 작성자 랭크포인트
+	private String profileUrl;//글 작성자 티어이미지 url
+	
 	
 	//[Collection용] 첨부파일 담을 변수
 	private ArrayList<BoardFile> fileList;

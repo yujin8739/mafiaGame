@@ -112,73 +112,168 @@
   <!-- 헤더 -->
   <div th:replace="~{/common/header :: header}"></div>
 
-  <!-- 본문 -->
-  <div class="container">
-    <h1>라운지 게시글 작성</h1>
+  <!-- 생략된 head 및 style 태그 동일 -->
 
-    <form action="/board/lounge/write" method="post" enctype="multipart/form-data">
-      <input type="hidden" name="userName" th:value="${loginUser.userName}">
-      <div class="form-group">
-        <label for="category">카테고리</label>
-        <select name="typeNo" id="category" required>
-          <option value="">-- 선택하세요 --</option>
-          <option value="1">자유</option>
-          <option value="2">플레이</option>
-          <option value="3">직업</option>
-        </select>
-      </div>
+	<!-- 본문 -->
+	<div class="container">
+	  <h1>라운지 게시글 작성</h1>
+	
+	  <form action="/board/lounge/write" method="post" enctype="multipart/form-data" id="loungeBoardForm">
+	    <input type="hidden" name="userName" th:value="${loginUser.userName}">
+	
+	    <div class="form-group">
+	      <label for="category">카테고리</label>
+	      <select name="typeNo" id="category" required>
+	        <option value="">-- 선택하세요 --</option>
+	        <option value="1">자유</option>
+	        <option value="2">플레이</option>
+	        <option value="0">직업</option>
+	      </select>
+	    </div>
+	
+	    <!-- 팀 및 직업 선택 영역 -->
+	    <div id="team-role-section" style="display:none;">
+	      <div class="form-group">
+	        <label for="team">팀 선택</label>
+	        <select id="team-select" style="width: 100%; height: 48px; border-radius: 6px; border: 1px solid #555; background-color: #2a2a2a; color: #fff;">
+	          <option value="">-- 팀 선택 --</option>
+	          <option value="mafia">팀 마피아</option>
+	          <option value="citizen">팀 시민</option>
+	          <option value="third">팀 제3세력</option>
+	        </select>
+	      </div>
+	
+	      <div class="form-group" id="role-group" style="display:none;">
+	        <label for="typeNo">직업 선택</label>
+	        <select id="role-select" style="width: 100%; height: 48px; border-radius: 6px; border: 1px solid #555; background-color: #2a2a2a; color: #fff;">
+	          <!-- JS로 채움 -->
+	        </select>
+	      </div>
+	    </div>
+	
+	    <div class="form-group">
+	      <label for="title">제목</label>
+	      <input type="text" id="title" name="title" placeholder="제목을 입력하세요" required />
+	    </div>
+	
+	    <div class="form-group">
+	      <label for="editor">내용</label>
+	      <textarea name="detail" id="hiddenContent" style="display:none"></textarea>
+	      <div id="editor-toolbar"></div>
+	      <div id="editor"></div>
+	    </div>
+	
+	    <div class="form-group">
+	      <label for="file">파일 첨부</label>
+	      <input type="file" name="uploadFile" id="file" />
+	    </div>
+	
+	    <div class="btn-group">
+	      <button type="submit" class="btn btn-submit">작성하기</button>
+	      <button type="button" class="btn btn-cancel" onclick="history.back()">취소</button>
+	    </div>
+	  </form>
+	</div>
+	
+	<!-- 스크립트 -->
+	<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+	<script>
+	  const toolbarOptions = [
+	    ['bold', 'italic', 'underline'],
+	    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+	    [{ 'header': [1, 2, false] }],
+	    ['link', 'image']
+	  ];
+	
+	  const quill = new Quill('#editor', {
+	    modules: { toolbar: toolbarOptions },
+	    placeholder: '내용을 입력하세요...',
+	    theme: 'snow'
+	  });
+	
+	  document.querySelector("form").addEventListener("submit", function () {
+	    document.querySelector("#hiddenContent").value = quill.root.innerHTML;
+	  });
+	
+	  const rolesByTeam = {
+	    mafia: [{ text: "마피아", value: 3 }],
+	    citizen: [
+	      { text: "경찰", value: 4 },
+	      { text: "의사", value: 5 },
+	      { text: "영매사", value: 6 }
+	    ],
+	    third: [{ text: "훼방꾼", value: 7 }]
+	  };
+	
+	  $(function () {
+	    const $team = $("#team-select");
+	    const $role = $("#role-select");
+	
+	    // 카테고리 변경 감지
+	    $("#category").on("change", function () {
+	      const categoryVal = $(this).val();
+	
+	      if (categoryVal === "0") {
+	        $("#team-role-section").show();
+	        // name 속성 동적으로 추가
+	        $team.attr("name", "teamTypeNo");
+	        $role.attr("name", "jobTypeNo");
+	      } else {
+	        $("#team-role-section").hide();
+	        $("#role-group").hide();
+	        // name 속성 제거 (submit 안되도록)
+	        $team.removeAttr("name");
+	        $role.removeAttr("name");
+	      }
+	    });
+	
+	    // 팀 선택 시 직업 옵션 설정
+	    $team.on("change", function () {
+	      const selectedTeam = $(this).val();
+	
+	      if (!rolesByTeam[selectedTeam]) {
+	        $("#role-group").hide();
+	        $role.empty();
+	        return;
+	      }
+	
+	      $role.empty();
+	      $.each(rolesByTeam[selectedTeam], function (index, role) {
+	        $role.append($("<option>", {
+	          value: role.value,
+	          text: role.text
+	        }));
+	      });
+	
+	      $("#role-group").show();
+	    });
+	
+	    // 최종 submit 유효성 체크
+	    $("#loungeBoardForm").submit(function (e) {
+	      const category = $("#category").val();
+	
+	      if (category === "0") {
+	        if (!$team.val()) {
+	          alert("팀을 선택해주세요.");
+	          $team.focus();
+	          e.preventDefault();
+	          return;
+	        }
+	
+	        if (!$role.val()) {
+	          alert("직업을 선택해주세요.");
+	          $role.focus();
+	          e.preventDefault();
+	          return;
+	        }
+	      }
+	    });
+	  });
+	</script>
+	
+	<!-- 푸터 -->
+	<div th:replace="~{common/footer :: footer}"></div>
 
-      <div class="form-group">
-        <label for="title">제목</label>
-        <input type="text" id="title" name="title" placeholder="제목을 입력하세요" required />
-      </div>
-
-      <div class="form-group">
-        <label for="editor">내용</label>
-        <textarea name="detail" id="hiddenContent" style="display:none"></textarea>
-        <div id="editor-toolbar"></div>
-        <div id="editor"></div>
-      </div>
-
-      <div class="form-group">
-        <label for="file">파일 첨부</label>
-        <input type="file" name="uploadFile" id="file" />
-      </div>
-
-      <div class="btn-group">
-        <button type="submit" class="btn btn-submit">작성하기</button>
-        <button type="button" class="btn btn-cancel" onclick="history.back()">취소</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- 퀼 에디터 -->
-  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-  <script>
-    const toolbarOptions = [
-      ['bold', 'italic', 'underline'],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      [{ 'header': [1, 2, false] }],
-      ['link', 'image']
-    ];
-
-    const quill = new Quill('#editor', {
-      modules: {
-        toolbar: toolbarOptions
-      },
-      placeholder: '내용을 입력하세요...',
-      theme: 'snow'
-    });
-    
-    // 폼 제출 전에 quill 내용을 textarea에 복사
-    document.querySelector("form").addEventListener("submit", function () {
-      const html = quill.root.innerHTML;
-      document.querySelector("#hiddenContent").value = html;
-    });
-  </script>
-
-  <!-- 푸터 -->
-  <div th:replace="~{common/footer :: footer}"></div>
 
 </body>
 </html>
