@@ -15,14 +15,16 @@
 	        USERLIST,
 	        HEADCOUNT,
 	        PASSWORD,
-	        TYPE
+	        TYPE,
+	        COUNT
 	    ) VALUES (
 	        #{roomNo},
 	        #{roomName},
 	        #{userList},
 	        #{headCount},
 	        #{password},
-	        #{type}
+	        #{type},
+	        #{count}
 	    )
 	</insert>
     
