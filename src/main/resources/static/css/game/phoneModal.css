@@ -1,0 +1,95 @@
+.phone-modal {
+    top: 100%;
+    left: 0;
+    width: 372px; /* 가로 */
+    height: 840px; /* 세로 */
+    background: black;
+    border-radius: 40px;
+    box-shadow: 0 10px 30px white;
+    padding: 5px;
+    box-sizing: border-box;
+    z-index: 1000;
+    display: none;
+    user-select: none;
+}
+
+/* 화면 영역: 20:9 비율 */
+.phone-screen {
+    width: 100%;
+    height: calc(100% - 10px); /* 위 아래 노치 영역 제외 */
+    background: #f9f9f9;
+    border-radius: 30px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+/* 상단 노치/스피커 */
+.phone-notch {
+    width: 100px;
+    height: 2px;
+    background: #333;
+    border-radius: 10px;
+    margin: 0 auto 0px auto;
+}
+
+/* 하단 홈버튼 */
+.phone-home-button {
+    width: 60px;
+    height: 0px;
+    background: #333;
+    border-radius: 10px;
+    margin: 15px auto 0 auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* 헤더 */
+.phone-header {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #222;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 닫기 버튼 스타일 */
+#closePhoneModalBtn {
+    background: transparent;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: #555;
+    padding: 0 5px;
+    transition: color 0.2s ease;
+}
+#closePhoneModalBtn:hover {
+    color: #000;
+}
+
+/* 유저 리스트 */
+.phone-content ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+.phone-content li {
+    padding: 6px 10px;
+    border-bottom: 1px solid #ddd;
+    color: #333;
+}
+.phone-content li:last-child {
+    border-bottom: none;
+}
+.sideAD {
+	width:300px;
+}
+#togglePhoneModalBtn { 
+	width: 360px; /* 가로 */
+    height: 300px; /* 세로 */
+    background-color: rgba(0,0,0,0.1);
+    border: none;
+    color:white;
+}

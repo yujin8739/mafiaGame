@@ -8,18 +8,25 @@
 <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
 <link rel="stylesheet" th:href="@{/css/index.css}" />
 <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+<link rel="stylesheet" th:href="@{/css/game/phoneModal.css}"/>
 <title>GOD Father 0805 마피아 게임룸</title>
 </head>
 
 <body>
 	<div th:replace="~{common/header :: header}"></div>
 	<div class="home-wrapper">
+		<div class="sideAD"></div>
 		<div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
-		<div>
-			<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
-			<button onclick="sendEvent('6');">임시</button>
-			<button onclick="ready()"></button>
+		<div class="player-panel-container" style="position: relative;">
+			<div id="controlPanel">
+		    	<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
+		    </div>
+		    <div th:replace="game/phoneModal :: phoneModal(${userList})" 
+		         id="phoneModal" 
+		         style="display:none; position:absolute; top:100%; left:0; z-index:1000;"></div>  
+		    <button id="togglePhoneModalBtn" type="button" style="margin-top:10px;">휴대폰 열기</button>
 		</div>
+
 	</div>
 	<div th:replace="~{common/footer :: footer}"></div>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -253,6 +260,34 @@
 				url: '/room/ready'
 			})
 		}
+		
+		document.addEventListener("DOMContentLoaded", function() {
+		    const phoneModal = document.getElementById("phoneModal");
+		    const toggleBtn = document.getElementById("togglePhoneModalBtn");
+		    const closeBtn = phoneModal.querySelector("#closePhoneModalBtn");
+		    const controlPanel = document.getElementById("controlPanel");
+		   
+
+		    toggleBtn.addEventListener("click", () => {
+		    	 console.log(controlPanel);
+		        if(phoneModal.style.display === "none" || phoneModal.style.display === "") {
+		            phoneModal.style.display = "block";
+		            togglePhoneModalBtn.style.display = "none";
+		            controlPanel.style.display = "none";
+		        } else {
+		            phoneModal.style.display = "none";
+		            togglePhoneModalBtn.style.display = "block";
+		            controlPanel.style.display = "block";
+		        }
+		    });
+
+		    closeBtn.addEventListener("click", () => {
+		        phoneModal.style.display = "none";
+		        togglePhoneModalBtn.style.display = "block";
+		        controlPanel.style.display = "block";
+		    });
+		});
+
 	</script>
 </body>
 

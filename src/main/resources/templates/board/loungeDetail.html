@@ -248,19 +248,20 @@
         <div th:utext="${board.detail}">
           게시글 내용 출력 부분 (HTML 포함 가능)
         </div>
-		
-        <div class="attachments" th:if="${board.fileList[0].fileNo != 0}">
-		  <hr />
-		  <h6>📎 첨부파일</h6>
-		  <div class="attachment-list">
-		    <div class="attachment-item" th:object="${board.fileList[0]}">
-		      <i class="fas fa-paperclip"></i>
-		      <a th:href="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=*{changeName})}"
-		         th:text="*{originName}"
-		         th:download="*{originName}"></a>
-		    </div>
-		  </div>
-		</div>
+		<th:block th:if="${board.fileList[0].status == 'Y'}">
+	        <div class="attachments" th:if="${board.fileList[0].fileNo != 0}">
+			  <hr />
+			  <h6>📎 첨부파일</h6>
+			  <div class="attachment-list">
+			    <div class="attachment-item" th:object="${board.fileList[0]}">
+			      <i class="fas fa-paperclip"></i>
+			      <a th:href="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=*{changeName})}"
+			         th:text="*{originName}"
+			         th:download="*{originName}"></a>
+			    </div>
+			  </div>
+			</div>
+		</th:block>
 
         <div class="btn-group-custom">
           <a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
@@ -268,9 +269,12 @@
           	<a th:href="@{/board/lounge/update/{boardNo}(boardNo=${board.boardNo})}" class="btn btn-custom btn-update">수정</a>
           </th:block>
           <th:block th:if="${loginUser.userName == board.userName}">
-          	<a th:href="@{/board/lounge/delete/{boardNo}(boardNo=${board.boardNo})}" class="btn btn-custom btn-delete" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</a>
+          	<form th:action="@{/board/lounge/delete/{boardNo}(boardNo=${board.boardNo})}" method="POST">
+          		<button class="btn btn-custom btn-delete" onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</button>
+          	</form>
          	</th:block>
         </div>
+        
         
         <!-- 댓글 영역 -->
 		<div class="comments-section">
