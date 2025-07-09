@@ -15,4 +15,8 @@ public interface GameRoomService {
 	int deleteRoom(int roomNo);
 	
 	List<GameRoom> getAllRooms();
+
+	int updateReadyList(int roomNo, String updatedList);
+
+	String getReadyCount(int roomNo);
 }

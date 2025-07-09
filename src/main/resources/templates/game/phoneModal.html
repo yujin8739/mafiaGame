@@ -1,4 +1,4 @@
-<div id="phoneModal" class="phone-modal" th:fragment="phoneModal(userList)">
+<div id="phoneModal" class="phone-modal" th:fragment="phoneModal">
     <div class="phone-notch"></div>
 
     <div class="phone-screen">
@@ -7,9 +7,12 @@
             <button type="button" id="closePhoneModalBtn">&times;</button>
         </div>
         <div class="phone-content">
-            <ul>
-                <li th:each="user : ${userList}" th:text="${user.nickName}">닉네임</li>
-            </ul>
+	        <th:block th:if="${nickName != null and #lists.size(nickName) > 0}">
+                <div th:each="name : ${nickName}" class="slot">
+                    <div class="panels"></div>
+                    <input type="text" class="player-name" th:value="${name}" readonly>
+                </div>
+			</th:block>
         </div>
     </div>
 

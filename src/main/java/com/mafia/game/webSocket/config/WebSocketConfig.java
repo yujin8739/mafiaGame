@@ -31,6 +31,7 @@ public class WebSocketConfig implements WebSocketConfigurer{
 	public WebSocketHandler gameMainServer() {
 		return new GameMainServer();
 	}
+
 	
 	//요청 매핑주소와 웹소켓 서버 연결하는 핸들러 처리 
 	@Override

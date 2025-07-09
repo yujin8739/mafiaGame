@@ -20,8 +20,12 @@
 		<div class="player-panel-container" style="position: relative;">
 			<div id="controlPanel">
 		    	<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
+		    	<div style="display:flex;align-items: center;">
+			    	<button onclick="ready()">레디</button>
+					<div id="readyCount">Ready: 0</div>
+		    	</div>
 		    </div>
-		    <div th:replace="game/phoneModal :: phoneModal(${userList})" 
+		    <div th:replace="game/phoneModal :: phoneModal" 
 		         id="phoneModal" 
 		         style="display:none; position:absolute; top:100%; left:0; z-index:1000;"></div>  
 		    <button id="togglePhoneModalBtn" type="button" style="margin-top:10px;">휴대폰 열기</button>
@@ -31,12 +35,16 @@
 	<div th:replace="~{common/footer :: footer}"></div>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script th:inline="javascript">
+		//게임 실행여부
+		var isGaming = false;
+	    let isReady = false;
+	
 		// 닉네임 초기화
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
 		let userName = /*[[${loginUser.userName}]]*/ '';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
-		var job = '무직';
+		var job = 'citizen';
 		var isNight = false;
 		var user = '';
 		var usable = 'Y';
@@ -83,6 +91,7 @@
 		const messages = /*[[${messages}]]*/[];
 		const chatArea = document.querySelector("#chatArea");
 		chatLoad();
+		
 		function chatLoad() {
 		    if (isLoading || isLastPage) return;
 		    isLoading = true;
@@ -182,6 +191,8 @@
 					typeDiv.textContent = "『마피아』";
 					div.appendChild(typeDiv);
 				}
+			} else if (msgData.type === "ready" || msgData.type === "unReady") {
+				setReadyCount();
 			}	
 			
 			reciveMsg(msgData, div);
@@ -217,7 +228,7 @@
 					}
 				},
 				error: function () {
-
+					alert("이벤트를 불러오지 못했습니다.");
 				}
 			});
 		}
@@ -239,6 +250,7 @@
 		                job = jobFromServer;
 		                alert("당신의 직업은: " + job);
 		            }
+		            setReadyCount();
 		        },
 		        error: function(xhr, status, error) {
 		            console.error('요청 실패:', error);
@@ -256,12 +268,32 @@
 			contentDiv.textContent = msgData.msg;
 			div.appendChild(contentDiv);
 		}
-		
+
+	    stompClient.connect({}, function () {
+	        stompClient.subscribe("/topic/readyCount", function (message) {
+	            const count = JSON.parse(message.body).readyCount;
+	            document.getElementById("readyCount").innerText = "Ready: " + count;
+	        });
+	    });
 
 		function ready() {
-			$.ajax({
-				url: '/room/ready'
-			})
+				isReady = !isReady;
+					
+				var type = isReady ? "ready" : "unReady";
+				var msg = isReady ? nickName + "님이 준비를 했습니다." : nickName + "님이 준비를 해제했습니다.";
+				
+				const messageObj = {
+					type: type,
+					userName: nickName,
+					msg: msg,
+					roomNo: roomNo
+				};
+				
+				if (socket.readyState === WebSocket.OPEN) {
+					socket.send(JSON.stringify(messageObj));
+				} else {
+					alert("서버 연결이 끊어졌습니다.");
+				}
 		}
 		
 		document.addEventListener("DOMContentLoaded", function() {
@@ -291,6 +323,19 @@
 		    });
 		});
 
+		function setReadyCount() {
+			$.ajax({
+				url:'/room/readyCount',
+				type:'GET',
+				data:{roomNo:roomNo},
+				success: function(length){
+		            document.getElementById("readyCount").innerText = "Ready: " + length+"/"+document.querySelectorAll(".slot").length;
+				},
+				error: function () {
+					alert("준비중인 유저수를 불러오지 못했습니다.");
+				}
+			});
+		}
 	</script>
 </body>
 

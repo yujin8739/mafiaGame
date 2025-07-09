@@ -37,7 +37,7 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
-	<select id="selectRoom" resultType="GameRoom" parameterType="int">
+	<select id="selectRoom" resultType="GameRoom" parameterType="_int">
 	    SELECT *
 	    FROM GAME_ROOM
 	    WHERE ROOMNO = #{roomNo}
@@ -47,6 +47,18 @@
 	    SELECT ROOMNO, ROOMNAME, USERLIST, HEADCOUNT, PASSWORD, TYPE
 	    FROM GAME_ROOM
 	    ORDER BY ROOMNO
+	</select>
+	
+	<update id="updateReadyList">
+	    UPDATE GAME_ROOM
+	    SET READYUSER = #{userList}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
+	<select id="getReadyCount" resultType="string">
+		SELECT READYUSER
+		FROM GAME_ROOM
+		WHERE ROOMNO = #{roomNo}
 	</select>
 	
 </mapper>
