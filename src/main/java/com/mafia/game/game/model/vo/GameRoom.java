@@ -15,6 +15,7 @@ public class GameRoom {
 	private String password;//방 비밀번호
 	private String type;//방종류(랭크,일반,친선)
     private int currentUserCount; //현재 접속 인원
+    private String count; //커스텀모드 인원(마피아,시민,중립)
 	
 }
  

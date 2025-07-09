@@ -16,5 +16,8 @@ public class Job {
 	private String jobName; //직업명
 	private int jobClass; //직업 소속(시민, 마피아, 중립)
 	private String optional; //필수 직업 유무
+	private String matchCode;
+	private String probablity;
+	private String jobVisible;
 	
 }

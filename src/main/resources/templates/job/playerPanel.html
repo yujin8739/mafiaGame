@@ -11,7 +11,7 @@
 			    </div>
 			</th:block>
 	        <div class="skillDiv">
-	            <button class="skillBtn">능력 사용</button>
+	            <button class="skillBtn" th:disabled="${user != null and user.usable == 'Y'}">능력 사용</button>
 	        </div>
 	        <div id="jobData" th:attr="data-job=${job}" style="display:none;"></div>
 	    </div>
