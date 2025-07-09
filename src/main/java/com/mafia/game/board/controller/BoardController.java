@@ -52,7 +52,8 @@ public class BoardController {
 	@Value("${file.deletedLoungeImage.path}")
 	private String deletedLoungeImagePath;
 	
-
+	/*=======================================라운지============================================*/
+	
 	@GetMapping("lounge") // 라운지 - 일반 게시판
 	public String loungeBoardList(@RequestParam(defaultValue = "1") int currentPage, String type, String condition,
 			String keyword, Model model, HttpSession session) {
@@ -72,6 +73,21 @@ public class BoardController {
 		PageInfo pi = Pagination.getPageInfo(listCount, currentPage, pageLimit, boardLimit); // 페이징 처리를 위한 정보
 
 		ArrayList<Board> boardList = service.boardList(filterMap, pi); // 가져올 게시글 목록
+		
+		for(Board b : boardList) {
+			int rankPoint = b.getRankPoint();
+			if(0 <= rankPoint && rankPoint < 500) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/iron.png");
+			}else if(500 <= rankPoint && rankPoint < 1200) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/thug.png");
+			}else if(1200 <= rankPoint && rankPoint < 2000) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/agent.png");
+			}else if(2000 <= rankPoint && rankPoint < 3000) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/underBoss.png");
+			}else if(3000 <= rankPoint) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/boss.png");
+			}
+		}
 
 		model.addAttribute("boardList", boardList);
 		model.addAttribute("pi", pi);
@@ -91,7 +107,8 @@ public class BoardController {
 	public String writeLoungeBoard(Board board
 								 , MultipartFile uploadFile
 								 , HttpSession session
-								 , RedirectAttributes redirectAttributes) {
+								 , RedirectAttributes redirectAttributes
+								 , @RequestParam(defaultValue="0") int jobTypeNo) {
 		
 		BoardFile file = null; //저장될 첨부파일 1개 담을 변수 미리 선언
 		
@@ -106,6 +123,9 @@ public class BoardController {
 			
 		}
 		
+		if(board.getTypeNo() == 0) {
+			board.setTypeNo(jobTypeNo);
+		}
 		//두가지 경우 존재
 		//1)첨부 파일 1개 있을시, file != null
 		//2)첨부 파일 없을 시 , file == null
@@ -126,9 +146,8 @@ public class BoardController {
 			redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
 
 		}
-
+		
 		return "redirect:/board/lounge";
-
 	}
 
 	@GetMapping("/lounge/detail/{boardNo}") // 라운지 게시글 상세보기
@@ -310,7 +329,26 @@ public class BoardController {
 		return result;
 	}
 	
+	
+	/*=======================================갤러리============================================*/
+	
+	@GetMapping("/gallery")
+	public String galleryBoardList() {
+		return "board/gallery";
+	}
+	
+	
+	
+	
+	/*=======================================하이라이트 영상============================================*/
+	@GetMapping("/video")
+	public String videoBoardList() {
+		return "board/video";
+	}
+	
 
+	/*=======================================파일 저장 및 변경 이름 반환 메소드============================================*/
+	
 	// 변경된 파일 이름 반환 메소드
 	public String getChangedFileName(MultipartFile uploadFile) {
 		// 1.원본 파일명 추출
@@ -378,8 +416,9 @@ public class BoardController {
 		File deletedFile = new File(deletePath + changeName);
 		return originFile.renameTo(deletedFile); 
 		
-		
 	}
+	
+	
 	
 	
 	

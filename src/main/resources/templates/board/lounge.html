@@ -182,6 +182,22 @@
     .team-tabs, .role-tabs {
       display: none;
     }
+
+    .rank-badge {
+	  border: 2px solid rgba(255, 255, 255, 0.5); /* 밝은 테두리 추가 */
+	  background-color: #fff;
+	  border-radius: 50%;
+	  width: 36px;
+	  height: 36px;
+	  object-fit: cover;
+	  padding: 2px;
+	  box-shadow: 0 0 6px rgba(255, 255, 255, 0.2); /* 부드러운 외곽 효과 */
+	}
+
+    .nickname {
+      font-weight: 500;
+      color: #222;
+    }
   </style>
 </head>
 <body>
@@ -191,7 +207,7 @@
   <div class="board-wrapper">
     <div class="main-tabs mb-4" th:object="${filterMap}">
       <a th:href="@{/board/lounge}" th:class="*{type == null || type == '' || type.contains('lounge') ? 'active' : ''}">라운지</a>
-      <a th:href="@{/board/photo}">갤러리</a>
+      <a th:href="@{/board/gallery}">갤러리</a>
       <a th:href="@{/board/video}">하이라이트 영상</a>
     </div>
 
@@ -199,30 +215,36 @@
       <a th:href="@{/board/lounge}" th:class="*{type == null || type == '' ? 'active' : ''}">전체</a>
       <a th:href="@{/board/lounge(type='lounge_free')}" th:class="*{type == 'lounge_free' ? 'active' : ''}">자유</a>
       <a th:href="@{/board/lounge(type='lounge_play')}" th:class="*{type == 'lounge_play' ? 'active' : ''}">플레이</a>
-      <a th:href="@{/board/lounge(type='lounge_job')}" th:class="*{type == 'lounge_job' ? 'active' : ''}">직업</a>
+      <a th:href="@{/board/lounge(type='lounge_job')}" th:class="*{type != null and type.contains('lounge_job') ? 'active' : ''}">직업</a>
     </div>
 
     <!-- 직업 탭 선택 시 표시될 팀 탭 -->
-    <div id="teamTabs" class="team-tabs">
-      <a href="#" class="team-tab active" data-team="all">전체</a>
-      <a href="#" class="team-tab" data-team="mafia">팀 마피아</a>
-      <a href="#" class="team-tab" data-team="citizen">팀 시민</a>
-      <a href="#" class="team-tab" data-team="third">팀 제3세력</a>
+    <div id="teamTabs" class="team-tabs" th:object="${filterMap}">
+      <a th:href="@{/board/lounge(type='lounge_job')}" class="team-tab" data-team="all"
+      th:classappend="*{type == 'lounge_job' ? ' active' : ''}">전체</a>
+      <a href="#" class="team-tab" data-team="mafia" id="team-mafia">팀 마피아</a>
+      <a href="#" class="team-tab" data-team="citizen" id="team-citizen">팀 시민</a>
+      <a href="#" class="team-tab" data-team="third" id="team-third">팀 제3세력</a>
     </div>
 
     <!-- 각 팀별 직업 탭 -->
-    <div id="roleTabs-mafia" class="role-tabs">
-      <a href="#" data-job="mafia">마피아</a>
+    <div id="roleTabs-mafia" class="role-tabs" th:object="${filterMap}">
+      <a th:href="@{/board/lounge(type='lounge_job_mafia')}" data-job="mafia" id="mafia"
+      th:class="*{type == 'lounge_job_mafia' ? 'active' : ''}">마피아</a>
     </div>
 
-    <div id="roleTabs-citizen" class="role-tabs">
-      <a href="#" data-job="police">경찰</a>
-      <a href="#" data-job="doctor">의사</a>
-      <a href="#" data-job="spiritualist">영매사</a>
+    <div id="roleTabs-citizen" class="role-tabs" th:object="${filterMap}">
+      <a th:href="@{/board/lounge(type='lounge_job_police')}" data-job="police" id="police"
+      th:class="*{type == 'lounge_job_police' ? 'active' : ''}">경찰</a>
+      <a th:href="@{/board/lounge(type='lounge_job_doctor')}" data-job="doctor" id="doctor"
+      th:class="*{type == 'lounge_job_doctor' ? 'active' : ''}">의사</a>
+      <a th:href="@{/board/lounge(type='lounge_job_spiritualist')}" data-job="spiritualist" id="spiritualist"
+      th:class="*{type == 'lounge_job_spiritualist' ? 'active' : ''}">영매사</a>
     </div>
 
-    <div id="roleTabs-third" class="role-tabs">
-      <a href="#" data-job="disruptor">훼방꾼</a>
+    <div id="roleTabs-third" class="role-tabs" th:object="${filterMap}">
+      <a th:href="@{/board/lounge(type='lounge_job_disruptor')}" data-job="disruptor" id="disruptor"
+      th:class="*{type == 'lounge_job_disruptor' ? 'active' : ''}">훼방꾼</a>
     </div>
 
     <!-- 검색창 -->
@@ -251,22 +273,33 @@
           <th>조회수</th>
         </tr>
       </thead>
-      <tbody>
-        <tr th:if="${#lists.isEmpty(boardList)}">
-          <td colspan="5">조회된 게시물이 없습니다</td>
-        </tr>
-        <tr th:each="b : ${boardList}">
-          <td><span class="board-tag" th:text="${b.displayName}"></span></td>
-          <td style="text-align: left;"><a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}" class="post-title" th:text="${b.title}"></a></td>
-          <td th:text="${b.nickName}"></td>
-          <td th:text="${b.createDate}"></td>
-          <td th:text="${b.viewCount}"></td>
-        </tr>
-      </tbody>
+      <!-- 개선된 자유게시판 테이블 부분만 수정한 버전 -->
+		<tbody>
+      <tr th:if="${#lists.isEmpty(boardList)}">
+        <td colspan="5">조회된 게시물이 없습니다</td>
+      </tr>
+      <tr th:each="b : ${boardList}">
+        <td>
+          <span class="board-tag" th:text="${b.displayName}"></span>
+        </td>
+        <td style="text-align: left;">
+		  <a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}" class="post-title" th:text="${b.title}"></a>
+		  <span th:if="${b.fileList[0].status == 'Y'}">📎</span>
+		</td>
+        <td style="text-align: center;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <img th:src="${b.profileUrl}" class="rank-badge" alt="프로필" />
+            <span class="nickname" th:text="${b.nickName}"></span>
+          </div>
+        </td>
+        <td th:text="${b.createDate}"></td>
+        <td th:text="${b.viewCount}"></td>
+      </tr>
+    </tbody>
     </table>
 
     <!-- 페이지네이션 -->
-    <ul class="pagination" th:if="${pi.endPage != 0}">
+    <ul class="pagination" th:if="${pi.endPage != 0}" th:object="${filterMap}">
       <li th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">
         <a class="page-link" th:href="@{/board/lounge(currentPage=${i},type=*{type},condition=*{condition},keyword=*{keyword})}" th:text="${i}"></a>
       </li>
@@ -278,42 +311,52 @@
   <script>
     $(function () {
       // 직업 탭이면 팀 탭 보여줌
-      const isJobTabActive = window.location.href.includes("type=lounge_job");
+      const currentUrl = window.location.href
+      const isJobTabActive = currentUrl.includes("type=lounge_job");
       if (isJobTabActive) {
-        $("#teamTabs").show();
+        $("#teamTabs").show();// 전체, 팀 마피아, 팀 시민, 팀 제 3세력 탭 보여주기
       }
+      
 
-      $(".sub-tabs a").on("click", function () {
-        if ($(this).attr("href").includes("lounge_job")) {
-          $("#teamTabs").fadeIn(200);
-        } else {
-          $("#teamTabs").fadeOut(200);
-          $(".role-tabs").hide();
+      $(".sub-tabs a").on("click", function () { //전체, 자유, 플레이, 직업 클릭시
+        if ($(this).attr("href").includes("lounge_job")) { // 직업 클릭했다면
+          $("#teamTabs").fadeIn(200); //전체, 팀 마피아, 팀 시민, 팀 제 3세력 나올 수 있도록 (div영역)
+        } else {// 전체, 자유, 플레이 클릭했다면
+          $("#teamTabs").fadeOut(200); //전체, 팀 마피아, 팀 시민, 팀 제 3세력 사라질 수 있도록
+          $(".role-tabs").hide(); //마피아,시민,경찰,의사 등 직업 탭 숨길 수 있도록
         }
       });
 
-      $(".team-tab").on("click", function (e) {
-        e.preventDefault();
-        $(".team-tab").removeClass("active");
-        $(this).addClass("active");
+      $(".team-tab").on("click", function (e) { //전체, 팀 마피아, 팀 시민, 팀 제 3세력 클릭했을시 (a태그)
+        //e.preventDefault(); //일단 이동 막기
+        $(".team-tab").removeClass("active"); 
+        $(this).addClass("active");  // 전체, 팀 마피아, 팀 시민, 팀 제 3세력 클릭한것만 활성화시키기
 
-        const team = $(this).data("team");
-        $(".role-tabs").hide();
-        if (team === "mafia") $("#roleTabs-mafia").fadeIn(200);
-        else if (team === "citizen") $("#roleTabs-citizen").fadeIn(200);
-        else if (team === "third") $("#roleTabs-third").fadeIn(200);
+        const team = $(this).data("team"); //마피아 팀인지, 시민 팀인지, 제3세력 팀인지 문자열 출력(all,mafia,citizen,third)
+        $(".role-tabs").hide(); //직업 div 숨기기
+        if (team === "mafia") $("#roleTabs-mafia").fadeIn(200); //마피아 팀이라면 마피아 div 나오게 하기
+        else if (team === "citizen") $("#roleTabs-citizen").fadeIn(200); //시민 팀이라면 시민 div 나오게 하기
+        else if (team === "third") $("#roleTabs-third").fadeIn(200); //제 3세력 팀이라면 제 3세력 div 나오게 하기
+      });
+      
+      $("#roleTabs-mafia a").each(function(index,el){ //마피아 직업군 선택했으면 팀 마피아 탭 활성화시키기
+    	  if($(el).attr('class') === 'active'){
+			$("#team-mafia").click();    		  
+    	  }
+      });
+      
+      $("#roleTabs-citizen a").each(function(index,el){ //시민 직업군 선택했으면 팀 마피아 탭 활성화시키기
+    	  if($(el).attr('class') === 'active'){
+			$("#team-citizen").click();    		  
+    	  }
+      });
+      
+      $("#roleTabs-third a").each(function(index,el){ //제3세력 직업군 선택했으면 팀 마피아 탭 활성화시키기
+    	  if($(el).attr('class') === 'active'){
+			$("#team-third").click();    		  
+    	  }
       });
 
-      $(".role-tabs a").on("click", function (e) {
-        e.preventDefault();
-        $(".role-tabs a").removeClass("active");
-        $(this).addClass("active");
-
-        const selectedJob = $(this).data("job");
-        const url = new URL(window.location.href);
-        url.searchParams.set("job", selectedJob);
-        window.location.href = url.toString();
-      });
     });
   </script>
 </body>
