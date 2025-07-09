@@ -44,4 +44,11 @@ public class GameRoomDao {
 	public String getReadyCount(SqlSessionTemplate sqlSession, int roomNo) {
 		return sqlSession.selectOne("gameRoomMapper.getReadyCount",roomNo);
 	}
+
+	public int updateRoomMaster(SqlSessionTemplate sqlSession, int roomNo, String userName) {
+		Map<String, Object> param = new java.util.HashMap<>();
+		param.put("roomNo",roomNo);
+		param.put("userName", userName);
+		return sqlSession.update("gameRoomMapper.updateRoomMaster",param);
+	}
 }

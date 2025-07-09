@@ -80,6 +80,9 @@ public class GameRoomManager {
                         //게임 진행중에는 유저 리스트 업데이트 막기
                         if(!room.getIsGaming().equals('Y')) {
 	                        gameRoomService.updateUserList(roomNo, updatedList);
+	                        if(userList.size() >= 1) { //유저 갱신될때마다 방장 변경
+	                        	gameRoomService.updateRoomMaster(roomNo, userList.get(0));
+	                        }
 	                        gameRoomService.updateReadyList(roomNo, updateReady);
                         }
                     }
@@ -117,10 +120,14 @@ public class GameRoomManager {
             try {
                 String updatedList = new ObjectMapper().writeValueAsString(users);
                 gameRoomService.updateUserList(roomNo, updatedList);
+                if(users.size() >= 1) {//유저 갱신될때마다 방장 변경
+                	gameRoomService.updateRoomMaster(roomNo, users.get(0));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        
     }
     
     public void addReadyToRoom(int roomNo, String userName) { 

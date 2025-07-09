@@ -39,6 +39,12 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
+	<update id="updateRoomMaster">
+		UPDATE GAME_ROOM
+	    SET MASTER = #{userName}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
 	<select id="selectRoom" resultType="GameRoom" parameterType="_int">
 	    SELECT *
 	    FROM GAME_ROOM

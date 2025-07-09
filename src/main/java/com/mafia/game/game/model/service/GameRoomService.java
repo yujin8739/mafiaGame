@@ -19,4 +19,6 @@ public interface GameRoomService {
 	int updateReadyList(int roomNo, String updatedList);
 
 	String getReadyCount(int roomNo);
+
+	int updateRoomMaster(int roomNo, String string);
 }

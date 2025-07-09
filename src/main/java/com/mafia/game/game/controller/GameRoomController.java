@@ -61,10 +61,15 @@ public class GameRoomController {
         }
         
         int result = gameRoomService.createRoom(room);
-        
+        System.out.println(room.getPassword());
         if (result > 0) {
             redirectAttributes.addFlashAttribute("msg", "방이 성공적으로 생성되었습니다!");
-            return "redirect:/";
+            System.out.println(room.getPassword());
+            if(room.getPassword()==null || room.getPassword().isEmpty()) {
+            	return "redirect:/room/"+room.getRoomNo()+"/"+"0000";
+            } else {
+            	return "redirect:/room/"+room.getRoomNo()+"/"+room.getPassword();	
+            }
         } else {
             redirectAttributes.addFlashAttribute("msg", "방 생성에 실패했습니다.");
             return "redirect:/room/createRoom";
@@ -147,11 +152,7 @@ public class GameRoomController {
             return "redirect:/";
         }
 
-        // 메시지 로딩
-//        List<Message> messages = chatService.getMessages(roomNo);
-
         model.addAttribute("room", room);
-//        model.addAttribute("messages", messages);
         return "game/gameRoom";
     }
     

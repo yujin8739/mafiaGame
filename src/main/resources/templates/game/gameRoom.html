@@ -20,14 +20,19 @@
 		<div class="player-panel-container" style="position: relative;">
 			<div id="controlPanel">
 		    	<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
-		    	<div style="display:flex;align-items: center;">
-			    	<button onclick="ready()">레디</button>
-					<div id="readyCount">Ready: 0</div>
-		    	</div>
+		    	<div class="readyDiv" style="display:flex; align-items: center;">
+				    <button class="readyBtn"
+				            th:if="${room.master == loginUser.userName}"
+				            onclick="startGame()">Start</button>
+				    <button class="readyBtn"
+				            th:unless="${room.master == loginUser.userName}"
+				            onclick="ready()">Ready</button>
+				    <div id="readyCount">Ready: 0</div>
+				</div>
 		    </div>
 		    <div th:replace="game/phoneModal :: phoneModal" 
 		         id="phoneModal" 
-		         style="display:none; position:absolute; top:100%; left:0; z-index:1000;"></div>  
+		         style="display:none; position:absolute; top:100%; left:0; "></div>  
 		    <button id="togglePhoneModalBtn" type="button" style="margin-top:10px;">휴대폰 열기</button>
 		</div>
 
@@ -38,6 +43,7 @@
 		//게임 실행여부
 		var isGaming = false;
 	    let isReady = false;
+	    let readyCount = 0;
 	
 		// 닉네임 초기화
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
@@ -46,10 +52,7 @@
 		const input = document.querySelector("#chat");
 		var job = 'citizen';
 		var isNight = false;
-		var user = '';
-		var usable = 'Y';
-		var dDay = 1;
-		
+
 		//블록검색용
 		let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
 		const pageSize = 20; // 한 블록에 몇 개의 메시지를 가져올지
@@ -193,7 +196,9 @@
 				}
 			} else if (msgData.type === "ready" || msgData.type === "unReady") {
 				setReadyCount();
-			}	
+			} else if (msgData.type === "start") {
+				setStart();
+			}
 			
 			reciveMsg(msgData, div);
 			
@@ -201,7 +206,7 @@
 		};
 
 		//이벤트 발생
-		function sendEvent(eventNo, target) {
+		function sendEvent(eventNo) {
 
 			$.ajax({
 				url: '/chat/selectEvent',
@@ -245,10 +250,10 @@
 		        	
 		        	// HTML 삽입 이후에 DOM에서 job 값을 읽어옴
 		            var jobFromServer = $('#jobData').data('job');
-		        	var user = $('#user').data('')
 		            if (jobFromServer) {
 		                job = jobFromServer;
 		                alert("당신의 직업은: " + job);
+		                console.log("직업 업데이트됨:", job);
 		            }
 		            setReadyCount();
 		        },
@@ -269,12 +274,7 @@
 			div.appendChild(contentDiv);
 		}
 
-	    stompClient.connect({}, function () {
-	        stompClient.subscribe("/topic/readyCount", function (message) {
-	            const count = JSON.parse(message.body).readyCount;
-	            document.getElementById("readyCount").innerText = "Ready: " + count;
-	        });
-	    });
+
 
 		function ready() {
 				isReady = !isReady;
@@ -294,6 +294,24 @@
 				} else {
 					alert("서버 연결이 끊어졌습니다.");
 				}
+		}
+		function startGame() {
+			if(readyCount === (document.querySelectorAll(".slot").length-1)){
+				const messageObj = {
+					type: "start",
+					userName: "시스템",
+					msg: "게임이 시작되었습니다.",
+					roomNo: roomNo
+				};
+				
+				if (socket.readyState === WebSocket.OPEN) {
+					socket.send(JSON.stringify(messageObj));
+				} else {
+					alert("서버 연결이 끊어졌습니다.");
+				}
+			} else {
+				alert("모든 플레이어가 준비되지 않았습니다.");
+			}
 		}
 		
 		document.addEventListener("DOMContentLoaded", function() {
@@ -329,10 +347,26 @@
 				type:'GET',
 				data:{roomNo:roomNo},
 				success: function(length){
-		            document.getElementById("readyCount").innerText = "Ready: " + length+"/"+document.querySelectorAll(".slot").length;
+					readyCount = length;
+		            document.getElementById("readyCount").innerText = "Ready: " + length+"/"+(document.querySelectorAll(".slot").length-1);
 				},
 				error: function () {
 					alert("준비중인 유저수를 불러오지 못했습니다.");
+				}
+			});
+		}
+		
+		function setStart() {
+			$.ajax({
+				url:'/room/setStart',
+				type:'POST',
+				data:{roomNo:roomNo},
+				success:function(){
+					isStart = true;
+					const readyDiv = document.getElementById('readyDiv');
+					readyDiv.style.display = "none";
+				},error: function () {
+					alert("게임 시작을 실패했습니다. 새로고침후 다시 시도해주세요.");
 				}
 			});
 		}
