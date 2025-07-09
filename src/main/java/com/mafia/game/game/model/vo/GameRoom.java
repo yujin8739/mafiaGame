@@ -17,6 +17,7 @@ public class GameRoom {
     private int currentUserCount; //현재 접속 인원
     private String isGaming;//게임중인지 표시
     private String readyUser;//게임 시작 준비중인 유저
+    private String count; //커스텀모드 인원(마피아,시민,중립)
 	
 }
  

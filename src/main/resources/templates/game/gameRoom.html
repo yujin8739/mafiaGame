@@ -46,7 +46,10 @@
 		const input = document.querySelector("#chat");
 		var job = 'citizen';
 		var isNight = false;
-
+		var user = '';
+		var usable = 'Y';
+		var dDay = 1;
+		
 		//블록검색용
 		let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
 		const pageSize = 20; // 한 블록에 몇 개의 메시지를 가져올지
@@ -198,7 +201,7 @@
 		};
 
 		//이벤트 발생
-		function sendEvent(eventNo) {
+		function sendEvent(eventNo, target) {
 
 			$.ajax({
 				url: '/chat/selectEvent',
@@ -242,10 +245,10 @@
 		        	
 		        	// HTML 삽입 이후에 DOM에서 job 값을 읽어옴
 		            var jobFromServer = $('#jobData').data('job');
+		        	var user = $('#user').data('')
 		            if (jobFromServer) {
 		                job = jobFromServer;
 		                alert("당신의 직업은: " + job);
-		                console.log("직업 업데이트됨:", job);
 		            }
 		            setReadyCount();
 		        },

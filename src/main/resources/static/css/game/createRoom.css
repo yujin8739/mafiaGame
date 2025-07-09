@@ -83,3 +83,16 @@ form.container button[type="submit"]:hover {
   color: #f44;
   text-align: center;
 }
+
+.roomSet {
+	display: flex;
+	gap: 20px;
+	font-weight: normal;
+}
+
+.roomSet label {
+    display: flex; /* 각 라디오 버튼과 텍스트를 한 줄에 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    white-space: nowrap; /* "사용자 설정"이 줄바꿈되지 않도록 */
+    gap: 5px; /* 라디오 버튼과 텍스트 사이의 간격 */
+}

@@ -82,12 +82,16 @@ public class JobController {
 			playerInfo(jnList.get(i), pList.get(i), roomNo);
 		}
 		ArrayList<Player> playerList = service.player(roomNo);
+		Player user = new Player();
 		for(Player p : playerList) {
-			System.out.println(p);
+			if(p.getUserName().equals(userName)) {
+				user = p;
+				break;
+			}
 		}
-		model.addAttribute("player", playerList);
-		model.addAttribute("nickName", nList);
-		model.addAttribute("job", job);
+		model.addAttribute("player", playerList); //전체 플레이어 정보
+		model.addAttribute("nickName", nList); //전체 플레이어 닉네임
+		model.addAttribute("job", job); //유저 직업
 		
 		return "job/playerPanel :: playerPanelFragment";
 		

@@ -49,7 +49,7 @@ public class GameRoomController {
 
     @PostMapping("/create")
     public String createRoom(@ModelAttribute GameRoom room, Model model, RedirectAttributes redirectAttributes) {
-        
+        System.out.println(room.getCount());
         if (room.getRoomName() == null || room.getRoomName().trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("msg", "방 이름을 입력해주세요.");
             return "redirect:/room/createRoom";
