@@ -30,17 +30,16 @@
 
     <!-- 일러스트 전체 조회 -->
     <select id="selectAllArtworks" resultType="Shop">
-        SELECT 
-            ART_ID,
-            TITLE,
-            DESCRIPTION,
-            IMAGEPATH,
-            SELLERNAME,
-            PRICE,
-            STATUS,
-            UPLOADDATE
+        SELECT * 
         FROM USER_ARTWORK
-        ORDER BY ART_ID DESC
+        ORDER BY ARTID DESC
     </select>
+    
+    <!-- 상세 페이지 조회용  -->
+    <select id="selectArtworkById" resultType="Shop" parameterType="int">
+    SELECT * 
+    FROM USER_ARTWORK
+    WHERE ARTID = #{artId}
+	</select>
 
 </mapper>
