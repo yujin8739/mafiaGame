@@ -1,5 +1,6 @@
 package com.mafia.game.job.model.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.mafia.game.job.model.dao.JobDao;
+import com.mafia.game.job.model.vo.Player;
 
 @Service
 public class JobServiceImpl implements JobService{
@@ -41,6 +43,21 @@ public class JobServiceImpl implements JobService{
 	@Override
 	public String userNickName(String userName) {
 		return dao.userNickName(sqlSession, userName);
+	}
+	
+	@Override
+	public Integer jobNo(String job) {
+		return dao.jobNo(sqlSession, job);
+	}
+	
+	@Override
+	public void playerInfo(int jobNo, String playerName, int roomNo) {
+		dao.playerInfo(sqlSession, jobNo, playerName, roomNo);
+	}
+	
+	@Override
+	public ArrayList<Player> player(int roomNo) {
+		return dao.player(sqlSession, roomNo);
 	}
 	
 }

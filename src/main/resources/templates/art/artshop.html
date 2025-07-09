@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>일러스트 상점</title>
+  <meta charset="UTF-8">
+  <title>일러스트 상점</title>
   <!-- 부트스트랩 4.5.2 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
   <!-- jQuery CDN -->
@@ -10,32 +10,44 @@
   
   <link rel="stylesheet" th:href="@{/css/common/header.css}" />
   <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-
+  
+  <style>
+    .card-img-top {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+  </style>
 </head>
 <body>
-	<div th:replace="common/header :: header"></div>
-	<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>일러스트 상점</h2>
-    <a href="/artshop/uploadForm" class="btn btn-primary">상품 등록</a>
-  </div>
-  
-  <div class="row">
-    <div th:each="item : ${shopList}" class="col-md-4 mb-3">
-      <div class="card">
-        <img th:src="@{${item.imagePath}}" class="card-img-top" alt="작품 이미지" />
-        <div class="card-body">
-          <h5 class="card-title" th:text="${item.title}">작품 제목</h5>
-          <p class="card-text" th:text="${item.description}">설명</p>
-          <p class="card-text text-right font-weight-bold" th:text="${item.price} + ' 원'">가격</p>
+  <!-- Header 부분 -->
+  <div th:replace="common/header :: header"></div>
+
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>일러스트 상점</h2>
+      <a href="/artshop/uploadForm" class="btn btn-primary">상품 등록</a>
+    </div>
+    
+    <!-- 상품 목록 부분 -->
+    <div class="row">
+      <div th:each="item : ${shopList}" class="col-md-4 mb-3">
+        <div class="card">
+          <!-- 이미지 클릭 시 해당 상품의 상세 페이지로 이동하도록 <a> 태그로 감싸기 -->
+          <a th:href="@{'/artshop/detail/' + ${item.artId}}">
+            <img th:src="@{${item.imagePath}}" class="card-img-top" alt="작품 이미지" />
+          </a>
         </div>
+          <div class="card-body">
+            <h5 class="card-title" th:text="${item.title}">작품 제목</h5>
+            <p class="card-text" th:text="${item.description}">설명</p>
+            <p class="card-text text-right font-weight-bold" th:text="${item.price} + ' 원'">가격</p>
+          </div>
       </div>
     </div>
   </div>
-</div>
-	
-	
-	
-	<div th:replace="common/footer :: footer"></div>
+  
+  <!-- Footer 부분 -->
+  <div th:replace="common/footer :: footer"></div>
 </body>
 </html>

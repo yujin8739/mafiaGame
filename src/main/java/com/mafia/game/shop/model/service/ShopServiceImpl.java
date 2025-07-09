@@ -1,5 +1,7 @@
 package com.mafia.game.shop.model.service;
 
+import java.util.List;
+
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,4 +24,16 @@ public class ShopServiceImpl implements ShopService {
     public int insertArtwork(Shop shop) {
         return shopDao.insertArtwork(sqlSession, shop);
     }
+    
+    @Override
+    public List<Shop> selectAllArtworks() {
+        return shopDao.selectAllArtworks(sqlSession);
+    }
+    @Override
+    public Shop selectArtworkById(int artId) {
+        return shopDao.selectArtworkById(sqlSession, artId);
+    }
+    
+    
+    
 }
