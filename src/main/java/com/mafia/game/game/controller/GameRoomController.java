@@ -178,5 +178,11 @@ public class GameRoomController {
         }
     	return users.size();
     }
+    
+    @GetMapping("/reloadRoom")
+    @ResponseBody
+    public GameRoom reloadRoom(@RequestParam int roomNo) {
+    	return gameRoomService.selectRoom(roomNo);
+    }
 
 }

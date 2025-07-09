@@ -63,10 +63,29 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
+	<update id="updateStart">
+	    UPDATE GAME_ROOM
+	    SET READYUSER = '[]',
+	    	ISGAMING = 'Y',
+	    	JOB = #{updatedJob}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
 	<select id="getReadyCount" resultType="string">
 		SELECT READYUSER
-		FROM GAME_ROOM
+		FROM GAME_ROOM	
 		WHERE ROOMNO = #{roomNo}
 	</select>
 	
+	<!-- 게임시작 시 직업 선택 -->
+	<select id="selectRandomJobs" parameterType="hashmap" resultType="Job">
+        SELECT
+            JOBNO, SKILLNO, JOBNAME, JOBCLASS, OPTIONAL,
+            MATCHCODE, PROBABILITY, JOBVISIBLE
+        FROM TABLE(F_GET_RANDOM_JOBS(
+            p_mafia_count   => #{mafiaCount},
+            p_citizen_count => #{citizenCount},
+            p_neutral_count => #{neutralCount}
+        ))
+    </select>
 </mapper>

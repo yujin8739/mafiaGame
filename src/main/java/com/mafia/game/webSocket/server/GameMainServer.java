@@ -69,17 +69,38 @@ public class GameMainServer extends TextWebSocketHandler {
                 	roomManager.addReadyToRoom(roomNo, userName);
                 } else if(type != null && type.equals("unReady")) {
                 	roomManager.removeReady(roomNo, userName);
+                } else if(type != null && type.equals("start")) {
+                	roomManager.updateStart(roomNo);
                 }
                 s.sendMessage(new TextMessage(json));
             }
         }
     }
-    
+
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         int roomNo = (int) session.getAttributes().get("roomNo");
+        Member loginUser = (Member) session.getAttributes().get("loginUser");
+        String nickName =loginUser.getNickName();
+        
+        Message msg = new Message(roomNo, UUID.randomUUID().toString(), "leave", nickName +"님이 퇴장하셨습니다.", nickName, new Date());
+        roomManager.sendMessage(msg);
+        
         roomManager.removeSession(roomNo, session, status);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("userName", nickName);
+        payload.put("msg", msg.getMsg());
+        payload.put("type", msg.getType());
+        
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(payload);
+        
+        for (WebSocketSession s : roomManager.getSessions(roomNo)) {
+            if (s.isOpen() && !s.getId().equals(session.getId())) {
+                s.sendMessage(new TextMessage(json));
+            }
+        }
     }
 
     private int extractRoomNo(WebSocketSession session) {

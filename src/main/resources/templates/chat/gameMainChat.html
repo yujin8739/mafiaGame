@@ -69,7 +69,7 @@
 				// 마피아 메시지
 				div.classList.add("mafia-bubble"); // 흐린 배경용 클래스
 				insertMsg(msgData, div);
-			} else if (msgData.type === "ready" || msgData.type === "unReady"){
+			} else if (msgData.type === "ready" || msgData.type === "unReady" || msgData.type === "start"){
 				div.classList.add("ready-bubble"); // 흐린 배경용 클래스
 				insertMsg(msgData, div);
 			} else {
