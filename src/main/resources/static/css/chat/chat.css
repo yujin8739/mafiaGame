@@ -53,6 +53,11 @@
 	border: 1px dashed gray;
 }
 
+.ready-bubble {
+	background-color: rgba(120, 120, 120, 0.3);
+	border: 1px dashed green;
+}
+
 .mafia-bubble{
 	background-color: rgba(120, 120, 120, 0.3);
 	border: 1px dashed red;

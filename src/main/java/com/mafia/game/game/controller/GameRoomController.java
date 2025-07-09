@@ -164,5 +164,18 @@ public class GameRoomController {
     	RowBounds rowBounds = new RowBounds(offset, size);
     	return chatService.getMessages(roomNo, rowBounds);
     }
+    
+    @GetMapping("/readyCount")
+    @ResponseBody
+    public int getReadyCount(@RequestParam int roomNo) {
+    	String readyUsers = gameRoomService.getReadyCount(roomNo);
+    	List<String> users = new ArrayList<>();
+        try {
+            users = new ObjectMapper().readValue(readyUsers, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+        }
+    	return users.size();
+    }
 
 }

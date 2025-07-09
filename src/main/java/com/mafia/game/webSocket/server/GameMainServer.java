@@ -51,6 +51,10 @@ public class GameMainServer extends TextWebSocketHandler {
         // 해당 방 세션 목록 가져오기
         int roomNo = msg.getRoomNo();
         
+        Member loginUser = (Member) session.getAttributes().get("loginUser");
+        String userName = loginUser.getUserName(); //이게 진짜 유저 id 나중에 시간나면 msg.userName은 닉네임으로 바꿔주기
+        
+        String type = msg.getType();
         Map<String, Object> payload = new HashMap<>();
         payload.put("userName", msg.getUserName()); // nickName
         payload.put("msg", msg.getMsg());     // 메시지 본문
@@ -61,6 +65,11 @@ public class GameMainServer extends TextWebSocketHandler {
         // 브로드캐스트
         for (WebSocketSession s : roomManager.getSessions(roomNo)) {
             if (s.isOpen()) {
+                if(type != null && type.equals("ready")) {
+                	roomManager.addReadyToRoom(roomNo, userName);
+                } else if(type != null && type.equals("unReady")) {
+                	roomManager.removeReady(roomNo, userName);
+                }
                 s.sendMessage(new TextMessage(json));
             }
         }

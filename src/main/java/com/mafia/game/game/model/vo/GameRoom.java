@@ -15,6 +15,8 @@ public class GameRoom {
 	private String password;//방 비밀번호
 	private String type;//방종류(랭크,일반,친선)
     private int currentUserCount; //현재 접속 인원
+    private String isGaming;//게임중인지 표시
+    private String readyUser;//게임 시작 준비중인 유저
 	
 }
  
