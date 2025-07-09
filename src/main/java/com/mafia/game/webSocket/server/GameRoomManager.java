@@ -19,6 +19,7 @@ import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.member.model.vo.Member;
+import com.mafia.game.job.model.vo.Job;
 
 /**
  * 게임룸을 관리하는 내부 클래스
@@ -91,7 +92,6 @@ public class GameRoomManager {
                 }
             }
 
-            System.out.println("dd");
             // 메모리에서도 제거
             if (sessions.isEmpty()) {
                 roomSessions.remove(roomNo);
@@ -179,6 +179,70 @@ public class GameRoomManager {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+	}
+
+	public void updateStart(int roomNo) {//게임 시작중 처리, 준비중 인원 초기화
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		List<String> users = new ArrayList<>();
+        
+        if (room == null) {
+            System.out.println("존재하지 않는 방 번호입니다: " + roomNo);  // 혹은 로깅 처리
+            return; // 방이 없으면 더 이상 진행하지 않음
+        }
+        try {
+        	users = new ObjectMapper().readValue(room.getUserList(), new TypeReference<List<String>>() {});
+    		int totalPlayers = users.size();
+    		
+    		List<Integer> jobCounts = new ObjectMapper().readValue(room.getCount(), new TypeReference<List<Integer>>() {});
+    		
+    		int mafiaCount = 0; //마피아 인원
+    	    int citizenCount = 0; //시민 인원
+    	    int neutralCount = 0; //중립 인원
+    	    
+    		if(jobCounts.size()<1) {
+    			// 일반 모드일때 
+	    	    if (totalPlayers == 6) {
+	    	        mafiaCount = 2; citizenCount = 4; neutralCount = 0;
+	    	    } else if (totalPlayers == 7) {
+	    	        mafiaCount = 2; citizenCount = 5; neutralCount = 0;
+	    	    } else if (totalPlayers == 8) {
+	    	        mafiaCount = 2; citizenCount = 5; neutralCount = 1;
+	    	    } else if (totalPlayers == 9) {
+	    	        mafiaCount = 3; citizenCount = 6; neutralCount = 0;
+	    	    } else if (totalPlayers == 10) {
+	    	        mafiaCount = 3; citizenCount = 6; neutralCount = 1;
+	    	    } else if (totalPlayers == 11) {
+	    	        mafiaCount = 3; citizenCount = 7; neutralCount = 1;
+	    	    } else if (totalPlayers == 12) {
+	    	        mafiaCount = 3; citizenCount = 8; neutralCount = 1;
+	    	    } else if (totalPlayers == 13) {
+	    	        mafiaCount = 4; citizenCount = 9; neutralCount = 0;
+	    	    } else if (totalPlayers == 14) {
+	    	        mafiaCount = 4; citizenCount = 9; neutralCount = 1;
+	    	    } else if (totalPlayers == 15) {
+	    	        mafiaCount = 4; citizenCount = 10; neutralCount = 1;
+	    	    } else {
+	    	        // 6~15명 범위를 벗어나는 경우에 대한 예외 처리
+	    	        throw new IllegalArgumentException("게임은 6명에서 15명까지만 가능합니다.");
+	    	    }
+    		} else {
+    			//커스텀 모드 일때 
+    			mafiaCount = jobCounts.get(0);
+    			citizenCount = jobCounts.get(1);
+    			neutralCount = jobCounts.get(2);
+    		}
+    		
+        	List<Job> jobList = gameRoomService.selectRandomJobs(mafiaCount, citizenCount, neutralCount);
+        	List<Integer> jobArr = new ArrayList<>();
+        	for (Job job : jobList) {
+        	    // 각 Job 객체에서 jobNo를 가져와 새로운 리스트에 추가합니다.
+        		jobArr.add(job.getJobNo());
+        	}
+        	String updatedJob = new ObjectMapper().writeValueAsString(jobArr);
+        	int result = gameRoomService.updateStart(roomNo,updatedJob);
+        } catch (Exception e) {
+        	e.printStackTrace();
         }
 	}
 

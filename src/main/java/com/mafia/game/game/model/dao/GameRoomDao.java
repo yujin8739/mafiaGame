@@ -7,6 +7,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.job.model.vo.Job;
 
 @Repository
 public class GameRoomDao {
@@ -50,5 +51,20 @@ public class GameRoomDao {
 		param.put("roomNo",roomNo);
 		param.put("userName", userName);
 		return sqlSession.update("gameRoomMapper.updateRoomMaster",param);
+	}
+
+	public int updateStart(SqlSessionTemplate sqlSession, int roomNo, String updatedJob) {
+		Map<String, Object> param = new java.util.HashMap<>();
+		param.put("roomNo",roomNo);
+		param.put("updatedJob",updatedJob);
+		return sqlSession.update("gameRoomMapper.updateStart", param);
+	}
+
+	public List<Job> selectRandomJobs(SqlSessionTemplate sqlSession, int mafiaCount, int citizenCount, int neutralCount) {
+		Map<String, Object> param = new java.util.HashMap<>();
+		param.put("mafiaCount", mafiaCount);
+		param.put("citizenCount", citizenCount);
+		param.put("neutralCount", neutralCount);
+		return sqlSession.selectList("gameRoomMapper.selectRandomJobs",param);
 	}
 }

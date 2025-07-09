@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mafia.game.game.model.dao.GameRoomDao;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.job.model.vo.Job;
 
 
 
@@ -60,5 +61,15 @@ public class GameRoomServiceImpl implements GameRoomService {
 	@Override
 	public int updateRoomMaster(int roomNo, String userName) {
 		return gameRoomDao.updateRoomMaster(sqlSession, roomNo, userName);
+	}
+
+	@Override
+	public int updateStart(int roomNo, String updatedJob) {
+		return gameRoomDao.updateStart(sqlSession, roomNo, updatedJob);
+	}
+
+	@Override
+	public List<Job> selectRandomJobs(int mafiaCount, int citizenCount, int neutralCount) {
+		return gameRoomDao.selectRandomJobs(sqlSession, mafiaCount,citizenCount, neutralCount);
 	}
 }

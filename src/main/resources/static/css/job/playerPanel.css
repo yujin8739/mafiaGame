@@ -28,6 +28,11 @@
     align-items: center;
 }
 
+.someNails {
+	width:95px; 
+	height:95px;
+}
+
 .player-name {
 	all: unset;
     margin-top: 10px;
@@ -59,10 +64,25 @@
 }
 
 .readyBtn {
-    background-color: #28a745;
+    background-color: green;
     color: white;
     border: none;
     padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+}
+
+.startBtn {
+	background-color: blue;
+    color: white;
+    display: none;
+    border: none;
+    padding: 10px 20px;
+    display:none;
     font-size: 16px;
     border-radius: 10px;
     cursor: pointer;
