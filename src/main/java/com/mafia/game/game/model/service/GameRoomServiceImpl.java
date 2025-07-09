@@ -54,7 +54,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
 	@Override
 	public String getReadyCount(int roomNo) {
-		// TODO Auto-generated method stub
 		return gameRoomDao.getReadyCount(sqlSession, roomNo);
+	}
+
+	@Override
+	public int updateRoomMaster(int roomNo, String userName) {
+		return gameRoomDao.updateRoomMaster(sqlSession, roomNo, userName);
 	}
 }
