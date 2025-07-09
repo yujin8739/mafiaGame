@@ -21,16 +21,6 @@
 		        </label><br>
         <label id="passwordLabel" style="display: none;">방 비밀번호 (선택): <input type="text" name="password"></label><br>
         
-        <label>방 설정:
-		    <div class="roomSet">
-		        <label><input type="radio" name="roomSetting" value="nomal" checked> 일반</label>
-		        <label><input type="radio" name="roomSetting" value="custom"> 사용자 설정</label>
-		    </div>
-		</label>
-	    <label class="roomSetLabel" style="display: none;">마피아 수 : <input type="number" name="mCount" max="15" required></label>
-	    <label class="roomSetLabel" style="display: none;">시민 수 : <input type="number" name="cCount" max="15" required></label>
-	    <label class="roomSetLabel" style="display: none;">중립 수 : <input type="number" name="nCount" max="15" required></label>
-
 		<input type="hidden" name="count" id="hiddenCount">
         <input type="hidden" name="userList" value="[]">
 		
@@ -50,45 +40,6 @@
 	        passwordLabel.style.display = showPassword ? '' : 'none';
 	    });
 	    
-	    document.querySelectorAll('input[name="roomSetting"]').forEach(radio => {
-	        radio.addEventListener('change', function () {
-	            const isCustom = this.value === 'custom';
-	            
-	            document.querySelectorAll('.roomSetLabel').forEach(label => {
-	                label.style.display = isCustom ? '' : 'none';
-	            });
-	        });
-	    });
-	    
-	    document.querySelector('.container').addEventListener('submit', function(event) {
-	        event.preventDefault();
-
-	        const roomSetting = document.querySelector('input[name="roomSetting"]:checked').value;
-	        const mCountInput = document.querySelector('input[name="mCount"]');
-	        const cCountInput = document.querySelector('input[name="cCount"]');
-	        const nCountInput = document.querySelector('input[name="nCount"]');
-
-	        const mCount = mCountInput ? mCountInput.value : '0';
-	        const cCount = cCountInput ? cCountInput.value : '0';
-	        const nCount = nCountInput ? nCountInput.value : '0';
-
-	        let countArray = [];
-
-	        if (roomSetting === 'custom') {
-	            console.log("커스텀 설정입니다");
-	            console.log("mCount:", mCount, "cCount:", cCount, "nCount:", nCount);
-	            countArray.push(mCount || '0');
-	            countArray.push(cCount || '0');
-	            countArray.push(nCount || '0');
-	        }
-
-	        const countString = JSON.stringify(countArray);
-	        document.getElementById('hiddenCount').value = countString;
-
-	        console.log("최종 countString:", countString);
-
-	        this.submit();
-	    });
 	</script>
 </body>
 </html>
