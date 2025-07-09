@@ -1,7 +1,6 @@
 .playerPanel {
     width: 372px;
     height: 380px;
-    max-height: 1200px;
     background-color: black;
     display: flex;
     justify-content: center; /* 내부를 가로 중앙 정렬 */
@@ -16,12 +15,17 @@
     row-gap: 20px;
     justify-content: center; /* 가로 중앙 정렬 */
     padding-top: 30px;
+    max-height: 333px;
+    overflow-y: auto;
 }
 
 .panels {
     width: 100px;
     height: 100px;
     background-color: grey;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .player-name {
