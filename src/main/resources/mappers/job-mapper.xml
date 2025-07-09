@@ -46,7 +46,7 @@
 	
 	<insert id="playerInfo">
 		INSERT INTO PLAYER
-		VALUES (SEQ_PNO.NEXTVAL, #{jobNo}, #{roomNo}, #{playerName}, 'Y')
+		VALUES (SEQ_PNO.NEXTVAL, #{jobNo}, #{roomNo}, #{playerName}, 'Y', 'N')
 	</insert>
 	
 	<select id="player" resultMap="playerResultMap">
