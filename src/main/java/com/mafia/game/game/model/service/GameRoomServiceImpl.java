@@ -46,4 +46,15 @@ public class GameRoomServiceImpl implements GameRoomService {
     public List<GameRoom> getAllRooms() {
         return gameRoomDao.selectAllRooms(sqlSession);
     }
+
+	@Override
+	public int updateReadyList(int roomNo, String updatedList) {
+		return gameRoomDao.updateReadyList(sqlSession, roomNo, updatedList);
+	}
+
+	@Override
+	public String getReadyCount(int roomNo) {
+		// TODO Auto-generated method stub
+		return gameRoomDao.getReadyCount(sqlSession, roomNo);
+	}
 }

@@ -57,11 +57,17 @@ public class GameRoomManager {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
                     List<String> userList = new ArrayList<>();
+                    List<String> readyList = new ArrayList<>();
 
                     if (room.getUserList() != null && !room.getUserList().isEmpty()) {
                         userList = mapper.readValue(room.getUserList(), new TypeReference<List<String>>() {});
                     }
                     userList.remove(userName);
+                    //게임방 세션 나갈시
+                    if (room.getReadyUser() != null && !room.getReadyUser().isEmpty()) {
+                    	readyList = mapper.readValue(room.getReadyUser(), new TypeReference<List<String>>() {});
+                    }
+                    readyList.remove(userName);
                     System.out.println(userList.toString());
                     if (userList.isEmpty()) {
                         // 남은 유저가 없으면 방 제거
@@ -70,10 +76,15 @@ public class GameRoomManager {
                     } else {
                         // 아니면 DB에 유저리스트만 갱신
                         String updatedList = mapper.writeValueAsString(userList);
-                        gameRoomService.updateUserList(roomNo, updatedList);
+                        String updateReady = mapper.writeValueAsString(readyList);
+                        //게임 진행중에는 유저 리스트 업데이트 막기
+                        if(!room.getIsGaming().equals('Y')) {
+	                        gameRoomService.updateUserList(roomNo, updatedList);
+	                        gameRoomService.updateReadyList(roomNo, updateReady);
+                        }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace(); // 로깅 처리 권장
+                    e.printStackTrace(); // 로깅 처리 권 장
                 }
             }
 
@@ -111,7 +122,58 @@ public class GameRoomManager {
             }
         }
     }
+    
+    public void addReadyToRoom(int roomNo, String userName) { 
+        GameRoom room = gameRoomService.selectRoom(roomNo);
+        
+        if (room == null) {
+            System.out.println("존재하지 않는 방 번호입니다: " + roomNo);  // 혹은 로깅 처리
+            return; // 방이 없으면 더 이상 진행하지 않음
+        }
+        
+        List<String> users = new ArrayList<>();
+        try {
+            users = new ObjectMapper().readValue(room.getReadyUser(), new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+        }
 
+        if (!users.contains(userName)) {
+            users.add(userName);
+            try {
+                String updatedList = new ObjectMapper().writeValueAsString(users);
+                gameRoomService.updateReadyList(roomNo, updatedList);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+	public void removeReady(int roomNo, String userName) {
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+        
+        if (room == null) {
+            System.out.println("존재하지 않는 방 번호입니다: " + roomNo);  // 혹은 로깅 처리
+            return; // 방이 없으면 더 이상 진행하지 않음
+        }
+        
+        List<String> users = new ArrayList<>();
+		
+        try {
+            users = new ObjectMapper().readValue(room.getReadyUser(), new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+        }
+        if (users.contains(userName)) {
+        	users.remove(userName);
+        	try {
+                String updatedList = new ObjectMapper().writeValueAsString(users);
+                gameRoomService.updateReadyList(roomNo, updatedList);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+	}
 
     public List<WebSocketSession> getSessions(int roomNo) {
         return roomSessions.getOrDefault(roomNo, Collections.emptyList());
