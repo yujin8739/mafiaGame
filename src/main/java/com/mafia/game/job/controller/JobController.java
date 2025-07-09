@@ -10,13 +10,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.job.model.service.JobService;
+import com.mafia.game.job.model.vo.Player;
 
 @Controller
 @RequestMapping("/job")
@@ -51,20 +51,11 @@ public class JobController {
 		List<String> ojList = new ArrayList<>();
 		List<String> njList = new ArrayList<>();
 		
-		if(pCount < 10) {
+		if(pCount < 13) {
 			ejList = service.essentialJob8();
 			ojList = service.optionalJob8();
 			njList = service.neutralJob8();
-//		}else if(pCount < 12) {
-//			ejList = service.essentialJob10();
-//			ojList = service.optionalJob10();
-//			njList = service.neutralJob10();
-//		}else {
-//			ejList = service.essentialJob12();
-//			ojList = service.optionalJob12();
-//			njList = service.neutralJob12();
 		}
-		//System.out.println(ejList.toString());
 		//조회해온 직업 리스트 병합
 		List<String> jobList = new ArrayList<>(ejList);
 		if(!njList.isEmpty()) {
@@ -76,7 +67,6 @@ public class JobController {
 			jobList.add(ojList.get(i));
 		}
 		Collections.shuffle(jobList);
-		System.out.println((String)jobList.toString());
 		String job = "";
 		for(int i = 0; i < pList.size(); i++) {
 			if(pList.get(i).equals(userName)) {
@@ -84,17 +74,27 @@ public class JobController {
 				break;
 			}
 		}
-		for(int i = 0; i < pList.size(); i++) {
-        	System.out.println(pList.get(i));
-        }
-		System.out.println("플레이어수 : " + pCount);
-		System.out.println("유저명 : " + userName);
-		System.out.println("직업 : " + job);
-		System.out.println("닉네임 : " + nList.toString());
+		List<Integer> jnList = new ArrayList<>();
+		for(int i = 0; i < jobList.size(); i++) {
+			jnList.add(service.jobNo(jobList.get(i)));
+		}
+		for(int i = 0; i < pCount; i++) {
+			playerInfo(jnList.get(i), pList.get(i), roomNo);
+		}
+		ArrayList<Player> playerList = service.player(roomNo);
+		for(Player p : playerList) {
+			System.out.println(p);
+		}
+		model.addAttribute("player", playerList);
 		model.addAttribute("nickName", nList);
 		model.addAttribute("job", job);
 		
 		return "job/playerPanel :: playerPanelFragment";
 		
-	}	
+	}
+	
+	public void playerInfo(int jobNo, String playerName, int roomNo) {
+		service.playerInfo(jobNo, playerName, roomNo);
+	}
+	
 }

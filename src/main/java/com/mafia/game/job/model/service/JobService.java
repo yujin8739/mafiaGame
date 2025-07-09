@@ -1,6 +1,9 @@
 package com.mafia.game.job.model.service;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.mafia.game.job.model.vo.Player;
 
 public interface JobService {
 
@@ -13,5 +16,11 @@ public interface JobService {
 	String playerList(int roomNo);
 
 	String userNickName(String userName);
+
+	Integer jobNo(String job);
+
+	void playerInfo(int jobNo, String playerName, int roomNo);
+
+	ArrayList<Player> player(int roomNo);
 
 }
