@@ -2,36 +2,50 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<meta charset="UTF-8">
-	<link rel="stylesheet" th:href="@{/css/common/header.css}" />
-	<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-	<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
-	<link rel="stylesheet" th:href="@{/css/index.css}" />
-	<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
-	<title>GOD Father 0805 마피아 게임룸</title>
+<meta charset="UTF-8">
+<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
+<link rel="stylesheet" th:href="@{/css/index.css}" />
+<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+<link rel="stylesheet" th:href="@{/css/game/phoneModal.css}"/>
+<title>GOD Father 0805 마피아 게임룸</title>
 </head>
 
 <body>
 	<div th:replace="~{common/header :: header}"></div>
 	<div class="home-wrapper">
+		<div class="sideAD"></div>
 		<div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
-		<div>
-			<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
-			<button onclick="sendEvent('6');">임시</button>
-			<button onclick="ready()"> </button>
+		<div class="player-panel-container" style="position: relative;">
+			<div id="controlPanel">
+		    	<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
+		    </div>
+		    <div th:replace="game/phoneModal :: phoneModal(${userList})" 
+		         id="phoneModal" 
+		         style="display:none; position:absolute; top:100%; left:0; z-index:1000;"></div>  
+		    <button id="togglePhoneModalBtn" type="button" style="margin-top:10px;">휴대폰 열기</button>
 		</div>
+
 	</div>
 	<div th:replace="~{common/footer :: footer}"></div>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script th:inline="javascript">
 		// 닉네임 초기화
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
+		let userName = /*[[${loginUser.userName}]]*/ '';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
-		var job = 'citizen';
-		var isNight = true;
+		var job = '무직';
+		var isNight = false;
 
-
+		//블록검색용
+		let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
+		const pageSize = 20; // 한 블록에 몇 개의 메시지를 가져올지
+		let isLoading = false;
+		let isLastPage = false;
+		let isFirstLoad = true;
+		
 		const sendBtn = document.getElementById('sendBtn');
 		const chatInput = document.getElementById('chat');
 
@@ -65,38 +79,85 @@
 
 		const messages = /*[[${messages}]]*/[];
 		const chatArea = document.querySelector("#chatArea");
-		
-		//초기설정
-		messages.forEach(msgData => {	
-			const div = document.createElement("div");
-			
-			if (msgData.type === "death") {
-				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
-					return;
-				} else {
-					const typeDiv = document.createElement("div");
-					typeDiv.classList.add("type-Text");
-					typeDiv.textContent = "『사망자』";
-					div.appendChild(typeDiv);
-				}
-			} else if (msgData.type === "mafia"){
-				if(job !== "mafia") {
-					return;
-				} else {
-					const typeDiv = document.createElement("div");
-					typeDiv.classList.add("type-Text");
-					typeDiv.textContent = "『마피아』";
-					div.appendChild(typeDiv);
-				}
-			}
-			
-			reciveMsg(msgData, div);
-		});
+		chatLoad();
+		function chatLoad() {
+		    if (isLoading || isLastPage) return;
+		    isLoading = true;
 
-		chatArea.scrollTop = chatArea.scrollHeight;
+		    $.ajax({
+		        url: '/room/loadMessage',
+		        type: 'GET',
+		        data: {
+		            roomNo: roomNo,
+		            page: currentPage,
+		            size: pageSize
+		        },
+		        success: function (messages) {
+		            if (messages.length === 0) {
+		                isLastPage = true;  // 더 이상 불러올 메시지 없음
+		                return;
+		            }
+		            currentPage++;
+
+		            // 불러오기 전 스크롤 위치 저장 (스크롤 아래로부터 거리)
+		            const scrollBefore = chatArea.scrollHeight - chatArea.scrollTop;
+
+		            messages.forEach(msgData => {
+		                const div = document.createElement("div");
+
+		                if (msgData.type === "death") {
+		                    if (job !== "ghost" && job !== "mafiaGhost" && job !== "spiritualists") {
+		                        return;
+		                    } else {
+		                        const typeDiv = document.createElement("div");
+		                        typeDiv.classList.add("type-Text");
+		                        typeDiv.textContent = "『사망자』";
+		                        div.appendChild(typeDiv);
+		                    }
+		                } else if (msgData.type === "mafia") {
+		                    if (job !== "mafia") {
+		                        return;
+		                    } else {
+		                        const typeDiv = document.createElement("div");
+		                        typeDiv.classList.add("type-Text");
+		                        typeDiv.textContent = "『마피아』";
+		                        div.appendChild(typeDiv);
+		                    }
+		                }
+
+		                reciveMsg(msgData, div);
+
+		                // 메시지를 기존 채팅창 맨 위에 삽입
+		                chatArea.insertBefore(div, chatArea.firstChild);
+		            });
+
+		            // 이미지가 있으면 모두 로드될 때까지 대기 후 스크롤 위치 보정
+		            if(isFirstLoad){
+		            	isFirstLoad=false;
+		            	scrollToBottomAfterImagesLoad(chatArea);
+		            }
+
+		            // 불러오기 후 스크롤 위치 보정: 추가된 메시지 높이만큼 스크롤 내리기
+		            const scrollAfter = chatArea.scrollHeight;
+		            chatArea.scrollTop = scrollAfter - scrollBefore;
+		        },
+		        complete: function () {
+		            isLoading = false;
+		        }
+		    });
+		}
+
+		chatArea.addEventListener("scroll", function () {
+			if (chatArea.scrollTop === 0 && !isLastPage && !isLoading) {
+		        chatLoad();
+		    }
+		});
+	
+
 		
 		//채팅 도착
 		socket.onmessage = function (message) {
+			const wasAtBottom = isScrolledToBottom(chatArea);
 			const msgData = JSON.parse(message.data);
 			const div = document.createElement("div");
 			
@@ -122,90 +183,8 @@
 			
 			reciveMsg(msgData, div);
 			
-			chatArea.scrollTop = chatArea.scrollHeight;
+			scrollIfNeeded(wasAtBottom);
 		};
-		
-		//채팅방에 메시지 보여주기
-		function reciveMsg(msgData, div) {
-			// 방향에 따른 클래스 추가
-			if (msgData.userName === nickName) {
-				div.classList.add("right");
-			} else {
-				div.classList.add("left");
-			}
-
-			// 메시지 타입에 따라 처리
-			if (msgData.type === "chat") {
-				// 일반 채팅
-				div.classList.add("chat-bubble");
-				insertMsg(msgData, div);
-			} else if (msgData.type === "death") {
-				// 사망자 메시지
-				div.classList.add("death-bubble"); // 흐린 배경용 클래스
-				insertMsg(msgData, div);
-			} else if (msgData.type === "mafia") {
-				// 마피아 메시지
-				div.classList.add("mafia-bubble"); // 흐린 배경용 클래스
-				insertMsg(msgData, div);
-			} else {
-				// 이벤트 메시지 - 이미지 + 텍스트 + 엑자 스타일
-				try {
-					const eventData = JSON.parse(msgData.msg); // msg는 JSON 문자열
-
-					const wrapper = document.createElement("div");
-					wrapper.classList.add("event-wrapper");
-
-					const img = document.createElement("img");
-					img.src = eventData.imageUrl;
-					img.alt = "event image";
-					img.classList.add("event-image");
-
-					const contentDiv = document.createElement("div");
-					contentDiv.classList.add("event-text");
-					contentDiv.textContent = eventData.content;
-
-					wrapper.appendChild(img);
-					wrapper.appendChild(contentDiv);
-					div.appendChild(wrapper);
-				} catch (e) {
-					// 파싱 실패 시 fallback
-					const fallback = document.createElement("div");
-					fallback.textContent = msgData.msg;
-					div.appendChild(fallback);
-				}
-			}
-
-			chatArea.appendChild(div);
-		}
-
-		//채팅 발송
-		function send() {
-			const msgInput = document.querySelector("#chat");
-			const msg = msgInput.value.trim();
-			var type = "chat"
-			
-			if (msg === "") return;
-			
-			if(job === "ghost") {
-				type = "death";
-			} else if(job === "mafia" && isNight) {
-				type = "mafia";
-			}
-
-			const messageObj = {
-				type: type,
-				userName: nickName,
-				msg: msg,
-				roomNo: roomNo
-			};
-
-			if (socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify(messageObj));
-				msgInput.value = "";
-			} else {
-				alert("서버 연결이 끊어졌습니다.");
-			}
-		}
 
 		//이벤트 발생
 		function sendEvent(eventNo) {
@@ -240,6 +219,30 @@
 			});
 		}
 		
+
+		$(document).ready(function() {
+		    $.ajax({
+		        url: '/job/employment',
+		        method: 'POST',
+		        data: { roomNo: roomNo,
+		        		userName: userName},
+		        success: function(response) {
+		        	$('.playerPanelArea').html(response);
+		        	
+		        	// HTML 삽입 이후에 DOM에서 job 값을 읽어옴
+		            var jobFromServer = $('#jobData').data('job');
+		            if (jobFromServer) {
+		                job = jobFromServer;
+		                alert("당신의 직업은: " + job);
+		                console.log("직업 업데이트됨:", job);
+		            }
+		        },
+		        error: function(xhr, status, error) {
+		            console.error('요청 실패:', error);
+		        }
+		    });
+		});
+		
 		function insertMsg(msgData, div) {
 			const senderDiv = document.createElement("div");
 			senderDiv.classList.add("chat-sender");
@@ -251,11 +254,40 @@
 			div.appendChild(contentDiv);
 		}
 		
+
 		function ready() {
 			$.ajax({
 				url: '/room/ready'
 			})
 		}
+		
+		document.addEventListener("DOMContentLoaded", function() {
+		    const phoneModal = document.getElementById("phoneModal");
+		    const toggleBtn = document.getElementById("togglePhoneModalBtn");
+		    const closeBtn = phoneModal.querySelector("#closePhoneModalBtn");
+		    const controlPanel = document.getElementById("controlPanel");
+		   
+
+		    toggleBtn.addEventListener("click", () => {
+		    	 console.log(controlPanel);
+		        if(phoneModal.style.display === "none" || phoneModal.style.display === "") {
+		            phoneModal.style.display = "block";
+		            togglePhoneModalBtn.style.display = "none";
+		            controlPanel.style.display = "none";
+		        } else {
+		            phoneModal.style.display = "none";
+		            togglePhoneModalBtn.style.display = "block";
+		            controlPanel.style.display = "block";
+		        }
+		    });
+
+		    closeBtn.addEventListener("click", () => {
+		        phoneModal.style.display = "none";
+		        togglePhoneModalBtn.style.display = "block";
+		        controlPanel.style.display = "block";
+		    });
+		});
+
 	</script>
 </body>
 

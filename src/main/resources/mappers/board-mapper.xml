@@ -36,38 +36,40 @@
 				</otherwise>
 			</choose>
 		</if>
+		AND BOARD.STATUS = 'Y'
 	</select>
 	
 	<!-- 라운지 게시글 목록 조회용 -->
 	<select id="boardList" resultType="Board">
 		SELECT *
-		FROM BOARD
-		JOIN BOARD_TYPE USING(TYPENO)
-<!-- 		JOIN USER_INFO USING(USERNAME) -->
+		FROM BOARD B
+		JOIN BOARD_TYPE T USING(TYPENO)
+		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
 		<choose>
 			<when test="type == null || type ==''">
-				WHERE TYPENAME LIKE 'lounge%'
+				WHERE T.TYPENAME LIKE 'lounge%'
 			</when>
 			<when test="type == 'lounge_job'">
-				WHERE TYPENAME LIKE 'lounge_job%'
+				WHERE T.TYPENAME LIKE 'lounge_job%'
 			</when>
 			<otherwise>
-				WHERE TYPENAME LIKE #{type}
+				WHERE T.TYPENAME LIKE #{type}
 			</otherwise>
 		</choose>
 		<if test="condition != ''">
 			<choose>
 				<when test="condition == 'title'">
-					AND TITLE LIKE '%'||#{keyword}||'%'
+					AND B.TITLE LIKE '%'||#{keyword}||'%'
 				</when>
 				<when test="condition == 'writer'">
-					AND USERNAME LIKE '%'||#{keyword}||'%'				
+					AND U.NICKNAME LIKE '%'||#{keyword}||'%'				
 				</when>
 				<otherwise>
-					AND DETAIL LIKE '%'||#{keyword}||'%'
+					AND B.DETAIL LIKE '%'||#{keyword}||'%'
 				</otherwise>
 			</choose>
 		</if>
+		AND B.STATUS = 'Y'
 		ORDER BY CREATEDATE DESC
 	</select>
 	
@@ -91,6 +93,14 @@
 			<result property="uploadDate" column="UPLOADDATE"/>
 			<result property="isDeleted" column="ISDELETED"/>
 		</collection>
+		<collection property="replyList" ofType="Reply">
+			<result property="replyNo" column="REPLYNO"/>
+			<result property="boardNo" column="BOARDNO"/>
+			<result property="fileNo" column="FILENO"/>
+			<result property="replyContent" column="REPLYCONTENT"/>
+			<result property="createDate" column="CREATEDATE"/>
+			<result property="userName" column="USERNAME"/>
+		</collection>
 	</resultMap>
 	
 	<update id="increaseCount">
@@ -101,10 +111,11 @@
 	
 	<select id="loungeBoardDetail" resultMap="boardDetailResultMap">
 		SELECT *
-		FROM BOARD
-		LEFT JOIN BOARD_FILE USING(BOARDNO)
-		JOIN BOARD_TYPE USING(TYPENO)
-		WHERE BOARDNO=#{boardNo}
+		FROM BOARD B
+		LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
+		JOIN BOARD_TYPE T USING(TYPENO)
+		LEFT JOIN REPLY R ON(B.BOARDNO = R.BOARDNO)
+		WHERE B.BOARDNO = #{boardNo}
 	</select>
 	
 	<select id="getBoardNo" resultType="_int">
@@ -141,6 +152,96 @@
 							  
 	</insert>
 	
+	<select id="getFileNo" resultType="_int">
+		SELECT SEQ_FNO.NEXTVAL
+		FROM DUAL
+	</select>
+	
+	<update id="deleteLoungeBoard">
+		UPDATE BOARD
+		SET STATUS = 'N'
+		WHERE BOARDNO = #{boardNo}
+	</update>
+	
+	<update id="deleteFileOfBoard">
+		UPDATE BOARD_FILE
+		SET STATUS = 'N'
+		WHERE FILENO = (SELECT FILENO
+						FROM BOARD
+						WHERE BOARDNO = #{boardNo})
+	</update>
+	
+	<update id="updateLoungeBoard">
+		UPDATE BOARD
+		SET TITLE = #{title}
+		   ,DETAIL = #{detail}
+		WHERE BOARDNO = #{boardNo}
+	</update>
+	
+	<insert id="uploadFileOfReply">
+		INSERT INTO BOARD_FILE(FILENO
+							  ,TYPE
+							  ,ORIGINNAME
+							  ,CHANGENAME)
+					VALUES(#{fileNo}
+						   ,#{type}
+						   ,#{originName}
+						   ,#{changeName})
+	</insert>
+	
+	<insert id="uploadReply">
+		INSERT INTO REPLY(REPLYNO
+						 ,BOARDNO
+						 ,FILENO
+						 ,REPLYCONTENT
+						 ,USERNAME)
+					VALUES(SEQ_REPLYNO.NEXTVAL
+						  ,#{boardNo}
+						  <choose>
+						  	<when test="fileNo == 0">
+						  	,null
+						  	</when>
+						  	<otherwise>
+						  	,#{fileNo}
+						  	</otherwise>
+						  </choose>
+						  ,#{replyContent}
+						  ,#{userName})						 				
+	</insert>
+	
+	<select id="getReplyList" resultType="Reply">
+		SELECT *
+		FROM REPLY R
+		JOIN BOARD B ON (R.BOARDNO =  B.BOARDNO)
+		LEFT JOIN BOARD_FILE F ON (R.FILENO = F.FILENO)
+		JOIN USER_INFO U ON (R.USERNAME = U.USERNAME)
+		WHERE B.BOARDNO = #{boardNo}
+		AND R.STATUS ='Y'
+		ORDER BY R.CREATEDATE DESC
+	</select>
+	
+	<select id="selectReply" resultType="Reply">
+		SELECT *
+		FROM REPLY
+		LEFT JOIN BOARD_FILE USING(FILENO)
+		WHERE REPLYNO = #{replyNo}
+	</select>
+	
+	<update id="deleteReply">
+		UPDATE REPLY
+		SET STATUS = 'N'
+		WHERE REPLYNO = #{replyNo}
+	</update>
+	
+	<update id="deleteFileOfReply">
+		UPDATE BOARD_FILE
+		SET BOARD_FILE.STATUS = 'N'
+		WHERE FILENO = (SELECT R.FILENO
+						FROM REPLY R
+						LEFT JOIN BOARD_FILE F ON (R.FILENO = F.FILENO)
+						WHERE REPLYNO = #{replyNo}
+					   )		
+	</update>
 
 	
 	

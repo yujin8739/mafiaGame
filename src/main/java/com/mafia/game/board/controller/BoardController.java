@@ -15,26 +15,42 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.board.model.service.BoardService;
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.common.template.Pagination;
 
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("board")
+@Slf4j
 public class BoardController {
 
 	@Autowired
 	private BoardService service;
 	
-	@Value("${file.upload.path}")
-	private String filePath;
+	@Value("${file.uploadLoungImage.path}")
+	private String loungeImagePath;
+	
+	@Value("${file.uploadReplyImage.path}")
+	private String replyImagePath;
+	
+	@Value("${file.uploadGalleryImage.path}")
+	private String galleryImagePath;
+	
+	@Value("${file.deletedReplyImage.path}")
+	private String deletedReplyImagePath;
+	
+	@Value("${file.deletedLoungeImage.path}")
+	private String deletedLoungeImagePath;
 	
 
 	@GetMapping("lounge") // 라운지 - 일반 게시판
@@ -100,7 +116,7 @@ public class BoardController {
 		if (result > 0) { // 게시글 등록 성공
 			
 			if(file != null) {
-				saveFile(uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
+				saveLoungeImage(uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
 			}
 			redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
 			
@@ -132,6 +148,168 @@ public class BoardController {
 
 		return "board/loungeDetail";
 	}
+	
+	@PostMapping("/lounge/delete/{boardNo}")
+	public String deleteLoungeBoard(@PathVariable int boardNo,RedirectAttributes redirectAttributes) {
+		
+		Board board = service.loungeBoardDetail(boardNo);
+		
+		int result = service.deleteLoungeBoard(board);//삭제할 게시글 정보 보내기
+		
+		if(result > 0) { //BOARD 테이블에서 삭제 완료
+			
+			if(!board.getFileList().isEmpty()) { //게시글에 첨부파일 있었을 경우
+				String changeName = board.getFileList().get(0).getChangeName();
+				if(deleteFile(loungeImagePath, deletedLoungeImagePath, changeName)) {
+					log.debug("게시글 파일 삭제 완료");
+				}else {
+					log.debug("게시글 파일 삭제 실패");
+				}
+			}
+			
+			ArrayList<Reply> replyList = board.getReplyList();
+			for(Reply reply : replyList) {
+				reply = service.selectReply(reply.getReplyNo());
+				if(reply.getChangeName() != null) {
+					if(deleteFile(replyImagePath,deletedReplyImagePath,reply.getChangeName())) {
+						log.debug("댓글 파일 삭제 완료");
+					}else {
+						log.debug("댓글 파일 삭제 실패");
+					}
+				}
+			}
+			
+			redirectAttributes.addFlashAttribute("msg","게시글이 정상적으로 삭제되었습니다.");
+			
+			return "redirect:/board/lounge";
+		}else {
+			redirectAttributes.addFlashAttribute("msg","게시글 삭제에 실패하였습니다.");
+			return "redirect:/board/lounge/detail/" + boardNo;
+		}
+		
+	}
+	
+	@GetMapping("/lounge/update/{boardNo}")
+	public String loungeUpdateForm(@PathVariable int boardNo, Model model) {
+		
+		Board board = service.loungeBoardDetail(boardNo);
+		
+		model.addAttribute("board", board);
+		
+		return "board/loungeUpdateForm";
+	}
+	
+	@PostMapping("/lounge/update")
+	public String updateLoungeBoard(Board board, MultipartFile uploadFile, boolean deleteFile) {
+		
+		BoardFile file = null;
+		
+		if(!uploadFile.getOriginalFilename().equals("")) { //수정한 파일이 존재한다면
+			
+			String changeName = getChangedFileName(uploadFile);
+			file = BoardFile.builder()
+		         			.originName(uploadFile.getOriginalFilename())
+		         			.changeName(changeName)
+		         			.type("image")
+		         			.boardNo(board.getBoardNo())
+		         			.build();
+			
+		}
+		
+		int result = service.updateLoungeBoard(board,file,deleteFile);
+		
+		if(result > 0) { //게시글 및 파일 변경 완료
+			
+			if(!board.getChangeName().equals("")) { //기존 파일 있었을 경우
+				if(file != null || deleteFile == true) { //파일 변경했을 경우 또는 파일 삭제 버튼 눌렀을 경우
+					if(deleteFile(loungeImagePath, deletedLoungeImagePath, board.getChangeName())) {
+						log.debug("기존 파일 삭제 완료");
+					}else {
+						log.debug("기존 파일 삭제 실패");
+					}
+				}
+			}
+			
+			if(file != null) {
+				saveLoungeImage(uploadFile, file.getChangeName()); //변경된 파일 있다변 서버에 저장
+			}
+			
+			return "redirect:/board/lounge/detail/" + board.getBoardNo();
+			
+		}else {//게시글 및 파일 변경 실패
+			
+			return "redirect:/board/lounge/update/" + board.getBoardNo();
+			
+		}
+		
+		
+		
+	}
+	
+	@PostMapping("/lounge/uploadReply") // 댓글 DB 저장 + 이미지 저장 처리
+	@ResponseBody                   
+	public int uploadReply(Reply reply
+	                      ,MultipartFile image
+	                      ,HttpSession session) {
+		
+		System.out.println("댓글 : " + reply);
+		System.out.println("이미지 : " + image);
+		BoardFile file = null;
+		
+		if(image != null) {
+			String changeName = getChangedFileName(image);
+			file = BoardFile.builder()  
+						    .originName(image.getOriginalFilename())
+						    .changeName(changeName)
+						    .type("image")
+						    .build();
+		}
+		
+		int result = service.uploadReply(reply,file);
+		
+		if(result > 0) {
+			if(image != null) { //업로드한 파일 있을 경우 서버에 등록
+				saveReplyImage(image, file.getChangeName());
+			}
+		}
+		
+		return result;
+	}
+	
+	@GetMapping("/lounge/getReplyList")
+	@ResponseBody
+	public ArrayList<Reply> getReplyList(int boardNo){
+		
+		ArrayList<Reply> replyList = service.getReplyList(boardNo);
+		
+		return replyList;
+	}
+	
+	@PostMapping("/lounge/deleteReply")
+	@ResponseBody
+	public int deleteReply(int replyNo) {
+		
+		Reply reply = service.selectReply(replyNo);
+		String changeName = reply.getChangeName();
+		
+		int result = service.deleteReply(reply); // 댓글 삭제
+		if(result > 0) { //정상적으로 REPLY 및 BOARD_FILE 테이블에서 삭제 완료
+			if(changeName != null) { //파일 있을 경우 -> 삭제 폴더로 이동시키기
+				
+				
+				if(deleteFile(replyImagePath,deletedReplyImagePath,changeName)) {
+					log.debug("파일 삭제 완료");
+				}else {
+					log.debug("파일 삭제 실패");
+				}
+			}
+		}
+		
+		
+		
+		return result;
+	}
+	
 
 	// 변경된 파일 이름 반환 메소드
 	public String getChangedFileName(MultipartFile uploadFile) {
@@ -162,15 +340,47 @@ public class BoardController {
 	}
 	
 	
-	public void saveFile(MultipartFile uploadFile,String changeName) {
+	public void saveLoungeImage(MultipartFile uploadFile,String changeName) {
 		try {
 			// application.properties에 정의했던 파일경로로 파일 저장
-			uploadFile.transferTo(new File(filePath + changeName));
+			uploadFile.transferTo(new File(loungeImagePath + changeName));
 		} catch (Exception e) {
 			
 			e.printStackTrace();
 		}
 	}
+	
+	public void saveReplyImage(MultipartFile uploadFile,String changeName) {
+		try {
+			// application.properties에 정의했던 파일경로로 파일 저장
+			uploadFile.transferTo(new File(replyImagePath + changeName));
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	public void saveGalleryImage(MultipartFile uploadFile,String changeName) {
+		try {
+			// application.properties에 정의했던 파일경로로 파일 저장
+			uploadFile.transferTo(new File(galleryImagePath + changeName));
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	//파일 삭제(deletedImage 폴더로 이동시키는 메소드)
+	public boolean deleteFile(String originPath,String deletePath,String changeName) {
+		
+		
+		File originFile = new File(originPath + changeName);
+		File deletedFile = new File(deletePath + changeName);
+		return originFile.renameTo(deletedFile); 
+		
+		
+	}
+	
 	
 	
 }
