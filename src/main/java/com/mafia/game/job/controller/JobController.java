@@ -51,7 +51,7 @@ public class JobController {
 		List<String> ojList = new ArrayList<>();
 		List<String> njList = new ArrayList<>();
 		
-		if(pCount < 13) {
+		if(pCount < 16) {
 			ejList = service.essentialJob8();
 			ojList = service.optionalJob8();
 			njList = service.neutralJob8();
@@ -63,7 +63,7 @@ public class JobController {
 			jobList.add(njList.get(0));
 		}
 		Collections.shuffle(ojList);
-		for(int i = 0; i < pCount - jobList.size(); i++) {
+		for(int i = 0; i < pCount - jobList.size() + 1; i++) {
 			jobList.add(ojList.get(i));
 		}
 		Collections.shuffle(jobList);
