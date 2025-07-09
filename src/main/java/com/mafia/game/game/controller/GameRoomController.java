@@ -49,7 +49,7 @@ public class GameRoomController {
 
     @PostMapping("/create")
     public String createRoom(@ModelAttribute GameRoom room, Model model, RedirectAttributes redirectAttributes) {
-        
+    	
         if (room.getRoomName() == null || room.getRoomName().trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("msg", "방 이름을 입력해주세요.");
             return "redirect:/room/createRoom";
@@ -61,10 +61,15 @@ public class GameRoomController {
         }
         
         int result = gameRoomService.createRoom(room);
-        
+        System.out.println(room.getPassword());
         if (result > 0) {
             redirectAttributes.addFlashAttribute("msg", "방이 성공적으로 생성되었습니다!");
-            return "redirect:/";
+            System.out.println(room.getPassword());
+            if(room.getPassword()==null || room.getPassword().isEmpty()) {
+            	return "redirect:/room/"+room.getRoomNo()+"/"+"0000";
+            } else {
+            	return "redirect:/room/"+room.getRoomNo()+"/"+room.getPassword();	
+            }
         } else {
             redirectAttributes.addFlashAttribute("msg", "방 생성에 실패했습니다.");
             return "redirect:/room/createRoom";
@@ -147,11 +152,7 @@ public class GameRoomController {
             return "redirect:/";
         }
 
-        // 메시지 로딩
-//        List<Message> messages = chatService.getMessages(roomNo);
-
         model.addAttribute("room", room);
-//        model.addAttribute("messages", messages);
         return "game/gameRoom";
     }
     
@@ -163,6 +164,25 @@ public class GameRoomController {
     	int offset = (page - 1) * size;
     	RowBounds rowBounds = new RowBounds(offset, size);
     	return chatService.getMessages(roomNo, rowBounds);
+    }
+    
+    @GetMapping("/readyCount")
+    @ResponseBody
+    public int getReadyCount(@RequestParam int roomNo) {
+    	String readyUsers = gameRoomService.getReadyCount(roomNo);
+    	List<String> users = new ArrayList<>();
+        try {
+            users = new ObjectMapper().readValue(readyUsers, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+        }
+    	return users.size();
+    }
+    
+    @GetMapping("/reloadRoom")
+    @ResponseBody
+    public GameRoom reloadRoom(@RequestParam int roomNo) {
+    	return gameRoomService.selectRoom(roomNo);
     }
 
 }

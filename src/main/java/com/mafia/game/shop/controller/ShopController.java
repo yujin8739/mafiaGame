@@ -3,6 +3,7 @@ package com.mafia.game.shop.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 @Controller
 public class ShopController {
@@ -24,10 +26,17 @@ public class ShopController {
         this.shopService = shopService;
     }
 
+//    @GetMapping("/artshop")
+//    public String showArtShopPage() {
+//        return "art/artshop";
+//    }
     @GetMapping("/artshop")
-    public String showArtShopPage() {
+    public String showArtShopPage(Model model) {
+        List<Shop> shopList = shopService.selectAllArtworks();
+        model.addAttribute("shopList", shopList);
         return "art/artshop";
     }
+    
 
     @GetMapping("/artshop/uploadForm")
     public String showUploadForm() {
@@ -43,7 +52,7 @@ public class ShopController {
                                  HttpSession session,
                                  Model model) {
 
-    	String uploadPath = "C:\\godDaddy_uploadImage\\artshopImage";
+    	String uploadPath = "C:\\godDaddy_uploadImage\\artshopImage\\";
         File dir = new File(uploadPath);
         if (!dir.exists()) dir.mkdirs();
 
@@ -65,7 +74,7 @@ public class ShopController {
         shop.setDescription(description);
         shop.setPrice(price);
         shop.setSellerName(sellerName);
-        shop.setImagePath("/images/art/" + changeName);
+        shop.setImagePath("/godDaddy_uploadImage/artshopImage/" + changeName);
         shop.setStatus("판매중");
         shop.setUploadDate(new Date());
 
@@ -77,4 +86,23 @@ public class ShopController {
             return "common/error";
         }
     }
+    
+    @GetMapping("/artshop/detail/{artId}")
+    public String showArtDetail(@PathVariable("artId") int artId, Model model) {
+        Shop shop = shopService.selectArtworkById(artId);
+        if (shop == null) {
+            model.addAttribute("msg", "존재하지 않는 작품입니다.");
+            return "common/error";
+        }
+
+        model.addAttribute("art", shop);
+        return "art/artDetail";
+    }
+    
+
+    
+    
+    
+    
+    
 }

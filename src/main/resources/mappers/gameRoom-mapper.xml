@@ -15,14 +15,16 @@
 	        USERLIST,
 	        HEADCOUNT,
 	        PASSWORD,
-	        TYPE
+	        TYPE,
+	        COUNT
 	    ) VALUES (
 	        #{roomNo},
 	        #{roomName},
 	        #{userList},
 	        #{headCount},
 	        #{password},
-	        #{type}
+	        #{type},
+	        #{count}
 	    )
 	</insert>
     
@@ -37,7 +39,13 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
-	<select id="selectRoom" resultType="GameRoom" parameterType="int">
+	<update id="updateRoomMaster">
+		UPDATE GAME_ROOM
+	    SET MASTER = #{userName}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
+	<select id="selectRoom" resultType="GameRoom" parameterType="_int">
 	    SELECT *
 	    FROM GAME_ROOM
 	    WHERE ROOMNO = #{roomNo}
@@ -49,4 +57,35 @@
 	    ORDER BY ROOMNO
 	</select>
 	
+	<update id="updateReadyList">
+	    UPDATE GAME_ROOM
+	    SET READYUSER = #{userList}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
+	<update id="updateStart">
+	    UPDATE GAME_ROOM
+	    SET READYUSER = '[]',
+	    	ISGAMING = 'Y',
+	    	JOB = #{updatedJob}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
+	<select id="getReadyCount" resultType="string">
+		SELECT READYUSER
+		FROM GAME_ROOM	
+		WHERE ROOMNO = #{roomNo}
+	</select>
+	
+	<!-- 게임시작 시 직업 선택 -->
+	<select id="selectRandomJobs" parameterType="hashmap" resultType="Job">
+        SELECT
+            JOBNO, SKILLNO, JOBNAME, JOBCLASS, OPTIONAL,
+            MATCHCODE, PROBABILITY, JOBVISIBLE
+        FROM TABLE(F_GET_RANDOM_JOBS(
+            p_mafia_count   => #{mafiaCount},
+            p_citizen_count => #{citizenCount},
+            p_neutral_count => #{neutralCount}
+        ))
+    </select>
 </mapper>
