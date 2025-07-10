@@ -48,7 +48,8 @@
 		let userName = /*[[${loginUser.userName}]]*/ '';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
-		var job = 'citizen';
+		var job = 'none';
+		let jobObj;
 		var isNight = false;
 
 		//블록검색용
@@ -64,10 +65,6 @@
 		
 		let room = /*[[${room}]]*/ 'NULL';
 		isGaming = room.isGaming==='Y';
-		
-		if (isGaming) {
-			document.getElementById('readyDiv').style.display = 'none';
-		}
 
 		if (isNight && job!=='mafia') {
 			sendBtn.disabled = true;
@@ -342,6 +339,10 @@
 		        togglePhoneModalBtn.style.display = "block";
 		        controlPanel.style.display = "block";
 		    });
+		    
+			if (isGaming) {
+				setStart();
+			}
 		});
 
 		function setReadyCount() {
@@ -361,12 +362,19 @@
 		
 		function setStart() {
 			isStart = true;
-			readyDiv.style.display = "none";
+			isGaming = true;
+			[...document.getElementsByClassName('readyDiv')].forEach(div => { 
+				div.style.display = 'none';
+			});
+
 			$.ajax({
-				url:'/room/getJobName',
-				data:{
-					userName:userName,
-						
+				url:'/room/getJob',
+				data:{roomNo:roomNo},
+				success:function(myJob){
+					console.log("직업");
+					console.log(myJob);
+					jobObj = myJob;
+					job = myJob.jobName;
 				}
 			})
 			

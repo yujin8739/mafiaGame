@@ -1,6 +1,7 @@
 package com.mafia.game.game.model.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,5 +72,15 @@ public class GameRoomServiceImpl implements GameRoomService {
 	@Override
 	public List<Job> selectRandomJobs(int mafiaCount, int citizenCount, int neutralCount) {
 		return gameRoomDao.selectRandomJobs(sqlSession, mafiaCount,citizenCount, neutralCount);
+	}
+
+	@Override
+	public Map<String, Object> getRoomJob(int roomNo, String userName) {
+		return gameRoomDao.getRoomJob(sqlSession,roomNo,userName);
+	}
+
+	@Override
+	public Job getJobDetail(int myJob) {
+		return gameRoomDao.getJobDetail(sqlSession,myJob);
 	}
 }
