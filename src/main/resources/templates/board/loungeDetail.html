@@ -224,6 +224,30 @@
 	  opacity: 1;
 	  transform: scale(1.1);
 	}
+	
+	.post-like-dislike button {
+	  font-weight: 600;
+	  border-radius: 25px;
+	  padding: 6px 14px;
+	  font-size: 14px;
+	  transition: background-color 0.3s ease, color 0.3s ease;
+	}
+	
+	.post-like-dislike button i {
+	  font-size: 18px;
+	}
+	
+	.post-like-dislike button:hover {
+	  background-color: #c82e38;
+	  color: #fff;
+	  border-color: #c82e38;
+	}
+	
+	.post-like-dislike button.btn-outline-primary:hover {
+	  background-color: #2980b9;
+	  border-color: #2980b9;
+	}
+	
 		    
   </style>
 </head>
@@ -238,16 +262,30 @@
       <div class="card-body">
 
         <div class="meta-info">
-          <span><strong th:text="${board.userName}">작성자</strong></span>
+          <span><strong th:text="${board.nickName}">작성자</strong></span>
           <span>작성일: <span th:text="${board.createDate}">2025-07-04</span></span>
           <span>조회수: <span th:text="${board.viewCount}">80</span></span>
         </div>
-
+		
+		
+		
         <hr />
 
         <div th:utext="${board.detail}">
           게시글 내용 출력 부분 (HTML 포함 가능)
         </div>
+        
+        
+		<!-- ✅ 게시글 좋아요/싫어요 버튼: 본문 바로 아래에 위치 -->
+		<div class="post-like-dislike d-flex justify-content-center align-items-center" style="gap: 15px; margin: 30px 0;">
+		  <button id="btnLike" type="button" class="btn btn-outline-danger d-flex align-items-center" style="gap:6px;">
+		    <i class="fas fa-heart"></i> 좋아요 <span id="likeCount">0</span>
+		  </button>
+		  <button id="btnDislike" type="button" class="btn btn-outline-primary d-flex align-items-center" style="gap:6px;">
+		    <i class="fas fa-thumbs-down"></i> 싫어요 <span id="dislikeCount">0</span>
+		  </button>
+		</div>
+		
 		<th:block th:if="${board.fileList[0].status == 'Y'}">
 	        <div class="attachments" th:if="${board.fileList[0].fileNo != 0}">
 			  <hr />
@@ -262,6 +300,9 @@
 			  </div>
 			</div>
 		</th:block>
+		        
+        
+		
 
         <div class="btn-group-custom">
           <a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
@@ -455,6 +496,27 @@
 	    	    
 	    	  }
 	    	});
+	    	
+	    	
+	    	
+	    	$(function () {
+	    		  // 게시글 좋아요/싫어요 버튼 클릭 이벤트
+	    		  $('#btnLike').click(function () {
+	    		    alert('게시글 좋아요 클릭됨');
+	    		    // TODO: Ajax 호출로 좋아요 증가 처리 후 카운트 갱신
+	    		    let count = parseInt($('#likeCount').text()) || 0;
+	    		    $('#likeCount').text(count + 1);
+	    		  });
+
+	    		  $('#btnDislike').click(function () {
+	    		    alert('게시글 싫어요 클릭됨');
+	    		    // TODO: Ajax 호출로 싫어요 증가 처리 후 카운트 갱신
+	    		    let count = parseInt($('#dislikeCount').text()) || 0;
+	    		    $('#dislikeCount').text(count + 1);
+	    		  });
+
+	    		  // --- 이하 기존 댓글, 파일, 수정 삭제 등 JS 코드 유지 ---
+	    		});
 
 	
 	    
