@@ -193,14 +193,16 @@ public class GameRoomManager {
         try {
         	users = new ObjectMapper().readValue(room.getUserList(), new TypeReference<List<String>>() {});
     		int totalPlayers = users.size();
-    		
-    		List<Integer> jobCounts = new ObjectMapper().readValue(room.getCount(), new TypeReference<List<Integer>>() {});
+    		List<Integer> jobCounts = null;
+    		if(room.getCount()!=null) {
+    			jobCounts = new ObjectMapper().readValue(room.getCount(), new TypeReference<List<Integer>>() {});
+    		}
     		
     		int mafiaCount = 0; //마피아 인원
     	    int citizenCount = 0; //시민 인원
     	    int neutralCount = 0; //중립 인원
     	    
-    		if(jobCounts.size()<1) {
+    		if(room.getCount() == null || jobCounts.size()<1) {
     			// 일반 모드일때 
 	    	    if (totalPlayers == 6) {
 	    	        mafiaCount = 2; citizenCount = 4; neutralCount = 0;
