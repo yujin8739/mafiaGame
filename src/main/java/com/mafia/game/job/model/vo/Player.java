@@ -16,5 +16,6 @@ public class Player {
 	private int roomNo;
 	private String userName;
 	private String status;
+	private String usable;
 	
 }

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>하이라이트 영상</title>
+
+  <!-- Bootstrap 4.5.2 + jQuery -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- HLS.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <!-- 공통 CSS -->
+  <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+  <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+
+  <style>
+    body {
+      background-color: #0b0b0b;
+      font-family: 'Noto Sans KR', sans-serif;
+      padding: 40px 8%;
+      color: #fff;
+    }
+
+    .board-wrapper {
+      background-color: #fff;
+      color: #333;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+    }
+
+    .main-tabs a {
+      font-weight: bold;
+      color: #999;
+      text-decoration: none;
+      margin-right: 24px;
+      font-size: 18px;
+      border-bottom: 3px solid transparent;
+      padding-bottom: 5px;
+    }
+
+    .main-tabs a.active {
+      color: #c82e38;
+      border-color: #c82e38;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .video-card {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .video-card:hover {
+      transform: scale(1.03);
+    }
+
+    .video-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .video-info {
+      padding: 14px;
+    }
+
+    .video-title {
+      font-weight: bold;
+      color: #fff;
+      font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .video-meta {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 6px;
+    }
+
+    .no-videos {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 100px;
+      color: #888;
+    }
+
+    /* 영상 모달 */
+    .modal-content {
+      background-color: #000;
+      border: none;
+    }
+    .modal-body video {
+      width: 100%;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div th:replace="common/header :: header"></div>
+
+  <div class="board-wrapper">
+    <div class="main-tabs mb-4">
+      <a th:href="@{/board/lounge}" >라운지</a>
+      <a th:href="@{/board/gallery}">갤러리</a>
+      <a th:href="@{/board/video}" class="active">하이라이트 영상</a>
+    </div>
+
+    <h4 class="mb-0 font-weight-bold">🎥 마피아 하이라이트</h4>
+
+    <div class="video-grid">
+      <div class="video-card" th:each="v : ${videoList}" th:data-src="${v.videoUrl}" onclick="openVideoModal(this)">
+        <img th:src="${v.thumbnailUrl}" alt="썸네일" />
+        <div class="video-info">
+          <div class="video-title" th:text="${v.title}"></div>
+          <div class="video-meta" th:text="'by ' + ${v.writer} + ' · ' + ${v.createDate} + ' · 조회수 ' + ${v.viewCount}"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 게시물이 없을 때 -->
+    <div class="no-videos" th:if="${#lists.isEmpty(videoList)}">
+      등록된 영상이 없습니다.
+    </div>
+  </div>
+
+  <!-- 영상 재생 모달 -->
+  <div class="modal fade" id="videoModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <video id="hlsPlayer" controls></video>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:replace="common/footer :: footer"></div>
+
+  <script>
+    function openVideoModal(el) {
+      const videoUrl = el.dataset.src;
+      const video = document.getElementById('hlsPlayer');
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(videoUrl);
+        hls.attachMedia(video);
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoUrl;
+      }
+
+      $('#videoModal').modal('show');
+    }
+  </script>
+</body>
+</html>

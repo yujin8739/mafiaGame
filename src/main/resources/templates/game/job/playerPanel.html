@@ -1,0 +1,52 @@
+<div class="playerPanelArea" th:fragment="playerPanelFragment">
+	<div class="playerPanel">
+	    <div id="playerPanelContainer" class="container">
+<!-- 	        <div class="skillDiv">
+	            <button class="skillBtn" th:disabled="${user != null and user.usable == 'Y'}">능력 사용</button>
+	        </div> -->
+	        <div id="jobData" th:attr="data-job=${job}" style="display:none;"></div>
+	    </div>
+	</div>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		
+			function loadUser(nRoom){
+				userList = nRoom.userList;
+				console.log(userList);
+				
+			    if (typeof userList === 'string') {
+			    	userList = JSON.parse(userList);
+			    }
+			
+			    const container = document.getElementById('playerPanelContainer');
+			    container.innerHTML = '';
+			    
+			    userList.forEach(name => {
+			        const div = document.createElement('div');
+			        div.className = 'slot';
+			        
+			        const panels = document.createElement('panels');
+			        panels.className = 'panels';
+			        
+			        const someNails = document.createElement('img');
+			        someNails.className = 'someNails';
+			        someNails.src = status === 'Y' ? '/images/생존이미지.png' : '/images/사망이미지.png';
+			        
+			        const input = document.createElement('input');
+			        
+			        input.className = 'player-name';
+			        input.type = 'text';
+			        input.readOnly = true;
+			        input.value = name;
+			        console.log(name);
+			        panels.appendChild(someNails);
+			        div.appendChild(input);
+			
+			        div.appendChild(panels);
+			        container.appendChild(div);
+			    });
+			    setReadyCount();
+			}
+		/*]]>*/
+	</script>
+</div>
