@@ -39,6 +39,12 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
+	<update id="updateRoomMaster">
+		UPDATE GAME_ROOM
+	    SET MASTER = #{userName}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
 	<select id="selectRoom" resultType="GameRoom" parameterType="_int">
 	    SELECT *
 	    FROM GAME_ROOM
@@ -57,10 +63,42 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
+	<update id="updateStart">
+	    UPDATE GAME_ROOM
+	    SET READYUSER = '[]',
+	    	ISGAMING = 'Y',
+	    	JOB = #{updatedJob}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
 	<select id="getReadyCount" resultType="string">
 		SELECT READYUSER
-		FROM GAME_ROOM
+		FROM GAME_ROOM	
 		WHERE ROOMNO = #{roomNo}
+	</select>
+	
+	<!-- 게임시작 시 직업 선택 -->
+	<select id="selectRandomJobs" parameterType="hashmap" resultType="Job">
+        SELECT
+            JOBNO, JOBNAME, JOBCLASS, OPTIONAL,
+            MATCHCODE, PROBABILITY, JOBVISIBLE
+        FROM TABLE(F_GET_RANDOM_JOBS(
+            p_mafia_count   => #{mafiaCount},
+            p_citizen_count => #{citizenCount},
+            p_neutral_count => #{neutralCount}
+        ))
+    </select>
+    
+    <select id="getRoomJob" resultType="map" parameterType="int">
+	    SELECT USERLIST, JOB
+	    FROM GAME_ROOM
+	    WHERE ROOMNO = #{roomNo}
+	</select>
+	
+	<select id="getJobDetail" resultType="Job">
+		SELECT JOBNO, JOBNAME, JOBCLASS, OPTIONAL, MATCHCODE, PROBABILITY, JOBVISIBLE
+		FROM JOB
+		WHERE JOBNO = #{myJob}
 	</select>
 	
 </mapper>

@@ -1,6 +1,7 @@
 package com.mafia.game.game.model.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mafia.game.game.model.dao.GameRoomDao;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.job.model.vo.Job;
 
 
 
@@ -54,7 +56,31 @@ public class GameRoomServiceImpl implements GameRoomService {
 
 	@Override
 	public String getReadyCount(int roomNo) {
-		// TODO Auto-generated method stub
 		return gameRoomDao.getReadyCount(sqlSession, roomNo);
+	}
+
+	@Override
+	public int updateRoomMaster(int roomNo, String userName) {
+		return gameRoomDao.updateRoomMaster(sqlSession, roomNo, userName);
+	}
+
+	@Override
+	public int updateStart(int roomNo, String updatedJob) {
+		return gameRoomDao.updateStart(sqlSession, roomNo, updatedJob);
+	}
+
+	@Override
+	public List<Job> selectRandomJobs(int mafiaCount, int citizenCount, int neutralCount) {
+		return gameRoomDao.selectRandomJobs(sqlSession, mafiaCount,citizenCount, neutralCount);
+	}
+
+	@Override
+	public Map<String, Object> getRoomJob(int roomNo, String userName) {
+		return gameRoomDao.getRoomJob(sqlSession,roomNo,userName);
+	}
+
+	@Override
+	public Job getJobDetail(int myJob) {
+		return gameRoomDao.getJobDetail(sqlSession,myJob);
 	}
 }

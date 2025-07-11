@@ -19,15 +19,18 @@
 		<div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
 		<div class="player-panel-container" style="position: relative;">
 			<div id="controlPanel">
-		    	<div th:replace="~{job/playerPanel :: playerPanelFragment}"></div>
-		    	<div style="display:flex;align-items: center;">
-			    	<button onclick="ready()">레디</button>
-					<div id="readyCount">Ready: 0</div>
-		    	</div>
+		    	<div th:replace="~{game/job/playerPanel :: playerPanelFragment}"></div>
+		    	<div class="readyDiv" style="display:flex; align-items: center;">
+				    <button class="startBtn" id="startBtn"
+				            onclick="startGame()">Start</button>
+				    <button class="readyBtn" id="readyBtn"
+				            onclick="ready()">Ready</button>
+				    <div id="readyCount">Ready: 0</div>
+				</div>
 		    </div>
 		    <div th:replace="game/phoneModal :: phoneModal" 
 		         id="phoneModal" 
-		         style="display:none; position:absolute; top:100%; left:0; z-index:1000;"></div>  
+		         style="display:none; position:absolute; top:100%; left:0; "></div>  
 		    <button id="togglePhoneModalBtn" type="button" style="margin-top:10px;">휴대폰 열기</button>
 		</div>
 
@@ -38,27 +41,30 @@
 		//게임 실행여부
 		var isGaming = false;
 	    let isReady = false;
+	    let readyCount = 0;
 	
 		// 닉네임 초기화
 		let nickName = /*[[${loginUser.nickName}]]*/ '익명';
 		let userName = /*[[${loginUser.userName}]]*/ '';
 		const roomNo = /*[[${roomNo}]]*/ 0;
 		const input = document.querySelector("#chat");
-		var job = 'citizen';
+		var job = 'none';
+		let jobObj;
 		var isNight = false;
-		var user = '';
-		var usable = 'Y';
-		var dDay = 1;
-		
+
 		//블록검색용
 		let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
-		const pageSize = 20; // 한 블록에 몇 개의 메시지를 가져올지
+		const pageSize = 30; // 한 블록에 몇 개의 메시지를 가져올지
 		let isLoading = false;
 		let isLastPage = false;
 		let isFirstLoad = true;
 		
 		const sendBtn = document.getElementById('sendBtn');
 		const chatInput = document.getElementById('chat');
+		const readyDiv = document.getElementById('readyDiv');//게임 시작 혹은 레디 버튼
+		
+		let room = /*[[${room}]]*/ 'NULL';
+		isGaming = room.isGaming==='Y';
 
 		if (isNight && job!=='mafia') {
 			sendBtn.disabled = true;
@@ -72,6 +78,19 @@
 
 		socket.onopen = function () {
 			console.log("WebSocket 연결됨");
+			
+			const messageObj = {
+					type: "enter",
+					userName: nickName,
+					msg: nickName+"님이 입장하셨습니다.",
+					roomNo: roomNo
+				};
+			if (socket.readyState === WebSocket.OPEN) {
+				socket.send(JSON.stringify(messageObj));
+			} else {
+				alert("서버 연결이 끊어졌습니다.");
+			}
+			loadUser(room);
 		};
 
 		socket.onerror = function (err) {
@@ -193,7 +212,11 @@
 				}
 			} else if (msgData.type === "ready" || msgData.type === "unReady") {
 				setReadyCount();
-			}	
+			} else if (msgData.type === "start") {
+				setStart();
+			}  else if (msgData.type === "enter" || "leave") {
+				roomReload();
+			}
 			
 			reciveMsg(msgData, div);
 			
@@ -201,7 +224,7 @@
 		};
 
 		//이벤트 발생
-		function sendEvent(eventNo, target) {
+		function sendEvent(eventNo) {
 
 			$.ajax({
 				url: '/chat/selectEvent',
@@ -233,31 +256,6 @@
 			});
 		}
 		
-
-		$(document).ready(function() {
-		    $.ajax({
-		        url: '/job/employment',
-		        method: 'POST',
-		        data: { roomNo: roomNo,
-		        		userName: userName},
-		        success: function(response) {
-		        	$('.playerPanelArea').html(response);
-		        	
-		        	// HTML 삽입 이후에 DOM에서 job 값을 읽어옴
-		            var jobFromServer = $('#jobData').data('job');
-		        	var user = $('#user').data('')
-		            if (jobFromServer) {
-		                job = jobFromServer;
-		                alert("당신의 직업은: " + job);
-		            }
-		            setReadyCount();
-		        },
-		        error: function(xhr, status, error) {
-		            console.error('요청 실패:', error);
-		        }
-		    });
-		});
-		
 		function insertMsg(msgData, div) {
 			const senderDiv = document.createElement("div");
 			senderDiv.classList.add("chat-sender");
@@ -268,13 +266,6 @@
 			contentDiv.textContent = msgData.msg;
 			div.appendChild(contentDiv);
 		}
-
-	    stompClient.connect({}, function () {
-	        stompClient.subscribe("/topic/readyCount", function (message) {
-	            const count = JSON.parse(message.body).readyCount;
-	            document.getElementById("readyCount").innerText = "Ready: " + count;
-	        });
-	    });
 
 		function ready() {
 				isReady = !isReady;
@@ -296,12 +287,39 @@
 				}
 		}
 		
+		function startGame() {
+			if(readyCount === (document.querySelectorAll(".slot").length-1)){
+				const messageObj = {
+					type: "start",
+					userName: "시스템",
+					msg: "게임이 시작되었습니다.",
+					roomNo: roomNo
+				};
+				
+				if (socket.readyState === WebSocket.OPEN) {
+					socket.send(JSON.stringify(messageObj));
+				} else {
+					alert("서버 연결이 끊어졌습니다.");
+				}
+			} else {
+				alert("모든 플레이어가 준비되지 않았습니다.");
+			}
+		}
+		
 		document.addEventListener("DOMContentLoaded", function() {
 		    const phoneModal = document.getElementById("phoneModal");
 		    const toggleBtn = document.getElementById("togglePhoneModalBtn");
 		    const closeBtn = phoneModal.querySelector("#closePhoneModalBtn");
 		    const controlPanel = document.getElementById("controlPanel");
-		   
+		    const startBtn = document.getElementById("startBtn");
+		    const readyBtn = document.getElementById("readyBtn");
+		    console.log(room);
+		    console.log("게임룸"+userName);
+		    if(room.master === userName || room.master === null) {
+		    	console.log("게임룸"+room.master);
+		    	startBtn.style.display = "block";
+		    	readyBtn.style.display = "none";
+		    }
 
 		    toggleBtn.addEventListener("click", () => {
 		    	 console.log(controlPanel);
@@ -321,6 +339,10 @@
 		        togglePhoneModalBtn.style.display = "block";
 		        controlPanel.style.display = "block";
 		    });
+		    
+			if (isGaming) {
+				setStart();
+			}
 		});
 
 		function setReadyCount() {
@@ -329,12 +351,44 @@
 				type:'GET',
 				data:{roomNo:roomNo},
 				success: function(length){
-		            document.getElementById("readyCount").innerText = "Ready: " + length+"/"+document.querySelectorAll(".slot").length;
+					readyCount = length;
+		            document.getElementById("readyCount").innerText = "Ready: " + length+"/"+(document.querySelectorAll(".slot").length-1);
 				},
 				error: function () {
 					alert("준비중인 유저수를 불러오지 못했습니다.");
 				}
 			});
+		}
+		
+		function setStart() {
+			isStart = true;
+			isGaming = true;
+			[...document.getElementsByClassName('readyDiv')].forEach(div => { 
+				div.style.display = 'none';
+			});
+
+			$.ajax({
+				url:'/room/getJob',
+				data:{roomNo:roomNo},
+				success:function(myJob){
+					console.log("직업");
+					console.log(myJob);
+					jobObj = myJob;
+					job = myJob.jobName;
+				}
+			})
+			
+		}
+		
+		function roomReload(){
+			$.ajax({
+				url:'/room/reloadRoom',
+				data:{roomNo:roomNo},
+				success: function(newRoom){
+					loadUser(newRoom);
+				}
+				
+			})
 		}
 	</script>
 </body>

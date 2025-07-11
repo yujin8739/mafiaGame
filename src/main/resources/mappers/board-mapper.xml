@@ -39,12 +39,46 @@
 		AND BOARD.STATUS = 'Y'
 	</select>
 	
+	
+	
+	<resultMap type="Board" id="boardDetailResultMap">
+		<result property="boardNo" column="BOARDNO"/>
+		<result property="userName" column="USERNAME"/>
+		<result property="nickName" column="NICKNAME"/>
+		<result property="typeNo" column="TYPENO"/>
+		<result property="title" column="TITLE"/>
+		<result property="detail" column="DETAIL"/>
+		<result property="status" column="STATUS"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="viewCount" column="VIEWCOUNT"/>
+		<result property="displayName" column="DISPLAYNAME"/>
+		<result property="rankPoint" column="RANKPOINT"/>
+		<collection property="fileList" ofType="BoardFile">
+			<result property="fileNo" column="FILENO"/>
+			<result property="boardNo" column="BOARDNO"/>
+			<result property="type" column="TYPE"/>
+			<result property="originName" column="ORIGINNAME"/>
+			<result property="changeName" column="CHANGENAME"/>
+			<result property="uploadDate" column="UPLOADDATE"/>
+			<result property="status" column="FILE_STATUS"/>
+		</collection>
+	</resultMap>
+	
 	<!-- 라운지 게시글 목록 조회용 -->
-	<select id="boardList" resultType="Board">
-		SELECT *
+	<select id="boardList" resultMap="boardDetailResultMap">
+		SELECT B.BOARDNO
+			  ,B.TITLE
+		      ,U.NICKNAME
+		      ,B.CREATEDATE
+		      ,B.VIEWCOUNT
+		      ,B.STATUS
+		      ,T.DISPLAYNAME
+		      ,U.RANKPOINT
+		      ,F.STATUS AS FILE_STATUS
 		FROM BOARD B
 		JOIN BOARD_TYPE T USING(TYPENO)
 		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
+		LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
 		<choose>
 			<when test="type == null || type ==''">
 				WHERE T.TYPENAME LIKE 'lounge%'
@@ -73,36 +107,6 @@
 		ORDER BY CREATEDATE DESC
 	</select>
 	
-	<resultMap type="Board" id="boardDetailResultMap">
-		<result property="boardNo" column="BOARDNO"/>
-		<result property="userName" column="USERNAME"/>
-		<result property="typeNo" column="TYPENO"/>
-		<result property="title" column="TITLE"/>
-		<result property="detail" column="DETAIL"/>
-		<result property="status" column="STATUS"/>
-		<result property="createDate" column="CREATEDATE"/>
-		<result property="viewCount" column="VIEWCOUNT"/>
-		<result property="displayName" column="DISPLAYNAME"/>
-		<collection property="fileList" ofType="BoardFile">
-			<result property="fileNo" column="FILENO"/>
-			<result property="boardNo" column="BOARDNO"/>
-			<result property="fileUrl" column="FILEURL"/>
-			<result property="type" column="TYPE"/>
-			<result property="originName" column="ORIGINNAME"/>
-			<result property="changeName" column="CHANGENAME"/>
-			<result property="uploadDate" column="UPLOADDATE"/>
-			<result property="isDeleted" column="ISDELETED"/>
-		</collection>
-		<collection property="replyList" ofType="Reply">
-			<result property="replyNo" column="REPLYNO"/>
-			<result property="boardNo" column="BOARDNO"/>
-			<result property="fileNo" column="FILENO"/>
-			<result property="replyContent" column="REPLYCONTENT"/>
-			<result property="createDate" column="CREATEDATE"/>
-			<result property="userName" column="USERNAME"/>
-		</collection>
-	</resultMap>
-	
 	<update id="increaseCount">
 		UPDATE BOARD
 		SET VIEWCOUNT = VIEWCOUNT + 1
@@ -110,11 +114,24 @@
 	</update>
 	
 	<select id="loungeBoardDetail" resultMap="boardDetailResultMap">
-		SELECT *
+		SELECT B.BOARDNO
+		      ,U.NICKNAME
+		      ,B.DETAIL
+		      ,B.TITLE
+		      ,B.CREATEDATE
+		      ,B.VIEWCOUNT
+		      ,B.STATUS
+		      ,T.DISPLAYNAME
+		      ,U.RANKPOINT
+		      ,F.FILENO
+		      ,F.ORIGINNAME
+		      ,F.CHANGENAME
+		      ,F.STATUS AS FILE_STATUS
 		FROM BOARD B
 		LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
 		JOIN BOARD_TYPE T USING(TYPENO)
 		LEFT JOIN REPLY R ON(B.BOARDNO = R.BOARDNO)
+		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
 		WHERE B.BOARDNO = #{boardNo}
 	</select>
 	

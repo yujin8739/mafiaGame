@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>마피아 갤러리</title>
+
+  <!-- Bootstrap 4.5.2 + jQuery -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- 공통 CSS -->
+  <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+  <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+
+  <style>
+    body {
+      background-color: #0b0b0b;
+      font-family: 'Noto Sans KR', sans-serif;
+      padding: 40px 8%;
+      color: #fff;
+    }
+
+    .board-wrapper {
+      background-color: #fff;
+      color: #333;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+    }
+
+    .main-tabs a {
+      font-weight: bold;
+      color: #999;
+      text-decoration: none;
+      margin-right: 24px;
+      font-size: 18px;
+      border-bottom: 3px solid transparent;
+      padding-bottom: 5px;
+    }
+
+    .main-tabs a.active {
+      color: #c82e38;
+      border-color: #c82e38;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 24px;
+      margin-top: 30px;
+    }
+
+    .gallery-card {
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.2s ease;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+
+    .gallery-card:hover {
+      transform: scale(1.03);
+    }
+
+    .gallery-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .gallery-info {
+      padding: 12px 15px;
+    }
+
+    .gallery-title {
+      font-weight: bold;
+      color: #f5f5f5;
+      font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .gallery-meta {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    .upload-btn {
+      float: right;
+      background-color: #444;
+      color: white;
+      border: none;
+      padding: 7px 18px;
+      border-radius: 25px;
+      transition: all 0.2s;
+    }
+
+    .upload-btn:hover {
+      background-color: #c82e38;
+    }
+
+    .no-posts {
+      text-align: center;
+      font-size: 18px;
+      color: #888;
+      padding: 80px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div th:replace="common/header :: header"></div>
+
+  <div class="board-wrapper">
+    <!-- 메인탭 유지 -->
+    <div class="main-tabs mb-4">
+      <a th:href="@{/board/lounge}" >라운지</a>
+      <a th:href="@{/board/gallery}" class="active">갤러리</a>
+      <a th:href="@{/board/video}">하이라이트 영상</a>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h4 class="mb-0 font-weight-bold">🖼 마피아 갤러리</h4>
+      <button class="upload-btn" onclick="location.href='/board/gallery/write'">+ 업로드</button>
+    </div>
+
+    <!-- 갤러리 카드 뷰 -->
+    <div class="gallery-grid" th:if="${not #lists.isEmpty(boardList)}">
+      <div class="gallery-card" th:each="g : ${boardList}">
+        <img th:src="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=${g.fileList[0].changeName})}"
+             th:alt="${g.title}" />
+        <div class="gallery-info">
+          <div class="gallery-title" th:text="${g.title}"></div>
+          <div class="gallery-meta">
+            by <span th:text="${g.nickName}"></span> · 
+            <span th:text="${g.createDate}"></span> · 
+            조회수 <span th:text="${g.viewCount}"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 게시물이 없을 때 -->
+    <div class="no-posts" th:if="${#lists.isEmpty(boardList)}">
+      등록된 갤러리 작품이 없습니다.
+    </div>
+    <!-- 썸네일이 없을 때 -->
+<!--     <img th:src="${g.fileList[0].status == 'Y'} ? @{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=${g.fileList[0].changeName})} : @{/img/default.jpg}" /> -->
+  </div>
+
+  <div th:replace="common/footer :: footer"></div>
+
+</body>
+</html>

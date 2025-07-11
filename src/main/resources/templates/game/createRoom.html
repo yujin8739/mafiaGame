@@ -22,8 +22,8 @@
         <label id="passwordLabel" style="display: none;">방 비밀번호 (선택): <input type="text" name="password"></label><br>
         
 		<input type="hidden" name="count" id="hiddenCount">
-        <input type="hidden" name="userList" value="[]">
-		
+        <input type="hidden" name="userList" value="[]" required>
+		<input type="hidden" name="master" th:value="${loginUser.userName}">
         <button type="submit">방 생성</button>
     </form>
 
