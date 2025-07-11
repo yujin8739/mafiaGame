@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>일러스트 수정</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+</head>
+<body>
+    <div th:replace="common/header :: header"></div>
+
+    <div class="container mt-5" style="max-width: 600px;">
+        <h2 class="mb-4 text-center">일러스트 수정</h2>
+        <form th:action="@{'/artshop/edit/' + ${art.artId}}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="artId" th:value="${art.artId}" />
+
+            <div class="form-group">
+                <label for="title">제목</label>
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    class="form-control"
+                    placeholder="제목을 입력하세요"
+                    required
+                    th:value="${art.title}" />
+            </div>
+
+            <div class="form-group">
+                <label for="description">설명</label>
+                <textarea
+                    id="description"
+                    name="description"
+                    class="form-control"
+                    rows="4"
+                    placeholder="작품 설명을 입력하세요"
+                    required
+                    th:text="${art.description}"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="price">가격 (₩)</label>
+                <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    class="form-control"
+                    min="0"
+                    required
+                    th:value="${art.price}" />
+            </div>
+
+            <div class="form-group">
+                <label for="sellerName">판매자 이름</label>
+                <input
+                    type="text"
+                    id="sellerName"
+                    name="sellerName"
+                    class="form-control"
+                    required
+                    readonly
+                    th:value="${art.sellerName}" />
+            </div>
+
+            <div class="form-group">
+                <label for="thumbnail">대표 이미지</label>
+                <input
+                    type="file"
+                    id="thumbnail"
+                    name="thumbnail"
+                    class="form-control-file"
+                    accept="image/*" />
+                <p>현재 이미지:</p>
+                <img th:src="@{${art.imagePath}}" alt="현재 이미지" style="width: 150px;"/>
+                <p class="text-muted">새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">수정 완료</button>
+        </form>
+    </div>
+
+    <div th:replace="common/footer :: footer"></div>
+</body>
+</html>

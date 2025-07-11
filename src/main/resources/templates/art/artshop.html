@@ -10,14 +10,39 @@
   
   <link rel="stylesheet" th:href="@{/css/common/header.css}" />
   <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-  
-  <style>
+<style>
+  .sold-out-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* 반투명 검정 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
     .card-img-top {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-    }
-  </style>
+    width: 100%;
+    aspect-ratio: 4 / 3; /* 가로:세로 비율 유지 */
+    object-fit: cover;
+    transition: 0.3s ease;
+    display: block;
+  }
+
+  .sold-out-text {
+    font-size: 36px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  }
+
+  /* 이미지 살짝 흐리게 */
+  .sold-out-img {
+    filter: grayscale(70%) brightness(0.6);
+  }
+</style>
 </head>
 <body>
   <!-- Header 부분 -->
@@ -31,22 +56,30 @@
     
     <!-- 상품 목록 부분 -->
     <div class="row">
-      <div th:each="item : ${shopList}" class="col-md-4 mb-3">
-        <div class="card">
-          <!-- 이미지 클릭 시 해당 상품의 상세 페이지로 이동하도록 <a> 태그로 감싸기 -->
-          <a th:href="@{'/artshop/detail/' + ${item.artId}}">
-            <img th:src="@{${item.imagePath}}" class="card-img-top" alt="작품 이미지" />
-          </a>
-        </div>
-          <div class="card-body">
-            <h5 class="card-title" th:text="${item.title}">작품 제목</h5>
-            <p class="card-text" th:text="${item.description}">설명</p>
-            <p class="card-text text-right font-weight-bold" th:text="${item.price} + ' 원'">가격</p>
-          </div>
-      </div>
-    </div>
+	<div th:each="item : ${shopList}" class="col-md-4 mb-3">
+	  <div class="card-container">
+	    <div class="card">
+	      <a th:href="@{'/artshop/detail/' + ${item.artId}}">
+	        <img th:src="@{${item.imagePath}}"
+	             class="card-img-top"
+	             th:classappend="${item.status == '판매완료'} ? 'sold-out' : ''"
+	             alt="작품 이미지" />
+	        <!-- 판매완료 라벨 표시 -->
+	      </a>
+	           <!-- 판매완료 마스크 오버레이 -->
+	    <div th:if="${item.status == '판매완료'}" class="sold-out-overlay">
+	      <span class="sold-out-text">SOLD OUT</span>
+	    </div>
+	    </div>
+	    <div class="card-body">
+	      <h5 class="card-title" th:text="${item.title}">작품 제목</h5>
+	      <p class="card-text" th:text="${item.description}">설명</p>
+	      <p class="card-text text-right font-weight-bold" th:text="${item.price} + ' 원'">가격</p>
+	    </div>
+	  </div>
+	</div>
   </div>
-  
+  </div>
   <!-- Footer 부분 -->
   <div th:replace="common/footer :: footer"></div>
 </body>

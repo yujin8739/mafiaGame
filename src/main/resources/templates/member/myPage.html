@@ -22,7 +22,7 @@
     <!-- 마이페이지 컨테이너 -->
     <div class="mypage-container">
         <h1 class="mypage-title">마이페이지</h1>
-
+		
         <!-- 성공/에러 메시지 -->
         <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
         <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
@@ -50,6 +50,7 @@
             <button onclick="deleteAccount()" class="mypage-btn delete">회원탈퇴</button>
             <a href="/report/myReports" class="mypage-btn primary">신고내역</a>
             <a href="/" class="mypage-btn">닫기</a>
+            <a href="/mypage/myitems" class="mypage-btn item">내 아이템</a>
         </div>
     </div>
 
@@ -93,6 +94,8 @@
                	<input type="hidden" id="beforeEmail" name="beforeEmail" th:value="${member.email}" required>
             </form>
         </div>
+      
+        
     </div>
     
     
