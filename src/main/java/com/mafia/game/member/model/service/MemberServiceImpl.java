@@ -71,6 +71,11 @@ public class MemberServiceImpl implements MemberService {
 		
 		return dao.deleteMember(sqlSession, userName);
 	}
+
+	@Override
+	public List<String> getUserNickList(String userList) {
+		return dao.getUserNickList(sqlSession, userList);
+	}
 	
 	
 }

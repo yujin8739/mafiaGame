@@ -19,6 +19,7 @@ import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.member.model.vo.Member;
+import com.mafia.game.webSocket.timer.PhaseBroadcaster;
 import com.mafia.game.job.model.vo.Job;
 
 /**
@@ -37,6 +38,8 @@ public class GameRoomManager {
     private final Map<Integer, GameRoom> gameRoomMap = new ConcurrentHashMap<>();
     //방의 세션
     private final Map<Integer, List<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
+    
+    private final Map<Integer, PhaseBroadcaster> phaseBroadcasters = new ConcurrentHashMap<>();
 
     public void addSession(int roomNo, WebSocketSession session) {
         roomSessions.putIfAbsent(roomNo, new CopyOnWriteArrayList<>());
@@ -86,6 +89,15 @@ public class GameRoomManager {
 	                        }
 	                        gameRoomService.updateReadyList(roomNo, updateReady);
                         }
+                    }
+                    
+                    if (userList.isEmpty()) {
+                        // 타이머 종료
+                        stopPhaseBroadcast(roomNo);
+
+                        // 기존 로직
+                        gameRoomService.deleteRoom(roomNo);
+                        roomSessions.remove(roomNo);
                     }
                 } catch (Exception e) {
                     e.printStackTrace(); // 로깅 처리 권 장
@@ -246,6 +258,19 @@ public class GameRoomManager {
         } catch (Exception e) {
         	e.printStackTrace();
         }
+        
+        List<WebSocketSession> sessions = getSessions(roomNo);
+        PhaseBroadcaster broadcaster = new PhaseBroadcaster(sessions);
+        broadcaster.startPhases();
+
+        phaseBroadcasters.put(roomNo, broadcaster); // Map에 등록
+	}
+	
+	public void stopPhaseBroadcast(int roomNo) {
+	    PhaseBroadcaster broadcaster = phaseBroadcasters.remove(roomNo);
+	    if (broadcaster != null) {
+	        broadcaster.stop();
+	    }
 	}
 
     public List<WebSocketSession> getSessions(int roomNo) {
