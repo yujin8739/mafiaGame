@@ -19,7 +19,10 @@ public class Reply {
 	private String replyContent;//	REPLYCONTENT	VARCHAR2(255 BYTE)
 	private Date createDate;//	CREATEDATE	DATE
 	private String userName;//USERNAME	VARCHAR2(255 BYTE)
-	
+	private String status;//STATUS	VARCHAR2(1 BYTE)
+	private int likeCount;//LIKECOUNT	NUMBER
 	private String changeName;
 	private String nickName;
+	private int rankPoint;
+	private String profileUrl;
 }
