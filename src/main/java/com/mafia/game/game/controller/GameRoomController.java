@@ -1,8 +1,12 @@
 package com.mafia.game.game.controller;
 
+import java.io.Reader;
+import java.io.StringWriter;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +23,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
+import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.vo.Member;
 
 import jakarta.servlet.http.HttpSession;
@@ -183,6 +189,61 @@ public class GameRoomController {
     @ResponseBody
     public GameRoom reloadRoom(@RequestParam int roomNo) {
     	return gameRoomService.selectRoom(roomNo);
+    }
+    
+    @GetMapping("/getJob")
+    @ResponseBody
+    public Job getJob(@RequestParam int roomNo, HttpSession session,
+    				RedirectAttributes redirectAttributes) {
+        Member loginUser = (Member) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            redirectAttributes.addFlashAttribute("msg", "로그인이 필요합니다.");
+            return null;
+        }
+        String userName = loginUser.getUserName();
+        System.out.println(">> 로그인 유저: " + userName);
+        Map<String, Object> result = gameRoomService.getRoomJob(roomNo,userName);
+        String userListJson = clobToString((Clob) result.get("USERLIST"));
+        String jobJson = (String) result.get("JOB");
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+        	if(userListJson != null &&jobJson != null) {
+        		System.out.println(">> userListJson: " + userListJson);
+        		 System.out.println(">> jobJson: " + jobJson);
+	        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+				
+				int index = userList.indexOf(userName);
+				int myJob = jobList.get(index);
+								
+				return gameRoomService.getJobDetail(myJob);
+        	} else {
+        		return null;
+        	}
+			
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+    }
+    
+    public static String clobToString(Clob clob) {
+        if (clob == null) return null;
+
+        try (Reader reader = clob.getCharacterStream();
+             StringWriter writer = new StringWriter()) {
+            char[] buffer = new char[2048];
+            int length;
+            while ((length = reader.read(buffer)) != -1) {
+                writer.write(buffer, 0, length);
+            }
+            return writer.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }
