@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.report.model.service.ReportService;
@@ -29,6 +28,27 @@ public class ReportController {
 	@Autowired
 	private ReportService reportService;
 
+	/**
+	 * 신고 폼 페이지
+	 */
+	@GetMapping("/form")
+	public String reportForm(@RequestParam(required = false) String reportedName, Model model, HttpSession session) {
+
+		// 로그인 확인
+		Member loginUser = (Member) session.getAttribute("loginUser");
+		if (loginUser == null) {
+			return "redirect:/login/view";
+		}
+
+		// URL 파라미터로 신고 대상이 전달된 경우 모델에 추가
+		if (reportedName != null && !reportedName.isEmpty()) {
+			model.addAttribute("reportedName", reportedName);
+		}
+
+		return "report/reportForm";
+	}
+	
+	
 	/**
 	 * 신고하기 (AJAX)
 	 */

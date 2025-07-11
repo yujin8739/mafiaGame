@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사용자 신고 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
     <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
     <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/report/report.css}" />
 </head>
 <body>
 
@@ -40,7 +42,7 @@
         <!-- 신고 폼 섹션 -->
         <div class="report-form-section">
             <h3>신고 정보 입력</h3>
-            <form id="reportSubmitForm" th:action="@{/report/submit}" method="POST">
+            <form id="reportSubmitForm">
                 
                 <div class="form-group">
                     <label for="reportedName">신고 대상 사용자 *</label>
@@ -57,7 +59,6 @@
                         <option value="욕설/비방">욕설/비방</option>
                         <option value="스팸/광고">스팸/광고</option>
                         <option value="부적절한 내용">부적절한 내용</option>
-                        <option value="사기/사칭">사기/사칭</option>
                         <option value="게임 방해">게임 방해</option>
                         <option value="기타">기타</option>
                     </select>
@@ -98,188 +99,7 @@
     <!-- 푸터 -->
     <div th:replace="~{common/footer :: footer}"></div>
 
-    <!-- 추가 스타일 -->
-    <style>
-        /* 경고 섹션 스타일 (deleteAccount.css 참고) */
-        .warning-section {
-            background-color: #2a1a1a;
-            border: 2px solid #ff3b3b;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .warning-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        .warning-section h3 {
-            color: #ff3b3b;
-            margin-bottom: 20px;
-            font-size: 20px;
-        }
-
-        .warning-list {
-            text-align: left;
-            color: #f5f5f5;
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .warning-list li {
-            margin-bottom: 10px;
-            line-height: 1.6;
-        }
-
-        /* 신고 폼 섹션 */
-        .report-form-section {
-            background-color: #222;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid #444;
-        }
-
-        .report-form-section h3 {
-            color: #ff3b3b;
-            margin-bottom: 20px;
-            font-size: 18px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-
-        /* 폼 그룹 (mypage.css와 동일) */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 14px;
-            color: #ccc;
-        }
-
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background-color: #111;
-            color: #eee;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #ff3b3b;
-            box-shadow: 0 0 5px rgba(255, 59, 59, 0.3);
-        }
-
-        .help-text {
-            display: block;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #888;
-        }
-
-        /* 체크박스 그룹 (deleteAccount.css와 동일) */
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 15px;
-            background-color: #1a1a1a;
-            border-radius: 6px;
-            border: 1px solid #444;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            margin-right: 10px;
-            transform: scale(1.2);
-            accent-color: #ff3b3b;
-        }
-
-        .checkbox-group label {
-            color: #f5f5f5;
-            font-weight: 500;
-            cursor: pointer;
-            margin: 0;
-        }
-
-        /* 버튼 그룹 */
-        .form-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .cancel-btn, .submit-btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .cancel-btn {
-            background-color: #666;
-            color: white;
-        }
-
-        .cancel-btn:hover {
-            background-color: #777;
-        }
-
-        .submit-btn {
-            background-color: #ff3b3b;
-            color: white;
-        }
-
-        .submit-btn:hover {
-            background-color: #cc2e2e;
-            box-shadow: 0 0 10px rgba(255, 59, 59, 0.5);
-        }
-
-        /* 정보 섹션 */
-        .info-section {
-            background-color: #222;
-            border-radius: 8px;
-            padding: 25px;
-            border: 1px solid #444;
-        }
-
-        .info-section h3 {
-            color: #ff3b3b;
-            margin-bottom: 20px;
-            font-size: 18px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-
-        .info-content p {
-            margin-bottom: 10px;
-            color: #f5f5f5;
-            line-height: 1.6;
-        }
-
-        .info-content strong {
-            color: #ff3b3b;
-        }
-    </style>
-
-    <!-- Thymeleaf 인라인 스크립트 -->
+    <!-- Thymeleaf  -->
     <script th:inline="javascript">
         $(document).ready(function() {
             // 폼 제출 처리
@@ -298,7 +118,8 @@
                 const category = $('#reportCategory').val();
                 const detail = $('#reportDetail').val();
                 const reason = category + ': ' + detail;
-
+				
+                
                 // AJAX 요청
                 $.ajax({
                     url: /*[[@{/report/submit}]]*/ '/report/submit',

@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>내 신고 내역 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
     <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
     <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/report/report.css}" />
 </head>
 <body>
 
@@ -74,52 +76,6 @@
     <!-- 푸터 -->
     <div th:replace="~{common/footer :: footer}"></div>
 
-    <!-- 신고 내역 스타일 -->
-    <style>
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .report-table th,
-        .report-table td {
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid #333;
-        }
-
-        .report-table th {
-            background-color: #222;
-            font-weight: bold;
-            color: #ff3b3b;
-            border-bottom: 2px solid #444;
-        }
-
-        .report-table td {
-            color: #f5f5f5;
-        }
-
-        .report-reason {
-            text-align: left !important;
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .no-reports {
-            text-align: center;
-            padding: 60px 20px;
-            color: #888;
-            font-size: 16px;
-        }
-
-        .delete-report-btn {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-    </style>
 
     <!-- Thymeleaf 인라인 스크립트 -->
     <script th:inline="javascript">
