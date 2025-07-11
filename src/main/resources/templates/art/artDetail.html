@@ -53,14 +53,16 @@
       <!-- 로그인한 사용자와 판매자가 같을 때 -->
 		<div th:if="${loginUser != null}">
 		    <div th:if="${loginUser.userName == art.sellerName}">
-		        <a th:href="@{'/artshop/edit/' + ${art.artId}}" class="btn btn-warning">수정</a>
+		        <a th:href="@{'/artshop/editForm/' + ${art.artId}}" class="btn btn-warning">수정</a>
 		        <a th:href="@{'/artshop/delete/' + ${art.artId}}" class="btn btn-danger">삭제</a>
 		    </div>
 
-      <!-- 다른 사용자일 때 -->
-		    <div th:if="${loginUser.userName != art.sellerName}">
-		        <button class="btn btn-success">구매하기</button>
-		    </div>
+		<!-- 로그인한 사용자가 판매자와 다를 경우에만 구매 버튼 노출 -->
+		<div th:if="${loginUser.userName != art.sellerName}">
+		    <form th:action="@{'/artshop/buy/' + ${art.artId}}" method="post">
+		        <button type="submit" class="btn btn-success">구매하기</button>
+		    </form>
+		</div>
 		</div>
 	</div>
     </div>

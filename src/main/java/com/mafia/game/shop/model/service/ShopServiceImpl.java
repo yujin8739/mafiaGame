@@ -34,6 +34,30 @@ public class ShopServiceImpl implements ShopService {
         return shopDao.selectArtworkById(sqlSession, artId);
     }
     
+    @Override
+    public int updateArt(Shop shop) {
+        return shopDao.updateArt(sqlSession, shop); // SqlSession 전달
+    }
     
+    @Override
+    public int deleteArt(int artId) {
+        return shopDao.deleteArt(sqlSession, artId);
+    }
     
+
+    @Override
+    public int purchaseArt(int artId, String buyerName) {
+        return shopDao.purchaseArt(sqlSession, artId, buyerName);
+    }
+    
+    @Override
+    public List<Shop> selectMyPurchaseList(String buyerName) {
+        return shopDao.selectMyPurchaseList(sqlSession, buyerName);
+    }
+
+    @Override
+    public int purchaseBuyArt(int artId, String buyerName) {
+        return shopDao.purchaseArt(sqlSession, artId, buyerName);
+    }
+  
 }
