@@ -1,10 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>공지사항</title>
+
+<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+<link rel="stylesheet" th:href="@{/css/board/notice.css}" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 <body>
-
+	
+	<div th:replace="common/header :: header"></div>
+	
+	<div class="noticeWrapper">
+		<form id="sortForm" th:action="@{/notice/list}" method="get" class="mb-3 d-flex justify-content-end">
+		    <!-- 기존 검색 조건 유지 -->
+		    <input type="hidden" name="condition" th:value="${noticeMap.condition}">
+		    <input type="hidden" name="keyword" th:value="${noticeMap.keyword}">
+		    <input type="hidden" name="currentPage" th:value="${pi.currentPage}">
+		
+		    <label class="mr-2 text-white font-weight-bold align-self-center">정렬 기준:</label>
+		    <select class="custom-select w-auto" name="sort" onchange="document.getElementById('sortForm').submit();">
+		        <option value="byDate" th:selected="${noticeMap.sort == 'byDate'}">게시일 순</option>
+		        <option value="count" th:selected="${noticeMap.sort == 'count'}">조회수 순</option>
+		    </select>
+		</form>
+		<table>
+			<thead>
+				<tr>
+					<th>글번호</th>
+					<th>제목</th>
+					<th>작성자</th>
+					<th>게시일</th>
+					<th>조회수</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:if="${#lists.isEmpty(noticeList)}">
+					<td colspan="5">조회된 공지사항이 없습니다.</td>
+				</tr>
+				<th:block th:if="${!#lists.isEmpty(noticeList)}">
+				    <tr th:each="notice : ${noticeList}">
+				      <td th:text="${notice.noticeNo}"></td>
+				      <td th:text="${notice.title}"></td>
+				      <td>관리자</td>
+				      <td th:text="${#dates.format(notice.createDate, 'yyyy-MM-dd')}"></td>
+				      <td th:text="${notice.count}"></td>
+				    </tr>
+				</th:block>
+			</tbody>
+		</table>
+		<br>
+		<div id="pagingArea">
+		    <ul class="pagination justify-content-center">
+		
+		        <!-- Previous 버튼 -->
+		        <li class="page-item" th:classappend="${pi.currentPage == 1} ? 'disabled'">
+		            <a class="page-link"
+		               th:href="@{/notice/list(
+		                            currentPage=${pi.currentPage - 1},
+		                            condition=${noticeMap.condition},
+		                            keyword=${noticeMap.keyword}
+		                        )}">
+		                Previous
+		            </a>
+		        </li>
+		
+		        <!-- 페이지 번호 반복 -->
+		        <li class="page-item" th:each="i : ${#numbers.sequence(pi.startPage, pi.endPage)}" th:classappend="${i == pi.currentPage} ? 'active'">
+		            <a class="page-link"
+		               th:href="@{/notice/list(
+		                            currentPage=${i},
+		                            condition=${noticeMap.condition},
+		                            keyword=${noticeMap.keyword}
+		                        )}"
+		               th:text="${i}">
+		            </a>
+		        </li>
+		
+		        <!-- Next 버튼 -->
+		        <li class="page-item" th:classappend="${pi.currentPage == pi.maxPage} ? 'disabled'">
+		            <a class="page-link"
+		               th:href="@{/notice/list(
+		                            currentPage=${pi.currentPage + 1},
+		                            condition=${noticeMap.condition},
+		                            keyword=${noticeMap.keyword}
+		                        )}">
+		                Next
+		            </a>
+		        </li>
+		    </ul>
+		</div>
+		
+		<br clear="both"><br>
+		
+		<!-- 검색 폼 -->
+		<form id="searchForm" th:action="@{/notice/list}" method="get" class="text-center">
+		    <div class="select d-inline-block">
+		        <select class="custom-select" name="condition">
+		            <option value="title"
+		                th:selected="${noticeMap.condition == 'title'}">제목</option>
+		            <option value="content"
+		                th:selected="${noticeMap.condition == 'content'}">내용</option>
+		        </select>
+		    </div>
+		    <div class="text d-inline-block">
+		        <input type="text" class="form-control d-inline-block w-auto"
+		               name="keyword"
+		               th:value="${noticeMap.keyword}">
+		    </div>
+		    <button type="submit" class="searchBtn btn btn-secondary ml-2">검색</button>
+		</form>
+		
+	</div>
+	
+	<div th:replace="common/footer :: footer"></div>
+	
 </body>
 </html>
