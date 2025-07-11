@@ -20,13 +20,18 @@ public class Board { //일반 게시글, 사진 게시글, 동영상 게시글
 	private String status;//	STATUS	VARCHAR2(1 BYTE)
 	private Date createDate;//	CREATEDATE	DATE
 	private int viewCount;//	VIEWCOUNT	NUMBER
+	private int likeCount;//	LIKECOUNT	NUMBER
+	private int dislikeCount;//	DISLIKECOUNT	NUMBER
+	
+	
 	private String typeName; // 게시판 타입 db명
 	private String displayName; //사용자에게 보여지는 게시판 타입명
-	
 	private String nickName;
 	private String changeName;
 	private int rankPoint; //글 작성자 랭크포인트
 	private String profileUrl;//글 작성자 티어이미지 url
+	private int replyCount; //리뷰 몇개인지
+	private boolean isNew; //오늘 올라온 게시글인지
 	
 	
 	//[Collection용] 첨부파일 담을 변수

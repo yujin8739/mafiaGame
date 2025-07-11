@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.BoardLikeDTO;
 import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 
@@ -84,6 +85,55 @@ public class BoardDao {
 
 	public int updateLoungeBoard(SqlSessionTemplate sqlSession, Board board) {
 		return sqlSession.update("boardMapper.updateLoungeBoard", board);
+	}
+
+	public String checkBoardLike(SqlSessionTemplate sqlSession, BoardLikeDTO dto) {
+		
+		return sqlSession.selectOne("boardMapper.checkBoardLike", dto);
+	}
+
+	public int deleteBoardLikeHistory(SqlSessionTemplate sqlSession, BoardLikeDTO dto) {
+		
+		return sqlSession.delete("boardMapper.deleteBoardLikeHistory", dto);
+	}
+
+	public int insertBoardLikeHistory(SqlSessionTemplate sqlSession, BoardLikeDTO dto) {
+		
+		return sqlSession.insert("boardMapper.insertBoardLikeHistory", dto);
+	}
+
+	public int decreaseBoardLike(SqlSessionTemplate sqlSession, BoardLikeDTO dto) {
+		
+		return sqlSession.update("boardMapper.decreaseBoardLike", dto);
+	}
+
+	public int increaseBoardLike(SqlSessionTemplate sqlSession, BoardLikeDTO dto) {
+		
+		return sqlSession.update("boardMapper.increaseBoardLike", dto);
+	}
+
+	public ArrayList<Board> topLikedList(SqlSessionTemplate sqlSession, HashMap<String, String> filterMap) {
+		return (ArrayList)sqlSession.selectList("boardMapper.topLikedList", filterMap);
+	}
+
+	public int checkReplyLike(SqlSessionTemplate sqlSession, HashMap<String, Object> needed) {
+		return sqlSession.selectOne("boardMapper.checkReplyLike", needed);
+	}
+
+	public int deleteReplyLikeHistory(SqlSessionTemplate sqlSession, HashMap<String, Object> needed) {
+		return sqlSession.delete("boardMapper.deleteReplyLikeHistory", needed);
+	}
+
+	public int decreaseReplyLike(SqlSessionTemplate sqlSession, HashMap<String, Object> needed) {
+		return sqlSession.update("boardMapper.decreaseReplyLike", needed);
+	}
+
+	public int insertReplyLikeHistory(SqlSessionTemplate sqlSession, HashMap<String, Object> needed) {
+		return sqlSession.insert("boardMapper.insertReplyLikeHistory", needed);
+	}
+
+	public int increaseReplyLike(SqlSessionTemplate sqlSession, HashMap<String, Object> needed) {
+		return sqlSession.update("boardMapper.increaseReplyLike", needed);
 	}
 
 
