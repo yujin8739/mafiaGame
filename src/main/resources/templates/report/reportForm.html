@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 신고 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/report/report.css}" />
+</head>
+<body>
+
+    <!-- 메시지 표시 -->
+    <div th:if="${msg}">
+        <script th:inline="javascript">
+            alert(/*[[${msg}]]*/ '메시지');
+        </script>
+    </div>
+
+    <!-- 헤더 -->
+    <div th:replace="~{common/header :: header}"></div>
+
+    <!-- 신고 폼 컨테이너 -->
+    <div class="mypage-container">
+        <h1 class="mypage-title">🚨 사용자 신고</h1>
+
+        <!-- 경고 메시지 -->
+        <div class="warning-section">
+            <div class="warning-icon">⚠️</div>
+            <h3>신고 시 주의사항</h3>
+            <ul class="warning-list">
+                <li>허위 신고 시 본인이 제재를 받을 수 있습니다.</li>
+                <li>신고는 신중하게 작성해주세요.</li>
+                <li>욕설이나 감정적인 표현은 피해주세요.</li>
+                <li>구체적이고 객관적인 사실을 기재해주세요.</li>
+            </ul>
+        </div>
+
+        <!-- 신고 폼 섹션 -->
+        <div class="report-form-section">
+            <h3>신고 정보 입력</h3>
+            <form id="reportSubmitForm">
+                
+                <div class="form-group">
+                    <label for="reportedName">신고 대상 사용자 *</label>
+                    <input type="text" id="reportedName" name="reportedName" 
+                           th:value="${param.reportedName}" 
+                           placeholder="신고할 사용자명을 정확히 입력해주세요" required>
+                    <small class="help-text">사용자명은 정확히 입력해주세요. (대소문자 구분)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="reportCategory">신고 사유 *</label>
+                    <select id="reportCategory" name="reportCategory" required>
+                        <option value="">-- 신고 사유를 선택하세요 --</option>
+                        <option value="욕설/비방">욕설/비방</option>
+                        <option value="스팸/광고">스팸/광고</option>
+                        <option value="부적절한 내용">부적절한 내용</option>
+                        <option value="게임 방해">게임 방해</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="reportDetail">상세 신고 내용 *</label>
+                    <textarea id="reportDetail" name="reportDetail" rows="6" 
+                              placeholder="신고 사유를 구체적으로 작성해주세요.&#10;&#10;예시:&#10;- 언제 어떤 상황에서 발생했는지&#10;- 어떤 내용/행동이 문제였는지&#10;- 관련 증거나 상황 설명" required></textarea>
+                    <small class="help-text">최소 10자 이상 작성해주세요.</small>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="confirmReport" name="confirmReport" required>
+                    <label for="confirmReport">
+                        위 내용이 사실임을 확인하며, 허위 신고 시 제재받을 수 있음을 동의합니다.
+                    </label>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" onclick="history.back()" class="cancel-btn">취소</button>
+                    <button type="submit" class="submit-btn">신고하기</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 추가 정보 섹션 -->
+        <div class="info-section">
+            <h3>신고 처리 안내</h3>
+            <div class="info-content">
+                <p><strong>처리 시간:</strong> 신고 접수 후 1-3일 내 검토</p>
+                <p><strong>처리 결과:</strong> 마이페이지 > 신고내역에서 확인 가능</p>
+                <p><strong>문의사항:</strong> 고객센터를 통해 문의 바랍니다</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <!-- Thymeleaf  -->
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // 폼 제출 처리
+            $('#reportSubmitForm').submit(function(e) {
+                e.preventDefault();
+                
+                // 유효성 검사
+                const reportDetail = $('#reportDetail').val().trim();
+                if (reportDetail.length < 10) {
+                    alert('신고 내용을 최소 10자 이상 작성해주세요.');
+                    $('#reportDetail').focus();
+                    return false;
+                }
+
+                // 신고 데이터 준비
+                const category = $('#reportCategory').val();
+                const detail = $('#reportDetail').val();
+                const reason = category + ': ' + detail;
+				
+                
+                // AJAX 요청
+                $.ajax({
+                    url: /*[[@{/report/submit}]]*/ '/report/submit',
+                    type: 'POST',
+                    data: {
+                        reportedName: $('#reportedName').val(),
+                        reason: reason
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            window.location.href = /*[[@{/report/myReports}]]*/ '/report/myReports';
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                    }
+                });
+            });
+
+            // 실시간 글자 수 체크
+            $('#reportDetail').on('input', function() {
+                const length = $(this).val().trim().length;
+                const helpText = $(this).siblings('.help-text');
+                
+                if (length < 10) {
+                    helpText.text(`최소 10자 이상 작성해주세요. (현재: ${length}자)`);
+                    helpText.css('color', '#ff3b3b');
+                } else {
+                    helpText.text(`현재: ${length}자`);
+                    helpText.css('color', '#888');
+                }
+            });
+
+            console.log('신고 폼 페이지 로드 완료');
+        });
+    </script>
+
+</body>
+</html>
