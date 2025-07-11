@@ -2,6 +2,7 @@ package com.mafia.game.board.controller;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,15 +17,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.board.model.service.BoardService;
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.BoardLikeDTO;
 import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.common.template.Pagination;
+import com.mafia.game.member.model.vo.Member;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -52,11 +56,12 @@ public class BoardController {
 	@Value("${file.deletedLoungeImage.path}")
 	private String deletedLoungeImagePath;
 	
-
+	/*=======================================라운지============================================*/
+	
 	@GetMapping("lounge") // 라운지 - 일반 게시판
 	public String loungeBoardList(@RequestParam(defaultValue = "1") int currentPage, String type, String condition,
 			String keyword, Model model, HttpSession session) {
-
+		
 
 		HashMap<String, String> filterMap = new HashMap<>(); // 필터링을 위한 상태값,조건값,키워드 맵
 		filterMap.put("type", type);
@@ -65,13 +70,25 @@ public class BoardController {
 
 		int listCount = service.listCount(filterMap); // 가져올 게시글 개수
 
-		System.out.println("게시글 개수 :" + listCount);
 		int pageLimit = 10;
 		int boardLimit = 20;
 
 		PageInfo pi = Pagination.getPageInfo(listCount, currentPage, pageLimit, boardLimit); // 페이징 처리를 위한 정보
 
 		ArrayList<Board> boardList = service.boardList(filterMap, pi); // 가져올 게시글 목록
+		ArrayList<Board> topLikedList = service.topLikedList(filterMap);//가져올 top5 게시글 목록
+		
+		
+		boardList = enrichBoardInfo(boardList);
+		topLikedList = enrichBoardInfo(topLikedList);
+		
+		System.out.println("상위게시물 : " + topLikedList);
+		int count = 0;
+		for(Board b : topLikedList) {
+			count++;
+		}
+		System.out.println("상위게시물 개수 : " + count);
+		
 
 		model.addAttribute("boardList", boardList);
 		model.addAttribute("pi", pi);
@@ -79,6 +96,62 @@ public class BoardController {
 
 		return "board/lounge";
 
+	}
+	
+	//게시글리스트 정보 가공을 위한 메소드
+	public ArrayList<Board> enrichBoardInfo(ArrayList<Board> boardList) {
+		for(Board b : boardList) {
+			int replyCount = 0;
+			for(Reply r : b.getReplyList()) {
+				if("Y".equals(r.getStatus())) {
+					replyCount++;
+				}
+			}
+			b.setReplyCount(replyCount);
+			
+			b.setNew(b.getCreateDate().toLocalDate().isEqual(LocalDate.now()));
+			
+			int rankPoint = b.getRankPoint();
+			setProfileUrl(b, rankPoint);
+			
+		}
+		
+		return boardList;
+	}
+	
+	//랭크포인트별 뱃지 이미지를 연결시키기 위한 메소드
+	public void setProfileUrl(Object obj, int rankPoint) {
+			
+		if(obj instanceof Board) {
+			Board b = (Board)obj;
+			if(0 <= rankPoint && rankPoint < 500) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/iron.png");
+			}else if(500 <= rankPoint && rankPoint < 1200) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/thug.png");
+			}else if(1200 <= rankPoint && rankPoint < 2000) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/agent.png");
+			}else if(2000 <= rankPoint && rankPoint < 3000) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/underBoss.png");
+			}else if(3000 <= rankPoint) {
+				b.setProfileUrl("/godDaddy_uploadImage/rankImage/boss.png");
+			}
+			
+		}else if(obj instanceof Reply) {
+			Reply r = (Reply)obj;
+			if(0 <= rankPoint && rankPoint < 500) {
+				r.setProfileUrl("/godDaddy_uploadImage/rankImage/iron.png");
+			}else if(500 <= rankPoint && rankPoint < 1200) {
+				r.setProfileUrl("/godDaddy_uploadImage/rankImage/thug.png");
+			}else if(1200 <= rankPoint && rankPoint < 2000) {
+				r.setProfileUrl("/godDaddy_uploadImage/rankImage/agent.png");
+			}else if(2000 <= rankPoint && rankPoint < 3000) {
+				r.setProfileUrl("/godDaddy_uploadImage/rankImage/underBoss.png");
+			}else if(3000 <= rankPoint) {
+				r.setProfileUrl("/godDaddy_uploadImage/rankImage/boss.png");
+			}
+			
+		}
+		
 	}
 
 	@GetMapping("/lounge/write") // 라운지 게시글 작성 폼으로 이동
@@ -91,7 +164,8 @@ public class BoardController {
 	public String writeLoungeBoard(Board board
 								 , MultipartFile uploadFile
 								 , HttpSession session
-								 , RedirectAttributes redirectAttributes) {
+								 , RedirectAttributes redirectAttributes
+								 , @RequestParam(defaultValue="0") int jobTypeNo) {
 		
 		BoardFile file = null; //저장될 첨부파일 1개 담을 변수 미리 선언
 		
@@ -106,6 +180,9 @@ public class BoardController {
 			
 		}
 		
+		if(board.getTypeNo() == 0) {
+			board.setTypeNo(jobTypeNo);
+		}
 		//두가지 경우 존재
 		//1)첨부 파일 1개 있을시, file != null
 		//2)첨부 파일 없을 시 , file == null
@@ -126,9 +203,8 @@ public class BoardController {
 			redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
 
 		}
-
+		
 		return "redirect:/board/lounge";
-
 	}
 
 	@GetMapping("/lounge/detail/{boardNo}") // 라운지 게시글 상세보기
@@ -138,6 +214,18 @@ public class BoardController {
 		
 		if(result > 0) { //조회수 증가 성공!
 			Board board = service.loungeBoardDetail(boardNo); // 1개의 라운지 게시글 정보 얻어오기
+			int rankPoint = board.getRankPoint();
+			if(0 <= rankPoint && rankPoint < 500) {
+				board.setProfileUrl("/godDaddy_uploadImage/rankImage/iron.png");
+			}else if(500 <= rankPoint && rankPoint < 1200) {
+				board.setProfileUrl("/godDaddy_uploadImage/rankImage/thug.png");
+			}else if(1200 <= rankPoint && rankPoint < 2000) {
+				board.setProfileUrl("/godDaddy_uploadImage/rankImage/agent.png");
+			}else if(2000 <= rankPoint && rankPoint < 3000) {
+				board.setProfileUrl("/godDaddy_uploadImage/rankImage/underBoss.png");
+			}else if(3000 <= rankPoint) {
+				board.setProfileUrl("/godDaddy_uploadImage/rankImage/boss.png");
+			}
 			
 			model.addAttribute("board", board);
 		}else { //조회수 증가 실패ㅠㅠ
@@ -252,8 +340,6 @@ public class BoardController {
 	                      ,MultipartFile image
 	                      ,HttpSession session) {
 		
-		System.out.println("댓글 : " + reply);
-		System.out.println("이미지 : " + image);
 		BoardFile file = null;
 		
 		if(image != null) {
@@ -281,6 +367,11 @@ public class BoardController {
 	public ArrayList<Reply> getReplyList(int boardNo){
 		
 		ArrayList<Reply> replyList = service.getReplyList(boardNo);
+		
+		for(Reply r : replyList) {
+			int rankPoint = r.getRankPoint();
+			setProfileUrl(r, rankPoint);
+		}
 		
 		return replyList;
 	}
@@ -310,7 +401,59 @@ public class BoardController {
 		return result;
 	}
 	
+	
+	
+	/*=======================================갤러리============================================*/
+	
+	@GetMapping("/gallery")
+	public String galleryBoardList() {
+		return "board/gallery";
+	}
+	
+	
+	
+	
+	/*=======================================하이라이트 영상============================================*/
+	@GetMapping("/video")
+	public String videoBoardList() {
+		return "board/video";
+	}
+	
 
+	/*=======================================공통============================================*/
+	
+	@GetMapping("/like") //게시물에 좋아요 혹은 싫어요 보내기
+	@ResponseBody
+	public int likeBoard(int boardNo
+						,String type
+						,@SessionAttribute Member loginUser) {
+		
+		BoardLikeDTO dto = BoardLikeDTO.builder()
+									   .boardNo(boardNo)
+									   .type(type)
+									   .userName(loginUser.getUserName())
+									   .build();
+		
+		return service.toggleBoardLike(dto);
+	}
+	
+	@GetMapping("/likeReply") //댓글에 좋아요 혹은 싫어요 보내기
+	@ResponseBody
+	public int likeReply(int replyNo
+						,@SessionAttribute Member loginUser) {
+		
+		
+		HashMap<String, Object> needed = new HashMap<>();
+		
+		needed.put("replyNo", replyNo);
+		needed.put("userName", loginUser.getUserName());
+		
+		return service.toggleReplyLike(needed);
+	}
+	
+	
+	
+	
 	// 변경된 파일 이름 반환 메소드
 	public String getChangedFileName(MultipartFile uploadFile) {
 		// 1.원본 파일명 추출
@@ -378,8 +521,9 @@ public class BoardController {
 		File deletedFile = new File(deletePath + changeName);
 		return originFile.renameTo(deletedFile); 
 		
-		
 	}
+	
+	
 	
 	
 	

@@ -39,12 +39,55 @@
 		AND BOARD.STATUS = 'Y'
 	</select>
 	
+	
+	
+	<resultMap type="Board" id="boardDetailResultMap">
+		<result property="boardNo" column="BOARDNO"/>
+		<result property="userName" column="USERNAME"/>
+		<result property="nickName" column="NICKNAME"/>
+		<result property="typeNo" column="TYPENO"/>
+		<result property="title" column="TITLE"/>
+		<result property="detail" column="DETAIL"/>
+		<result property="status" column="STATUS"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="viewCount" column="VIEWCOUNT"/>
+		<result property="displayName" column="DISPLAYNAME"/>
+		<result property="rankPoint" column="RANKPOINT"/>
+		<result property="likeCount" column="LIKECOUNT"/>
+		<result property="dislikeCount" column="DISLIKECOUNT"/>
+		<collection property="fileList" ofType="BoardFile">
+			<result property="fileNo" column="FILENO"/>
+			<result property="boardNo" column="BOARDNO"/>
+			<result property="type" column="TYPE"/>
+			<result property="originName" column="ORIGINNAME"/>
+			<result property="changeName" column="CHANGENAME"/>
+			<result property="uploadDate" column="UPLOADDATE"/>
+			<result property="status" column="FILE_STATUS"/>
+		</collection>
+		<collection property="replyList" ofType="Reply">
+			<result property="replyNo" column="REPLYNO"/>
+			<result property="status" column="REPLY_STATUS"/>
+		</collection>
+	</resultMap>
+	
 	<!-- 라운지 게시글 목록 조회용 -->
-	<select id="boardList" resultType="Board">
-		SELECT *
+	<select id="boardList" resultMap="boardDetailResultMap">
+		SELECT B.BOARDNO
+			  ,B.TITLE
+		      ,U.NICKNAME
+		      ,B.CREATEDATE
+		      ,B.VIEWCOUNT
+		      ,B.STATUS
+		      ,T.DISPLAYNAME
+		      ,U.RANKPOINT
+		      ,F.STATUS AS FILE_STATUS
+		      ,R.REPLYNO
+		      ,R.STATUS AS REPLY_STATUS
 		FROM BOARD B
 		JOIN BOARD_TYPE T USING(TYPENO)
 		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
+		LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
+		LEFT JOIN REPLY R ON(B.BOARDNO = R.BOARDNO)
 		<choose>
 			<when test="type == null || type ==''">
 				WHERE T.TYPENAME LIKE 'lounge%'
@@ -73,35 +116,57 @@
 		ORDER BY CREATEDATE DESC
 	</select>
 	
-	<resultMap type="Board" id="boardDetailResultMap">
-		<result property="boardNo" column="BOARDNO"/>
-		<result property="userName" column="USERNAME"/>
-		<result property="typeNo" column="TYPENO"/>
-		<result property="title" column="TITLE"/>
-		<result property="detail" column="DETAIL"/>
-		<result property="status" column="STATUS"/>
-		<result property="createDate" column="CREATEDATE"/>
-		<result property="viewCount" column="VIEWCOUNT"/>
-		<result property="displayName" column="DISPLAYNAME"/>
-		<collection property="fileList" ofType="BoardFile">
-			<result property="fileNo" column="FILENO"/>
-			<result property="boardNo" column="BOARDNO"/>
-			<result property="fileUrl" column="FILEURL"/>
-			<result property="type" column="TYPE"/>
-			<result property="originName" column="ORIGINNAME"/>
-			<result property="changeName" column="CHANGENAME"/>
-			<result property="uploadDate" column="UPLOADDATE"/>
-			<result property="isDeleted" column="ISDELETED"/>
-		</collection>
-		<collection property="replyList" ofType="Reply">
-			<result property="replyNo" column="REPLYNO"/>
-			<result property="boardNo" column="BOARDNO"/>
-			<result property="fileNo" column="FILENO"/>
-			<result property="replyContent" column="REPLYCONTENT"/>
-			<result property="createDate" column="CREATEDATE"/>
-			<result property="userName" column="USERNAME"/>
-		</collection>
-	</resultMap>
+	<!-- 라운지 상위top5 게시글 목록 조회용 -->
+	<select id="topLikedList" resultMap="boardDetailResultMap">
+		SELECT *
+		FROM (
+			SELECT B.BOARDNO
+				  ,B.TITLE
+			      ,U.NICKNAME
+			      ,B.CREATEDATE
+			      ,B.VIEWCOUNT
+			      ,B.STATUS
+			      ,B.LIKECOUNT
+			      ,B.DISLIKECOUNT
+			      ,T.DISPLAYNAME
+			      ,U.RANKPOINT
+			      ,F.STATUS AS FILE_STATUS
+			      ,R.REPLYNO
+			      ,R.STATUS AS REPLY_STATUS
+			FROM BOARD B
+			JOIN BOARD_TYPE T USING(TYPENO)
+			JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
+			LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
+			LEFT JOIN REPLY R ON(B.BOARDNO = R.BOARDNO)
+			<choose>
+				<when test="type == null || type ==''">
+					WHERE T.TYPENAME LIKE 'lounge%'
+				</when>
+				<when test="type == 'lounge_job'">
+					WHERE T.TYPENAME LIKE 'lounge_job%'
+				</when>
+				<otherwise>
+					WHERE T.TYPENAME LIKE #{type}
+				</otherwise>
+			</choose>
+			<if test="condition != ''">
+				<choose>
+					<when test="condition == 'title'">
+						AND B.TITLE LIKE '%'||#{keyword}||'%'
+					</when>
+					<when test="condition == 'writer'">
+						AND U.NICKNAME LIKE '%'||#{keyword}||'%'				
+					</when>
+					<otherwise>
+						AND B.DETAIL LIKE '%'||#{keyword}||'%'
+					</otherwise>
+				</choose>
+			</if>
+			AND B.STATUS = 'Y'
+			ORDER BY LIKECOUNT DESC
+		)
+		<![CDATA[ WHERE ROWNUM <= 5]]>
+	</select>
 	
 	<update id="increaseCount">
 		UPDATE BOARD
@@ -110,11 +175,25 @@
 	</update>
 	
 	<select id="loungeBoardDetail" resultMap="boardDetailResultMap">
-		SELECT *
+		SELECT B.BOARDNO
+		      ,U.NICKNAME
+		      ,B.DETAIL
+		      ,B.TITLE
+		      ,B.CREATEDATE
+		      ,B.VIEWCOUNT
+		      ,B.LIKECOUNT
+		      ,B.DISLIKECOUNT
+		      ,B.STATUS
+		      ,T.DISPLAYNAME
+		      ,U.RANKPOINT
+		      ,F.FILENO
+		      ,F.ORIGINNAME
+		      ,F.CHANGENAME
+		      ,F.STATUS AS FILE_STATUS
 		FROM BOARD B
 		LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
 		JOIN BOARD_TYPE T USING(TYPENO)
-		LEFT JOIN REPLY R ON(B.BOARDNO = R.BOARDNO)
+		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
 		WHERE B.BOARDNO = #{boardNo}
 	</select>
 	
@@ -212,12 +291,12 @@
 	<select id="getReplyList" resultType="Reply">
 		SELECT *
 		FROM REPLY R
-		JOIN BOARD B ON (R.BOARDNO =  B.BOARDNO)
+		JOIN BOARD B ON (R.BOARDNO = B.BOARDNO)
 		LEFT JOIN BOARD_FILE F ON (R.FILENO = F.FILENO)
 		JOIN USER_INFO U ON (R.USERNAME = U.USERNAME)
 		WHERE B.BOARDNO = #{boardNo}
 		AND R.STATUS ='Y'
-		ORDER BY R.CREATEDATE DESC
+		ORDER BY R.CREATEDATE
 	</select>
 	
 	<select id="selectReply" resultType="Reply">
@@ -242,6 +321,87 @@
 						WHERE REPLYNO = #{replyNo}
 					   )		
 	</update>
+	
+	<select id="checkBoardLike" resultType="string">
+		SELECT TYPE
+		FROM BOARD_LIKE
+		WHERE USERNAME = #{userName}
+		AND BOARDNO = #{boardNo}
+	</select>
+	
+	<delete id="deleteBoardLikeHistory">
+		DELETE
+		FROM BOARD_LIKE
+		WHERE USERNAME = #{userName}
+		AND BOARDNO = #{boardNo}
+		AND TYPE = #{type}
+	</delete>
+	
+	<update id="increaseBoardLike">
+		UPDATE BOARD
+		SET 
+			LIKECOUNT = LIKECOUNT + CASE WHEN #{type} = 'L' THEN 1 ELSE 0 END,
+			DISLIKECOUNT = DISLIKECOUNT + CASE WHEN #{type} = 'L' THEN 0 ELSE 1 END
+		WHERE BOARDNO = #{boardNo}
+	</update>
+	
+	<update id="decreaseBoardLike">
+		UPDATE BOARD
+		SET 
+			LIKECOUNT = LIKECOUNT - CASE WHEN #{type} = 'L' THEN 1 ELSE 0 END,
+			DISLIKECOUNT = DISLIKECOUNT - CASE WHEN #{type} = 'L' THEN 0 ELSE 1 END
+		WHERE BOARDNO = #{boardNo}
+	</update>
+	
+	<insert id="insertBoardLikeHistory">
+		INSERT INTO BOARD_LIKE(LIKENO
+							  ,BOARDNO
+							  ,USERNAME
+							  ,TYPE)
+			   VALUES(SEQ_B_LIKENO.NEXTVAL
+			   	     ,#{boardNo}
+			   	     ,#{userName}
+			   	     ,#{type}
+			   	     ) 
+	</insert>
+	
+	<select id="checkReplyLike" resultType="_int">
+		SELECT COUNT(*)
+		FROM REPLY_LIKE
+		WHERE REPLYNO = #{replyNo}
+	</select>
+	
+	<delete id="deleteReplyLikeHistory">
+		DELETE
+		FROM REPLY_LIKE
+		WHERE REPLYNO = #{replyNo}
+		AND USERNAME = #{userName}
+	</delete>
+	
+	<update id="decreaseReplyLike">
+		UPDATE REPLY
+		SET 
+			LIKECOUNT = LIKECOUNT - 1
+		WHERE REPLYNO = #{replyNo}
+	</update>
+	
+	<insert id="insertReplyLikeHistory">
+		INSERT INTO REPLY_LIKE(LIKENO
+							  ,REPLYNO
+							  ,USERNAME)
+				   VALUES(SEQ_R_LIKENO.NEXTVAL
+				   		 ,#{replyNo}
+				   		 ,#{userName}
+				   		 )
+	</insert>
+	
+	<update id="increaseReplyLike">
+		UPDATE REPLY
+		SET 
+			LIKECOUNT = LIKECOUNT + 1
+		WHERE REPLYNO = #{replyNo}
+	</update>
+	
 
 	
 	

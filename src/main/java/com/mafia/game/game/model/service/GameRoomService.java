@@ -1,8 +1,10 @@
 package com.mafia.game.game.model.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.job.model.vo.Job;
 
 public interface GameRoomService {
 	
@@ -15,4 +17,18 @@ public interface GameRoomService {
 	int deleteRoom(int roomNo);
 	
 	List<GameRoom> getAllRooms();
+
+	int updateReadyList(int roomNo, String updatedList);
+
+	String getReadyCount(int roomNo);
+
+	int updateRoomMaster(int roomNo, String string);
+
+	int updateStart(int roomNo, String updatedJob);
+	
+	List<Job> selectRandomJobs(int mafiaCount, int citizenCount, int neutralCount);
+
+	Map<String, Object> getRoomJob(int roomNo, String userName);
+
+	Job getJobDetail(int myJob);
 }

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 신고 내역 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/report/report.css}" />
+</head>
+<body>
+
+    <!-- 메시지 표시 -->
+    <div th:if="${msg}">
+        <script th:inline="javascript">
+            alert(/*[[${msg}]]*/ '메시지');
+        </script>
+    </div>
+
+    <!-- 헤더 -->
+    <div th:replace="~{common/header :: header}"></div>
+
+    <!-- 신고 내역 컨테이너 -->
+    <div class="mypage-container">
+        <h1 class="mypage-title">내 신고 내역</h1>
+
+        <!-- 신고 내역 섹션 -->
+        <div class="profile-section">
+            <h3>신고 목록</h3>
+            
+            <!-- 신고 내역이 있을 때 -->
+            <div th:if="${reportList != null and !#lists.isEmpty(reportList)}">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>번호</th>
+                            <th>신고 대상</th>
+                            <th>신고 사유</th>
+                            <th>신고 날짜</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="report, iterStat : ${reportList}">
+                            <td th:text="${iterStat.count}">1</td>
+                            <td th:text="${report.reportedNickName != null ? report.reportedNickName : report.reportedName}">닉네임</td>
+                            <td class="report-reason" th:text="${report.reason}">신고 사유</td>
+                            <td th:text="${#dates.format(report.reportedAt, 'yyyy-MM-dd HH:mm')}">2025-01-09 14:30</td>
+                            <td>
+                                <button class="delete-report-btn mypage-btn delete" 
+                                        th:attr="data-report-id=${report.reportId}"
+                                        th:onclick="|deleteReport(${report.reportId})|">
+                                    취소
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 신고 내역이 없을 때 -->
+            <div th:if="${reportList == null or #lists.isEmpty(reportList)}" class="no-reports">
+                <p>신고한 내역이 없습니다.</p>
+            </div>
+        </div>
+
+        <!-- 뒤로가기 버튼 -->
+        <div class="action-buttons">
+            <a th:href="@{/mypage}" class="mypage-btn">마이페이지로</a>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+
+    <!-- Thymeleaf 인라인 스크립트 -->
+    <script th:inline="javascript">
+        // 신고 취소 함수
+        function deleteReport(reportId) {
+            const confirmDelete = confirm('이 신고를 취소하시겠습니까?');
+            
+            if (confirmDelete) {
+                $.ajax({
+                    url: /*[[@{/report/delete}]]*/ '/report/delete',
+                    type: 'POST',
+                    data: { reportId: reportId },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload(); // 페이지 새로고침
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('서버 오류가 발생했습니다.');
+                    }
+                });
+            }
+        }
+
+        // 문서 준비 시 실행
+        $(document).ready(function() {
+            console.log('신고 내역 페이지 로드 완료');
+        });
+    </script>
+
+</body>
+</html>

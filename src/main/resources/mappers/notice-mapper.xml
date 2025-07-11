@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "Http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="noticeMapper">
+
+	<select id="noticeCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM NOTICE
+		WHERE STATUS = 'Y'
+		<if test="keyword != ''">
+			<choose>
+				<when test="condition == 'content'">
+					AND CONTENT LIKE '%'||#{keyword}||'%'
+				</when>
+				<when test="condition == 'title'">
+					AND TITLE LIKE '%'||#{keyword}||'%'
+				</when>
+			</choose>
+		</if>
+	</select>
+	
+	<select id="noticeList" resultType="Notice">
+		SELECT NOTICENO
+			  ,USERNAME
+			  ,TITLE
+			  ,CREATEDATE
+			  ,COUNT
+		FROM NOTICE
+		WHERE STATUS = 'Y'
+		<if test="keyword != ''">
+			<choose>
+				<when test="condition == 'content'">
+					AND CONTENT LIKE '%'||#{keyword}||'%'
+				</when>
+				<when test="condition == 'title'">
+					AND TITLE LIKE '%'||#{keyword}||'%'
+				</when>
+			</choose>
+		</if>
+		<choose>
+			<when test="sort == 'count'">
+				ORDER BY COUNT DESC
+			</when>
+			<otherwise>
+				ORDER BY CREATEDATE DESC
+			</otherwise>
+		</choose>
+	</select>
+
+</mapper>

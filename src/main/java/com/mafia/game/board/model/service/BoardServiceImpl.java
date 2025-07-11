@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mafia.game.board.model.dao.BoardDao;
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.BoardLikeDTO;
 import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 
@@ -31,6 +32,11 @@ public class BoardServiceImpl implements BoardService{
 	@Override
 	public ArrayList<Board> boardList(HashMap<String, String> filterMap, PageInfo pi) {
 		return dao.boardList(sqlSession,filterMap,pi);
+	}
+	
+	@Override
+	public ArrayList<Board> topLikedList(HashMap<String, String> filterMap) {
+		return dao.topLikedList(sqlSession, filterMap);
 	}
 	
 	@Override
@@ -180,6 +186,76 @@ public class BoardServiceImpl implements BoardService{
 		}
 		
 		return result;
+	}
+	
+	@Override
+	@Transactional
+	public int toggleBoardLike(BoardLikeDTO dto) {
+		
+		
+		String existingType = dao.checkBoardLike(sqlSession, dto); //없으면 null 반환
+		
+		int result = 1;
+		
+		if(existingType != null) { //이미 해당 게시물에 좋아요 OR 싫어요를 했다면
+			
+			if(existingType.equals(dto.getType())) { //기존 타입과 현재 등록할 타입이 일치한다면
+				result *= dao.deleteBoardLikeHistory(sqlSession, dto); //DB에서 해당 기록 제거
+				result *= dao.decreaseBoardLike(sqlSession, dto); //DB에서 좋아요 OR 싫어요 감소시키기
+				
+				if(result == 0) {
+					return result;
+				}else { //잘 됐다면
+					return -1;
+				}
+				
+			}else {//기존 타입과 현재 등록할 타입이 일치하지 않는다면
+				result *= dao.insertBoardLikeHistory(sqlSession, dto);
+				result *= dao.increaseBoardLike(sqlSession, dto);
+				dto.setType(existingType);
+				result *= dao.deleteBoardLikeHistory(sqlSession, dto); //DB에서 해당 기록 제거
+				result *= dao.decreaseBoardLike(sqlSession, dto); //DB에서 좋아요 OR 싫어요 감소시키기
+				
+				if(result == 0) {
+					return result;
+				}else {//잘 됐다면
+					return -100;
+				}
+			}
+			
+			
+		}else { //한 적 없다면
+			result *= dao.insertBoardLikeHistory(sqlSession, dto); //DB에서 해당 기록 추가
+			result *= dao.increaseBoardLike(sqlSession, dto); //DB에서 좋아요 OR 싫어요 증가시키기
+			
+			return result;
+		}
+	}
+	
+	@Override
+	@Transactional
+	public int toggleReplyLike(HashMap<String, Object> needed) {
+		
+		int exists = dao.checkReplyLike(sqlSession, needed);
+		int result = 1;
+		if(exists > 0) { //유저가 해당 댓글에 좋아요 누른 기록이 있다면
+			
+			result *= dao.deleteReplyLikeHistory(sqlSession, needed);
+			result *= dao.decreaseReplyLike(sqlSession, needed);
+			
+			if(result > 0) {
+				return -1;
+			}else {
+				return result;
+			}
+			
+		}else { //유저가 해당 댓글에 좋아요 누른 기록이 없다면
+			
+			result *= dao.insertReplyLikeHistory(sqlSession, needed);
+			result *= dao.increaseReplyLike(sqlSession, needed);
+			
+			return result;
+		}
 	}
 	
 	
