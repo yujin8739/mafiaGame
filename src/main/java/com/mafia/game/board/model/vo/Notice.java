@@ -16,6 +16,7 @@ public class Notice {
 	private String title;
 	private String content;
 	private Date createDate;
+	private int count;
 	private String status;
 	
 }

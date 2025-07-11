@@ -50,7 +50,7 @@ public class NoticeController {
 		model.addAttribute("pi", pi);
 		model.addAttribute("noticeMap", noticeMap);
 		
-		return "notice/notice";
+		return "board/notice";
 	}
 	
 }
