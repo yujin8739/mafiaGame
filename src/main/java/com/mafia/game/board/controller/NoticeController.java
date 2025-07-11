@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -51,6 +52,13 @@ public class NoticeController {
 		model.addAttribute("noticeMap", noticeMap);
 		
 		return "board/notice";
+	}
+	
+	@GetMapping("/detail/{noticeNo}")
+	public String noticeDetail(@PathVariable int noticeNo, Model model) {
+	    Notice notice = service.selectNotice(noticeNo);
+	    model.addAttribute("notice", notice);
+	    return "board/noticeDetail"; // 상세페이지 HTML
 	}
 	
 }

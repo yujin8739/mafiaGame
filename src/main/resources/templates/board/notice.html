@@ -45,7 +45,12 @@
 				<th:block th:if="${!#lists.isEmpty(noticeList)}">
 				    <tr th:each="notice : ${noticeList}">
 				      <td th:text="${notice.noticeNo}"></td>
-				      <td th:text="${notice.title}"></td>
+				      <td>
+			              <a th:href="@{/notice/detail/{noticeNo}(noticeNo=${notice.noticeNo})}"
+			                 th:text="${notice.title}"
+			                 style="color: inherit; text-decoration: none;">
+			              </a>
+			          </td>
 				      <td>관리자</td>
 				      <td th:text="${#dates.format(notice.createDate, 'yyyy-MM-dd')}"></td>
 				      <td th:text="${notice.count}"></td>
