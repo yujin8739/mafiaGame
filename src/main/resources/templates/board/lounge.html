@@ -146,17 +146,17 @@
     }
 
     .post-title {
-      color: #333;
-      font-weight: 500;
-      font-size: 15px;
-      text-decoration: none;
-      vertical-align: middle;
-    }
-
-    .post-title:hover {
-      text-decoration: underline;
-      color: #c82e38;
-    }
+	  color: #222;
+	  font-weight: 600;
+	  font-size: 16px;
+	  text-decoration: none;
+	  display: inline;        /* inline으로 되돌림 */
+	}
+	
+	.post-title:hover {
+	  color: #c82e38;
+	  text-decoration: none;
+	}
 
     .pagination {
       justify-content: center;
@@ -183,22 +183,85 @@
       display: none;
     }
 
-    .rank-badge {
-	  border: 2px solid rgba(255, 255, 255, 0.5); /* 밝은 테두리 추가 */
-	  background-color: #fff;
-	  border-radius: 50%;
-	  width: 36px;
-	  height: 36px;
+    .badge-icon {
+	  width: 24px;
+	  height: 24px;
+	  margin-right: 0;
+	  border-radius: 4px;
 	  object-fit: cover;
-	  padding: 2px;
-	  box-shadow: 0 0 6px rgba(255, 255, 255, 0.2); /* 부드러운 외곽 효과 */
+	  border: 1px solid rgba(255, 255, 255, 0.4);
+	  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+	  background-color: #fff;
+	  vertical-align: middle;
 	}
 
     .nickname {
-      font-weight: 500;
-      color: #222;
-    }
-  </style>
+	  font-weight: 500;
+	  background: linear-gradient(to right, #111, #444);
+	  -webkit-background-clip: text;
+	  -webkit-text-fill-color: transparent;
+	  padding-left : 0;
+	}
+    
+    .comment-count {
+	  font-size: 14px;
+	  font-weight: 600;
+	  color: #c82e38;
+	  margin-left: 4px;
+	  vertical-align: baseline; /* ✅ 기준선에 맞춤 */
+	  line-height: 1;
+	  padding : 0;
+	  margin-left : 1;
+	}
+		
+	.board-table tbody tr:hover {
+	  background-color: #fdf1f1;
+	  transition: background-color 0.2s;
+	}
+	
+	table.board-table tbody tr td {
+	  border-bottom: 1px solid #ddd;
+	}
+	
+	.new-label {
+	  display: inline-block;
+	  background-color: #f2dede;  /* 은은한 연분홍 배경 */
+	  color: #a94442;             /* 고급스러운 다홍 텍스트 */
+	  font-size: 11px;
+	  font-weight: 600;
+	  padding: 2px 6px;
+	  margin-left: 6px;
+	  border-radius: 8px;
+	  vertical-align: middle;
+	  border: 1px solid #ebcccc;
+	}
+	
+	/* 고정된 좋아요 Top 게시물 스타일 */
+	.top-liked-row {
+	  background: linear-gradient(to right, #111, #222);
+	  color: #fff;
+	  font-weight: 600;
+	  border-bottom: 1px solid #333 !important;
+	}
+	
+	.top-liked-row .post-title {
+	  color: #f1f1f1;
+	}
+	
+	.top-liked-row .post-title:hover {
+	  color: #f86a6a;
+	}
+	
+	.top-liked-row .comment-count {
+	  color: #ff8c8c;
+	}
+	
+	.top-liked-row .new-label {
+	  background-color: #2a2a2a;
+	  color: #ff6666;
+	  border-color: #444;
+	}
+	  </style>
 </head>
 <body>
 
@@ -261,20 +324,44 @@
 
     <!-- 글쓰기 버튼 -->
     <button class="write-btn" onclick="location.href='/board/lounge/write'">글쓰기</button>
-
+	
+	
+	
     <!-- 게시판 리스트 -->
     <table class="board-table">
       <thead>
         <tr>
           <th></th>
           <th style="text-align: left;">제목</th>
-          <th>작성자</th>
-          <th>날짜</th>
-          <th>조회수</th>
+          <th style="text-align: left;">작성자</th>
+          <th style="text-align: left;">날짜</th>
+          <th style="text-align: left;">조회수</th>
         </tr>
       </thead>
       <!-- 개선된 자유게시판 테이블 부분만 수정한 버전 -->
-		<tbody>
+	  <tbody>
+      <!-- 좋아요 순 Top 5 고정 게시물 (스타일 다름) -->
+	  <tr th:each="b : ${topLikedList}" class="top-liked-row">
+	    <td><span class="board-tag" th:text="${b.displayName}"></span></td>
+	    <td style="text-align: left;">
+	      <a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}"
+	         class="post-title text-white font-weight-bold"
+	         th:utext="${b.title + (b.replyCount > 0 ? ' <span class=''comment-count''>[' + b.replyCount + ']</span>' : '')}">
+	      </a>
+	      <span th:if="${b.isNew}" class="new-label">N</span>
+	      <span th:if="${b.fileList[0].status == 'Y'}" style="margin-left: 4px;">📎</span>
+	    </td>
+	    <td style="text-align: left;">
+	      <div style="display: flex; align-items: center; gap: 8px;">
+	        <img th:if="${b.profileUrl != null}" th:src="${b.profileUrl}" class="badge-icon" />
+	        <span class="nickname" th:text="${b.nickName}"></span>
+	      </div>
+	    </td>
+	    <td th:text="${b.createDate}" style="text-align: left;"></td>
+	    <td th:text="${b.viewCount}" style="text-align: left;"></td>
+	  </tr>
+	  
+	  
       <tr th:if="${#lists.isEmpty(boardList)}">
         <td colspan="5">조회된 게시물이 없습니다</td>
       </tr>
@@ -283,17 +370,22 @@
           <span class="board-tag" th:text="${b.displayName}"></span>
         </td>
         <td style="text-align: left;">
-		  <a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}" class="post-title" th:text="${b.title}"></a>
-		  <span th:if="${b.fileList[0].status == 'Y'}">📎</span>
+		 <a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}"
+		   class="post-title"
+		   th:utext="${b.title + (b.replyCount > 0 ? ' <span class=''comment-count''>[' + b.replyCount + ']</span>' : '')}">
+		</a>
+		<span th:if="${b.isNew}" class="new-label">N</span>
+	    <span th:if="${b.fileList[0].status == 'Y'}" style="margin-left: 4px;padding-left: 0">📎</span>
 		</td>
-        <td style="text-align: center;">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <img th:src="${b.profileUrl}" class="rank-badge" alt="프로필" />
-            <span class="nickname" th:text="${b.nickName}"></span>
-          </div>
-        </td>
-        <td th:text="${b.createDate}"></td>
-        <td th:text="${b.viewCount}"></td>
+        <!-- 작성자 좌측 정렬 -->
+		<td style="text-align: left;">
+		  <div style="display: flex; align-items: center; gap: 8px;">
+		    <img th:if="${b.profileUrl != null}" th:src="${b.profileUrl}" class="badge-icon" alt="뱃지 이미지" />
+		    <span class="nickname" th:text="${b.nickName}"></span>
+		  </div>
+		</td>
+        <td style="text-align: left;" th:text="${b.createDate}"></td>
+		<td style="text-align: left;" th:text="${b.viewCount}"></td>
       </tr>
     </tbody>
     </table>

@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.BoardLikeDTO;
 import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 
@@ -31,6 +32,12 @@ public interface BoardService {
 	int deleteLoungeBoard(Board board);
 
 	int updateLoungeBoard(Board board, BoardFile file, boolean deleteFile);
+
+	int toggleBoardLike(BoardLikeDTO dto);
+
+	ArrayList<Board> topLikedList(HashMap<String, String> filterMap);
+
+	int toggleReplyLike(HashMap<String, Object> needed);
 
 
 
