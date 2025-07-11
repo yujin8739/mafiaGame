@@ -1,6 +1,8 @@
 package com.mafia.game.shop.model.dao;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
@@ -23,4 +25,32 @@ public class ShopDao {
     public Shop selectArtworkById(SqlSession session, int artId) {
         return session.selectOne("artshopMapper.selectArtworkById", artId);
     }
+    public int updateArt(SqlSession session, Shop shop) {
+        return session.update("artshopMapper.updateArt", shop);
+    }
+    
+    public int deleteArt(SqlSession session, int artId) {
+        return session.delete("artshopMapper.deleteArt", artId);
+    }
+
+
+    public int purchaseArt(SqlSession sqlSession, int artId, String buyerName) {
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("artId", artId);
+        paramMap.put("buyerName", buyerName);
+        return sqlSession.update("artshopMapper.purchaseArt", paramMap);
+    }
+
+    public List<Shop> selectMyPurchaseList(SqlSession sqlSession, String buyerName) {
+        return sqlSession.selectList("artshopMapper.selectMyPurchaseList", buyerName);
+    }
+
+    public int purchaseBuyArt(SqlSession sqlSession, int artId, String buyerName) {
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("artId", artId);
+        paramMap.put("buyerName", buyerName);
+        return sqlSession.update("artshopMapper.purchaseArt", paramMap);
+    }
+
+    
 }

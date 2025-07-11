@@ -1,5 +1,7 @@
 package com.mafia.game.member.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -12,6 +14,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
+import com.mafia.game.shop.model.service.ShopService;
+import com.mafia.game.shop.model.vo.Shop;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -26,16 +30,18 @@ public class MemberController {
     private BCryptPasswordEncoder bcrypt;
 	
 	@GetMapping("")
-    public String myPage(HttpSession session, Model model) {
+    public String myPage(HttpSession session, Model model,ShopService shopService) {
         Member loginUser = (Member) session.getAttribute("loginUser");
         
         if (loginUser == null) {
             return "redirect:/login/view";
         }
+//        List<Shop> myItems = shopService.findByBuyer(loginUser.getUserName());
         
         // 최신 정보 조회
         Member member = ms.getMemberByUserName(loginUser.getUserName());
         model.addAttribute("member", member);
+//        model.addAttribute("myItems", myItems);
         return "member/mypage";
     }
 	
