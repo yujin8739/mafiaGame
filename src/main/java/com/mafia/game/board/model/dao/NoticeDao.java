@@ -23,5 +23,13 @@ public class NoticeDao {
 		
 		return (ArrayList)sqlSession.selectList("noticeMapper.noticeList", noticeMap, new RowBounds(offset,limit));
 	}
+
+	public void increaseCount(SqlSessionTemplate sqlSession, int noticeNo) {
+		sqlSession.update("noticeMapper.increaseCount", noticeNo);
+	}
+
+	public Notice selectNotice(SqlSessionTemplate sqlSession, int noticeNo) {
+		return (Notice)sqlSession.selectOne("noticeMapper.selectNotice", noticeNo);
+	}
 	
 }

@@ -47,5 +47,21 @@
 			</otherwise>
 		</choose>
 	</select>
+	
+	<update id="increaseCount" parameterType="int">
+		UPDATE NOTICE
+		SET COUNT = COUNT + 1
+		WHERE NOTICENO = #{noticeNo}
+	</update>
+	
+	<resultMap type="Notice" id="noticeResultMap">
+		<result property="noticeNo" column="NOTICENO"/>
+	</resultMap>
+	
+	<select id="selectNotice" parameterType="int" resultType="Notice">
+		SELECT *
+		FROM NOTICE
+		WHERE NOTICENO = #{noticeNo}
+	</select>
 
 </mapper>

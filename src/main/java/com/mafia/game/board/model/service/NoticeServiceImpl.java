@@ -31,4 +31,14 @@ public class NoticeServiceImpl implements NoticeService {
 		return dao.noticeList(sqlSession, noticeMap, pi);
 	}
 	
+	@Override
+	public Notice selectNotice(int noticeNo) {
+		return dao.selectNotice(sqlSession, noticeNo);
+	}
+	
+	@Override
+	public void increaseCount(int noticeNo) {
+		dao.increaseCount(sqlSession, noticeNo);
+	}
+	
 }

@@ -3,6 +3,8 @@ package com.mafia.game.board.controller;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,11 +17,14 @@ import com.mafia.game.board.model.service.NoticeService;
 import com.mafia.game.board.model.vo.Notice;
 import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.common.template.Pagination;
+import com.mafia.game.member.model.vo.Member;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("notice")
 public class NoticeController {
-
+	private static final Logger logger = LoggerFactory.getLogger(NoticeController.class);
 	@Autowired
 	private NoticeService service;
 	
@@ -41,7 +46,7 @@ public class NoticeController {
 		
 		int noticeCount = service.noticeCount(noticeMap);
 		int pageLimit = 10;
-		int boardLimit = 20;
+		int boardLimit = 10;
 		
 		PageInfo pi = Pagination.getPageInfo(noticeCount, currentPage, pageLimit, boardLimit);
 		
@@ -55,10 +60,21 @@ public class NoticeController {
 	}
 	
 	@GetMapping("/detail/{noticeNo}")
-	public String noticeDetail(@PathVariable int noticeNo, Model model) {
+	public String noticeDetail(@PathVariable int noticeNo, Model model, HttpSession session) {
+		String userName = ((Member) session.getAttribute("loginUser")).getUserName();
+	    logger.info("세션에 저장된 userName: {}", userName);
+		service.increaseCount(noticeNo);
+		
 	    Notice notice = service.selectNotice(noticeNo);
 	    model.addAttribute("notice", notice);
 	    return "board/noticeDetail"; // 상세페이지 HTML
+	}
+	
+	@GetMapping("/delete/{noticeNo}")
+	public String deleteNotice(@PathVariable int noticeNo, Model model) {
+		
+		
+		return null;
 	}
 	
 }
