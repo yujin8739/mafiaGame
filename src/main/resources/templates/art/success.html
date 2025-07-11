@@ -1,0 +1,66 @@
+<!-- templates/common/success.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>구매 완료</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #000000;
+            margin: 0;
+            padding: 0;
+        }
+
+        .success-container {
+            max-width: 600px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            color: #4CAF50;
+        }
+
+        .success-message {
+            font-size: 24px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .description {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .back-btn {
+            margin-top: 30px;
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">✔️</div>
+        <div class="success-message">구매가 완료되었습니다!</div>
+        <div class="description">마이페이지에서 구매 내역을 확인하실 수 있습니다.</div>
+        <a th:href="@{/artshop}" class="back-btn">상점으로 돌아가기</a>
+    </div>
+</body>
+</html>

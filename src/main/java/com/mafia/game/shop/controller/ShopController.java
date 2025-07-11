@@ -3,19 +3,23 @@ package com.mafia.game.shop.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.shop.model.service.ShopService;
 import com.mafia.game.shop.model.vo.Shop;
 
 import jakarta.servlet.http.HttpSession;
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Controller
 public class ShopController {
@@ -99,10 +103,131 @@ public class ShopController {
         return "art/artDetail";
     }
     
+    @PostMapping("/artshop/edit/{id}")
+    public String updateArt(
+        @PathVariable("id") int artId,
+        @ModelAttribute Shop updatedArt,
+        @RequestParam(value = "thumbnail", required = false) MultipartFile thumbnail,
+        HttpSession session,
+        Model model
+    ) {
+        String uploadPath = "C:\\godDaddy_uploadImage\\artshopImage\\";
+        File folder = new File(uploadPath);
+        if (!folder.exists()) folder.mkdirs();
 
+        // 기존 이미지 경로 확보
+        Shop originArt = shopService.selectArtworkById(artId);
+        String originImagePath = originArt.getImagePath();  // ex: /godDaddy_uploadImage/artshopImage/xxx.jpg
+
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+            String originalName = thumbnail.getOriginalFilename();
+            String ext = originalName.substring(originalName.lastIndexOf("."));
+            String renamed = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
+                            + "_" + (int)(Math.random() * 10000) + ext;
+
+            try {
+                // 새 이미지 저장
+                File newFile = new File(uploadPath + renamed);
+                thumbnail.transferTo(newFile);
+                updatedArt.setImagePath("/godDaddy_uploadImage/artshopImage/" + renamed);
+
+                // ✅ 기존 이미지 삭제 시도
+                if (originImagePath != null) {
+                    File oldFile = new File("C:" + originImagePath); // 실제 경로로 변환
+                    if (oldFile.exists()) {
+                        boolean deleted = oldFile.delete();
+                        if (!deleted) {
+                            System.out.println("[경고] 기존 이미지 삭제 실패: " + oldFile.getAbsolutePath());
+                        }
+                    }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                model.addAttribute("msg", "파일 업로드 실패!");
+                return "common/error";
+            }
+        } else {
+            // 새 이미지 없으면 기존 이미지 유지
+            updatedArt.setImagePath(originImagePath);
+        }
+
+        updatedArt.setArtId(artId); // ID 설정
+        int result = shopService.updateArt(updatedArt);
+
+        if (result > 0) {
+            return "redirect:/artshop/detail/" + artId;
+        } else {
+            model.addAttribute("msg", "수정 실패");
+            return "common/error";
+        }
+    }
+    
+    @GetMapping("/artshop/editForm/{id}")
+    public String showEditForm(@PathVariable("id") int artId, Model model) {
+        Shop art = shopService.selectArtworkById(artId);
+        if (art == null) {
+            model.addAttribute("msg", "존재하지 않는 작품입니다.");
+            return "common/error";
+        }
+        model.addAttribute("art", art);
+        return "art/artupdate";  // 수정 폼 뷰
+    }
+    
+    @GetMapping("/artshop/delete/{id}")
+    public String deleteArt(@PathVariable("id") int artId, Model model) {
+        Shop art = shopService.selectArtworkById(artId);
+        if (art == null) {
+            model.addAttribute("msg", "삭제할 작품이 존재하지 않습니다.");
+            return "common/error";
+        }
+
+        // 이미지 파일 삭제
+        String imagePath = art.getImagePath();
+        if (imagePath != null) {
+            File file = new File("C:" + imagePath);
+            if (file.exists()) file.delete();
+        }
+
+        int result = shopService.deleteArt(artId);
+        return (result > 0) ? "redirect:/artshop" : "common/error";
+    }
+    
+    @PostMapping("/artshop/buy/{id}")
+    public String buyArt(@PathVariable("id") int artId, HttpSession session, Model model) {
+        Member loginUser = (Member) session.getAttribute("loginUser");
+        
+        if (loginUser == null) {
+            return "redirect:/login/view";
+        }
+
+        int result = shopService.purchaseArt(artId, loginUser.getUserName());
+
+        if (result > 0) {
+            model.addAttribute("msg", "구매가 완료되었습니다.");
+            model.addAttribute("loc", "/artshop");
+            return "art/success"; // 구매 완료 메시지 띄우고 이동
+        } else {
+            model.addAttribute("msg", "구매에 실패했습니다.");
+            return "common/error";
+        }
+    }
     
     
     
-    
-    
+    // 내가 구매한 일러스트 목록 조회
+    @GetMapping("/mypage/myitems")
+    public String myPurchaseList(HttpSession session, Model model) {
+        String buyerName = (String) session.getAttribute("loginUser");
+
+        if (buyerName == null) {
+            model.addAttribute("msg", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+
+        List<Shop> myItems = shopService.selectMyPurchaseList(buyerName);
+        model.addAttribute("myItems", myItems);
+
+        return "member/myitems"; // myitems.html 뷰로 이동
+    }
 }

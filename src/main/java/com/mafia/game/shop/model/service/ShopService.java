@@ -10,4 +10,15 @@ public interface ShopService {
     List<Shop> selectAllArtworks();
     
     Shop selectArtworkById(int artId);
+    
+    int updateArt(Shop shop);
+    
+    int deleteArt(int artId);
+    
+	int purchaseArt(int artId, String userName);
+
+	List<Shop> selectMyPurchaseList(String buyerName);
+	
+	int purchaseBuyArt(int artId, String buyerName);
+	
 }
