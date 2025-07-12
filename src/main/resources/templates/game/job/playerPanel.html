@@ -5,29 +5,37 @@
 	    </div>
 	</div>
 	<script th:inline="javascript">
+		let userNickList;
 		/*<![CDATA[*/
-		
-			function loadUser(nRoom){
-				userList = nRoom.userList;
-				console.log(userList);
-				
-			    if (typeof userList === 'string') {
-			    	userList = JSON.parse(userList);
-			    }
+			function setUserNick(nickList){
+				userNickList = nickList;
+			}
+			
+			function loadUser(job){
 			
 			    const container = document.getElementById('playerPanelContainer');
 			    container.innerHTML = '';
 			    
-			    userList.forEach(name => {
+			    setUserName(job, userNickList, container)
+			    
+			    setReadyCount();
+			}
+		
+			function setUserName(userDeathList, userNickList, container) {
+			    
+			    userNickList.forEach((name, index) => {
 			        const div = document.createElement('div');
 			        div.className = 'slot';
 			        
 			        const panels = document.createElement('panels');
 			        panels.className = 'panels';
 			        
+			        const status = userDeathList[index];
 			        const someNails = document.createElement('img');
 			        someNails.className = 'someNails';
-			        someNails.src = status === 'Y' ? '/images/생존이미지.png' : '/images/사망이미지.png';
+			        someNails.src = (status === 'alive') ? '/images/생존이미지.png' : '/images/사망이미지.png';
+			        
+			        console.log(someNails.src);
 			        
 			        const input = document.createElement('input');
 			        
@@ -35,14 +43,72 @@
 			        input.type = 'text';
 			        input.readOnly = true;
 			        input.value = name;
-			        console.log(name);
 			        panels.appendChild(someNails);
 			        div.appendChild(input);
 			
 			        div.appendChild(panels);
 			        container.appendChild(div);
 			    });
-			    setReadyCount();
+			}
+			
+			function updateUserStatus(userDeathList) {
+			    const slots = document.querySelectorAll('.slot');
+			    slots.forEach((slot, index) => {
+			        const img = slot.querySelector('img.someNails');
+			        if (!img) return;
+
+			        const status = userDeathList[index];
+			        const newSrc = (status === 'alive') ? '/images/생존이미지.png' : '/images/사망이미지.png';
+
+			        // 플래그: 이미지가 다르면 src 교체
+			        if (img.src.indexOf(newSrc) === -1) {
+			            img.src = newSrc;
+			        }
+			    });
+			}
+			
+			function updateTimerUI(phase, time) {
+				const phaseDisplay = document.getElementById("phaseDisplay");
+				const timerDisplay = document.getElementById("timerDisplay");
+
+				let phaseText = "";
+
+				switch(phase) {
+					case "NIGHT":
+						setAlive();//투표로 죽였을때 생존자 다시 가져오기
+						setStart();//스파이가 마피아 찾았을 때 직업 마피아로 변경해주기
+						isNigth = true;
+						phaseText = "밤";
+						break;
+				    case "DAY":
+				    	setAlive();//마피아가 죽였을때 생존자 다시 가져오기
+				    	isNigth = false;
+						phaseText = "낮";
+						break;
+				    case "VOTE":
+						phaseText = "투표";
+						break;
+				    default:
+						phaseText = "알 수 없음";
+				  }
+
+				phaseDisplay.textContent = `현재 단계: ${phaseText}`;
+
+				if(timerDisplay) timerDisplay.textContent = `남은 시간: ${time}초`;
+				  
+				if (isNight && job!=='mafia') {
+					sendBtn.disabled = true;
+					sendBtn.classList.add('disabled-btn');
+
+					chatInput.disabled = true;
+					chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+				} else if (phase === "DAY" && isNigth === false) {
+					sendBtn.disabled = false;
+					sendBtn.classList.remove('disabled-btn');
+
+					chatInput.disabled = false;
+					chatInput.placeholder = "메시지를 입력하세요";
+				}
 			}
 		/*]]>*/
 	</script>

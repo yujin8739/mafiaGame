@@ -31,6 +31,7 @@ import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.job.model.vo.Job;
+import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
 
 import jakarta.servlet.http.HttpSession;
@@ -45,6 +46,9 @@ public class GameRoomController {
     
 	@Autowired
     private ChatService chatService;
+	
+	@Autowired
+	private MemberService memberService;
     
     private final ObjectMapper objectMapper = new ObjectMapper(); 
 
@@ -191,6 +195,12 @@ public class GameRoomController {
     	return gameRoomService.selectRoom(roomNo);
     }
     
+    @GetMapping("/userNickList")
+    @ResponseBody
+    public List<String> userNickList (@RequestParam String userList){
+    	return memberService.getUserNickList(userList);
+    }
+    
     @GetMapping("/getJob")
     @ResponseBody
     public Job getJob(@RequestParam int roomNo, HttpSession session,
@@ -227,6 +237,12 @@ public class GameRoomController {
 			e.printStackTrace();
 		}
 		return null;
+    }
+    
+    @GetMapping("/userDeathList")
+    @ResponseBody
+    public List<String> getDeathList (@RequestParam int roomNo) {
+    	return gameRoomService.getDeathList(roomNo);
     }
     
     public static String clobToString(Clob clob) {
