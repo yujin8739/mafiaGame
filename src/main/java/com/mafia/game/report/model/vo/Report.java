@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class Report {
-	private int reportid; //신고번호
+	private int reportId; //신고번호
 	private String reporterId; //신고자
 	private String reportedName; //신고대상
 	private String reason; //신고사유
