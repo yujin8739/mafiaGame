@@ -118,54 +118,8 @@
 	
 	<!-- 라운지 상위top5 게시글 목록 조회용 -->
 	<select id="topLikedList" resultMap="boardDetailResultMap">
-		SELECT *
-		FROM (
-			SELECT B.BOARDNO
-				  ,B.TITLE
-			      ,U.NICKNAME
-			      ,B.CREATEDATE
-			      ,B.VIEWCOUNT
-			      ,B.STATUS
-			      ,B.LIKECOUNT
-			      ,B.DISLIKECOUNT
-			      ,T.DISPLAYNAME
-			      ,U.RANKPOINT
-			      ,F.STATUS AS FILE_STATUS
-			      ,R.REPLYNO
-			      ,R.STATUS AS REPLY_STATUS
-			FROM BOARD B
-			JOIN BOARD_TYPE T USING(TYPENO)
-			JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
-			LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
-			LEFT JOIN REPLY R ON(B.BOARDNO = R.BOARDNO)
-			<choose>
-				<when test="type == null || type ==''">
-					WHERE T.TYPENAME LIKE 'lounge%'
-				</when>
-				<when test="type == 'lounge_job'">
-					WHERE T.TYPENAME LIKE 'lounge_job%'
-				</when>
-				<otherwise>
-					WHERE T.TYPENAME LIKE #{type}
-				</otherwise>
-			</choose>
-			<if test="condition != ''">
-				<choose>
-					<when test="condition == 'title'">
-						AND B.TITLE LIKE '%'||#{keyword}||'%'
-					</when>
-					<when test="condition == 'writer'">
-						AND U.NICKNAME LIKE '%'||#{keyword}||'%'				
-					</when>
-					<otherwise>
-						AND B.DETAIL LIKE '%'||#{keyword}||'%'
-					</otherwise>
-				</choose>
-			</if>
-			AND B.STATUS = 'Y'
-			ORDER BY LIKECOUNT DESC
-		)
-		<![CDATA[ WHERE ROWNUM <= 5]]>
+		select *
+		from board
 	</select>
 	
 	<update id="increaseCount">
@@ -369,6 +323,7 @@
 		SELECT COUNT(*)
 		FROM REPLY_LIKE
 		WHERE REPLYNO = #{replyNo}
+		AND USERNAME = #{userName}
 	</select>
 	
 	<delete id="deleteReplyLikeHistory">

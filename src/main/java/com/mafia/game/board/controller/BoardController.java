@@ -76,20 +76,14 @@ public class BoardController {
 		PageInfo pi = Pagination.getPageInfo(listCount, currentPage, pageLimit, boardLimit); // 페이징 처리를 위한 정보
 
 		ArrayList<Board> boardList = service.boardList(filterMap, pi); // 가져올 게시글 목록
-		ArrayList<Board> topLikedList = service.topLikedList(filterMap);//가져올 top5 게시글 목록
+		//ArrayList<Board> topLikedList = service.topLikedList(filterMap);//가져올 top5 게시글 목록
 		
 		
 		boardList = enrichBoardInfo(boardList);
-		topLikedList = enrichBoardInfo(topLikedList);
+		//topLikedList = enrichBoardInfo(topLikedList);
 		
-		System.out.println("상위게시물 : " + topLikedList);
-		int count = 0;
-		for(Board b : topLikedList) {
-			count++;
-		}
-		System.out.println("상위게시물 개수 : " + count);
 		
-
+		//model.addAttribute("topLikedList", topLikedList);
 		model.addAttribute("boardList", boardList);
 		model.addAttribute("pi", pi);
 		model.addAttribute("filterMap", filterMap);
@@ -408,6 +402,11 @@ public class BoardController {
 	@GetMapping("/gallery")
 	public String galleryBoardList() {
 		return "board/gallery";
+	}
+	
+	@GetMapping("/gallery/write")
+	public String glleryWriteForm() {
+		return "board/galleryWriteForm";
 	}
 	
 	
