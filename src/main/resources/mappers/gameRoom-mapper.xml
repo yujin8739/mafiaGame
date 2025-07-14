@@ -118,4 +118,21 @@
 	   )
 	</select>
 	
+	<select id="selectVote" resultType="Vote">
+		SELECT ROOMNO, DAYNO, VOTE
+		FROM VOTE WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
+	</select>
+	
+	<update id="updateVote">
+		UPDATE VOTE 
+		SET VOTE = #{vote}
+		WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
+	</update>
+	
+	<update id="updateDayNo">
+	    UPDATE GAME_ROOM
+	    SET DAYNO = #{dayNo}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
 </mapper>
