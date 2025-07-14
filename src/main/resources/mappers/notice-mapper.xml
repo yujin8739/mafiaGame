@@ -82,11 +82,15 @@
 		INSERT INTO NOTICE(NOTICENO
 						  ,USERNAME
 						  ,TITLE
-						  ,CONTENT)
+						  ,CONTENT
+						  ,ORIGINNAME
+						  ,CHANGENAME)
 					VALUES(SEQ_NNO.NEXTVAL
 						  ,#{userName}
 						  ,#{title}
-						  ,#{content})
+						  ,#{content}
+						  ,#{originName}
+						  ,#{changeName})
 	</insert>
 
 </mapper>

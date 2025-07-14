@@ -23,10 +23,25 @@
 	        <a class="btn btn-secondary" th:href="@{/notice/list}">목록으로</a>
 	    </div>
 	
-	    <!-- 작성일 + 조회수 -->
-	    <div class="d-flex justify-content-end mb-2 text-muted small">
-	        <div class="mr-3">작성일: <span th:text="${#dates.format(notice.createDate, 'yyyy-MM-dd')}"></span></div>
-	        <div>조회수: <span th:text="${notice.count}"></span></div>
+	    <!-- 작성일 + 첨부파일 + 조회수 -->
+	    <div class="d-flex justify-content-end align-items-center mb-2 text-muted small flex-wrap">
+	        <div class="mr-3"><span>작성일: </span>
+	            <span th:text="${#dates.format(notice.createDate, 'yyyy-MM-dd')}"></span>
+	        </div>
+
+	        <!-- 첨부파일 표시 영역 -->
+	        <div class="mr-3">
+	            <span>첨부파일: </span>
+	            <span th:if="${notice.originName == null or notice.originName == ''}">
+	                첨부파일이 없습니다.
+	            </span>
+	            <a th:if="${notice.originName != null and notice.originName != ''}"
+	               th:href="@{${notice.changeName}}"
+	               th:download="${notice.originName}"
+	               th:text="${notice.originName}"></a>
+	        </div>
+
+	        <div><span>조회수: </span><span th:text="${notice.count}"></span></div>
 	    </div>
 	
 	    <!-- 내용 -->

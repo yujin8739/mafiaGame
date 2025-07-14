@@ -27,3 +27,14 @@
     margin-top: 8px;
     font-size: 14px;
 }
+
+.role-item.selected .role-img {
+    box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.8);
+    border: 2px solid white;
+    transition: box-shadow 0.3s, border 0.3s;
+}
+
+.role-item.selected .role-name {
+    color: white;
+    font-weight: bold;
+}

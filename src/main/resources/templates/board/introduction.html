@@ -62,18 +62,25 @@
         	});
 
             // 동적으로 로드된 직업 아이템 클릭 시 Ajax로 상세 설명 불러오기
-            $('#role-list').on('click', '.role-item', function() {
-                const roleName = $(this).data('role');
+        	$('#role-list').on('click', '.role-item', function () {
+        	    const roleName = $(this).data('role');
 
-                $.ajax({
-                    url: '/introduce/roleDetail',
-                    type: 'GET',
-                    data: { role: roleName },
-                    success: function(response) {
-                        $('#role-detail').html(response);
-                    }
-                });
-            });
+        	    // 기존 선택 제거
+        	    $('.role-item').removeClass('selected');
+        	    
+        	    // 현재 선택 항목에 클래스 추가
+        	    $(this).addClass('selected');
+
+        	    // 상세 설명 Ajax 요청
+        	    $.ajax({
+        	        url: '/introduce/roleDetail',
+        	        type: 'GET',
+        	        data: { role: roleName },
+        	        success: function (response) {
+        	            $('#role-detail').html(response);
+        	        }
+        	    });
+        	});
         });
     </script>
 </body>

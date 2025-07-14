@@ -20,5 +20,8 @@ public class Notice {
 	private Date createDate;
 	private int count;
 	private String status;
+	private String originName;
+	private String changeName;
+	private String filePath;
 	
 }

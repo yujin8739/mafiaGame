@@ -18,7 +18,7 @@
 	<div class="wrapper">
 		<h3 class="mb-4">공지사항 등록</h3>
 
-	    <form th:action="@{/notice/write}" method="post">
+	    <form th:action="@{/notice/write}" method="post" enctype="multipart/form-data">
 	        <!-- 숨겨진 userName 전달 -->
 	        <input type="hidden" name="userName" th:value="${session.loginUser.userName}" />
 	
@@ -26,6 +26,11 @@
 	        <div class="form-group">
 	            <label for="title">제목</label>
 	            <input type="text" class="form-control" id="title" name="title" required />
+	        </div>
+	        
+	        <div class="form-group">
+	            <label for="upfile">첨부파일</label>
+	            <input type="file" class="form-control-file border" id="upfile" name="uploadFile" required />
 	        </div>
 	
 	        <!-- 내용 입력 -->

@@ -1,6 +1,10 @@
 package com.mafia.game.board.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import org.slf4j.Logger;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.board.model.service.NoticeService;
@@ -114,7 +119,17 @@ public class NoticeController {
 	}
 	
 	@PostMapping("/write")
-	public String writeNotice(Notice notice, RedirectAttributes redirectAttributes) {
+	public String writeNotice(Notice notice
+							 ,RedirectAttributes redirectAttributes
+							 ,MultipartFile uploadFile
+							 ,HttpSession session) {
+		if(!uploadFile.getOriginalFilename().equals("")) {
+			String changeName = saveFile(uploadFile, session);
+			
+			notice.setOriginName(uploadFile.getOriginalFilename());
+			notice.setChangeName("/resources/uploadFiles/" + changeName);
+		}
+		
 		int result = service.writeNotice(notice);
 		
 		if(result > 0) {
@@ -124,6 +139,25 @@ public class NoticeController {
 			redirectAttributes.addFlashAttribute("msg", "공지사항 등록 실패");
 			return "redirect:/notice/write";
 		}
+	}
+	
+	public String saveFile(MultipartFile uploadFile
+						  ,HttpSession session) {
+		String originName = uploadFile.getOriginalFilename();
+		String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+		int ranNum = (int)(Math.random()*90000+10000);
+		String ext = originName.substring(originName.lastIndexOf("."));
+		String changeName = currentTime + ranNum + ext;
+		String savePath = session.getServletContext().getRealPath("/resources/uploadFiles/");
+		
+		try {
+			uploadFile.transferTo(new File(savePath + changeName));
+		} catch (IllegalStateException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return changeName;
 	}
 	
 }
