@@ -57,4 +57,24 @@ public class MessageServiceImpl implements MessageService {
     public int getUnreadCount(String receiverUserName) {
         return messageDao.getUnreadCount(sqlSession, receiverUserName);
     }
+    
+    @Override
+    public ArrayList<UserMessage> getReceivedMessagesWithPaging(String receiverUserName, int offset, int pageSize) {
+        return messageDao.getReceivedMessagesWithPaging(sqlSession, receiverUserName, offset, pageSize);
+    }
+
+    @Override
+    public ArrayList<UserMessage> getSentMessagesWithPaging(String senderUserName, int offset, int pageSize) {
+        return messageDao.getSentMessagesWithPaging(sqlSession, senderUserName, offset, pageSize);
+    }
+
+    @Override
+    public int getTotalReceivedMessagesCount(String receiverUserName) {
+        return messageDao.getTotalReceivedMessagesCount(sqlSession, receiverUserName);
+    }
+
+    @Override
+    public int getTotalSentMessagesCount(String senderUserName) {
+        return messageDao.getTotalSentMessagesCount(sqlSession, senderUserName);
+    }
 }
