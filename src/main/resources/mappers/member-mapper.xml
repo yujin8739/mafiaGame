@@ -68,5 +68,8 @@
     AND STATUS = 'Y'
 	</delete>
 	
+
+	
+	
 	
 </mapper>
