@@ -3,7 +3,7 @@
 
 <mapper namespace="messageMapper">
 
-    <!-- UserMessage ResultMap 정의 -->
+    <!-- UserMessage ResultMap -->
     <resultMap type="UserMessage" id="messageResultMap">
         <result property="privateMsgNo" column="PRIVATEMSGNO"/>
         <result property="senderUserName" column="SENDERUSERNAME"/>
@@ -21,33 +21,35 @@
         <result property="receiverNickName" column="RECEIVER_NICKNAME"/>
     </resultMap>
 
-    <!-- 쪽지 번호 생성 -->
-    <select id="getNextMessageNo" resultType="_int">
-        SELECT SEQ_PRIVATEMSGNO.NEXTVAL FROM DUAL
-    </select>
-
     <!-- 쪽지 보내기 -->
-    <insert id="sendMessage" parameterType="UserMessage">
-        INSERT INTO USER_MESSAGE (
-            PRIVATEMSGNO,
-            SENDERUSERNAME,
-            RECEIVERUSERNAME,
-            TITLE,
-            CONTENT,
-            SENDDATE,
-            MESSAGETYPE
-        ) VALUES (
-            #{privateMsgNo},
-            #{senderUserName},
-            #{receiverUserName},
-            #{title},
-            #{content},
-            SYSDATE,
-            #{messageType}
-        )
-    </insert>
+<insert id="sendMessage" parameterType="UserMessage">
+    INSERT INTO USER_MESSAGE (
+        PRIVATEMSGNO,
+        SENDERUSERNAME,
+        RECEIVERUSERNAME,
+        TITLE,
+        CONTENT,
+        SENDDATE,
+        READYN,
+        DELETESENDER,
+        DELETERECEIVER,
+        MESSAGETYPE
+    ) VALUES (
+        SEQ_PRIVATEMSGNO.NEXTVAL,
+        #{senderUserName},
+        #{receiverUserName},
+        #{title},
+        #{content},
+        SYSDATE,
+        'N',
+        'N',
+        'N',
+        #{messageType}
+    )
+</insert>
 
-    <!-- 받은 쪽지함 조회 -->
+
+    <!-- 받은 쪽지함 조회 (인덱스 활용) -->
     <select id="getReceivedMessages" parameterType="String" resultMap="messageResultMap">
         SELECT 
             m.PRIVATEMSGNO,
@@ -72,7 +74,7 @@
         ORDER BY m.SENDDATE DESC
     </select>
 
-    <!-- 보낸 쪽지함 조회 -->
+    <!-- 보낸 쪽지함 조회 (인덱스 활용) -->
     <select id="getSentMessages" parameterType="String" resultMap="messageResultMap">
         SELECT 
             m.PRIVATEMSGNO,
@@ -144,7 +146,7 @@
         WHERE PRIVATEMSGNO = #{privateMsgNo}
     </update>
 
-    <!-- 안읽은 쪽지 개수 조회 -->
+    <!-- 안읽은 쪽지 개수 조회 (최적화된 인덱스 활용) -->
     <select id="getUnreadCount" parameterType="String" resultType="_int">
         SELECT COUNT(*)
         FROM USER_MESSAGE

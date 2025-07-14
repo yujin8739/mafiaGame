@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>친구 목록 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/message/friendList.css}" />
+    
+
+</head>
+<body>
+<body>
+
+    <!-- 헤더 -->
+    <div th:replace="~{common/header :: header}"></div>
+
+    <!-- 친구 목록 컨테이너 -->
+    <div class="friend-container">
+        <h1 class="mypage-title">👥 친구 목록</h1>
+
+        <!-- 친구 검색 -->
+        <div class="friend-search">
+            <input type="text" id="searchInput" placeholder="친구 검색...">
+            <button class="mypage-btn primary" onclick="searchFriends()">검색</button>
+            <button class="mypage-btn" onclick="addFriend()">친구 추가</button>
+        </div>
+
+        <!-- 친구 목록 -->
+        <div class="profile-section">
+            <h3>내 친구들</h3>
+            
+            <!-- TODO: 실제 친구 데이터가 있을 때 -->
+            <!-- 
+            <div th:if="${friends != null and !#lists.isEmpty(friends)}" class="friend-list">
+                <div th:each="friend : ${friends}" class="friend-card">
+                    <div class="friend-info">
+                        <div class="friend-avatar" th:text="${friend.nickName?.substring(0, 1)}">A</div>
+                        <div class="friend-details">
+                            <h4 th:text="${friend.nickName}">친구 닉네임</h4>
+                            <p th:text="'@' + ${friend.userName}">@username</p>
+                            <span class="online-status" 
+                                  th:classappend="${friend.isOnline} ? 'online' : 'offline'"></span>
+                            <span th:text="${friend.isOnline} ? '온라인' : '오프라인'">상태</span>
+                        </div>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="friend-btn message-btn" 
+                                th:onclick="|sendMessage('${friend.userName}')|">쪽지보내기</button>
+                        <button class="friend-btn remove-btn" 
+                                th:onclick="|removeFriend('${friend.userName}')|">친구삭제</button>
+                    </div>
+                </div>
+            </div>
+            -->
+            
+            <!-- 임시 데모 데이터 -->
+            <div class="friend-list">
+                <div class="friend-card">
+                    <div class="friend-info">
+                        <div class="friend-avatar">A</div>
+                        <div class="friend-details">
+                            <h4>Alice</h4>
+                            <p>@alice123</p>
+                            <span class="online-status online"></span>
+                            <span>온라인</span>
+                        </div>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="friend-btn message-btn" onclick="sendMessage('alice123')">쪽지보내기</button>
+                        <button class="friend-btn remove-btn" onclick="removeFriend('alice123')">친구삭제</button>
+                    </div>
+                </div>
+                
+                <div class="friend-card">
+                    <div class="friend-info">
+                        <div class="friend-avatar">B</div>
+                        <div class="friend-details">
+                            <h4>Bob</h4>
+                            <p>@bob456</p>
+                            <span class="online-status offline"></span>
+                            <span>오프라인</span>
+                        </div>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="friend-btn message-btn" onclick="sendMessage('bob456')">쪽지보내기</button>
+                        <button class="friend-btn remove-btn" onclick="removeFriend('bob456')">친구삭제</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 친구가 없을 때
+            <div th:if="${friends == null or #lists.isEmpty(friends)}" class="no-friends">
+                <p>아직 추가된 친구가 없습니다.</p>
+                <p>친구를 추가해보세요!</p>
+            </div>
+            -->
+        </div>
+
+        <!-- 액션 버튼들 -->
+        <div class="action-buttons">
+            <a href="/message/inbox" class="mypage-btn primary">쪽지함</a>
+            <a href="/mypage" class="mypage-btn">마이페이지로</a>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <script>
+        // 친구에게 쪽지 보내기
+        function sendMessage(userName) {
+            const url = '/message/write?receiverUserName=' + encodeURIComponent(userName);
+            location.href = url;
+        }
+
+        // 친구 삭제
+        function removeFriend(userName) {
+            if (confirm(userName + '님을 친구 목록에서 삭제하시겠습니까?')) {
+                // TODO: 실제 친구 삭제 API 구현
+                $.ajax({
+                    url: '/friend/remove',
+                    type: 'POST',
+                    data: { friendUserName: userName },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('친구가 삭제되었습니다.');
+                            location.reload();
+                        } else {
+                            alert(response.message || '친구 삭제에 실패했습니다.');
+                        }
+                    },
+                    error: function() {
+                        alert('서버 오류가 발생했습니다.');
+                    }
+                });
+            }
+        }
+
+        // 친구 추가
+        function addFriend() {
+            const userName = prompt('추가할 친구의 사용자명을 입력하세요:');
+            if (userName && userName.trim()) {
+                // TODO: 실제 친구 추가 API 구현
+                $.ajax({
+                    url: '/friend/add',
+                    type: 'POST',
+                    data: { friendUserName: userName.trim() },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('친구 요청을 보냈습니다.');
+                            location.reload();
+                        } else {
+                            alert(response.message || '친구 추가에 실패했습니다.');
+                        }
+                    },
+                    error: function() {
+                        alert('서버 오류가 발생했습니다.');
+                    }
+                });
+            }
+        }
+
+        // 친구 검색
+        function searchFriends() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (!searchTerm) {
+                location.reload();
+                return;
+            }
+            
+            // TODO: 실제 검색 API 구현
+            console.log('친구 검색:', searchTerm);
+            alert('검색 기능은 개발 중입니다.');
+        }
+
+        // 엔터키로 검색
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchFriends();
+            }
+        });
+
+        // 페이지 로드 시 실행
+        $(document).ready(function() {
+            console.log('친구 목록 페이지 로드 완료');
+        });
+    </script>
+
+</body>
+</html> 
