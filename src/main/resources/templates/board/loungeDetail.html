@@ -385,7 +385,7 @@
           	<form th:action="@{/board/lounge/delete/{boardNo}(boardNo=${board.boardNo})}" method="POST">
           		<button class="btn btn-custom btn-delete" onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</button>
           	</form>
-         	</th:block>
+         </th:block>
         </div>
         
         
@@ -515,6 +515,10 @@
 			  formData.append('boardNo',/*[[${board.boardNo}]]*/ 0);
 			  formData.append('userName',/*[[${loginUser.userName}]]*/ '');
 			  if (imageFile) formData.append('image', imageFile);
+			  if(content === '' && !imageFile){
+				  alert('내용을 입력해주세요');
+				  return;
+			  }
 			
 			  $.ajax({
 			    url: '/board/lounge/uploadReply', 

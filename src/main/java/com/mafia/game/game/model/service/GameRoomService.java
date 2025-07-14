@@ -31,4 +31,6 @@ public interface GameRoomService {
 	Map<String, Object> getRoomJob(int roomNo, String userName);
 
 	Job getJobDetail(int myJob);
+
+	List<String> getDeathList(int roomNo);
 }

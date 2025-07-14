@@ -1,11 +1,14 @@
 package com.mafia.game.member.model.dao;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.member.model.vo.Member;
 
 
@@ -54,6 +57,19 @@ public class MemberDao {
 	 
 	public int deleteMember(SqlSessionTemplate sqlSession, String userName) {
 	    return sqlSession.update("memberMapper.deleteMember", userName);
+	}
+
+	public List<String> getUserNickList(SqlSessionTemplate sqlSession, String userList) {
+		// TODO Auto-generated method stub
+		ObjectMapper mapper = new ObjectMapper();
+        List<String> userIdList = null;
+		try {
+			userIdList = mapper.readValue(userList, List.class);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return sqlSession.selectList("memberMapper.getUserNickList",userIdList);
 	}
 
 	
