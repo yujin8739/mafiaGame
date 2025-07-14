@@ -1,6 +1,6 @@
 package com.mafia.game.member.controller;
 
-import java.util.List;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.shop.model.service.ShopService;
-import com.mafia.game.shop.model.vo.Shop;
+
 
 import jakarta.servlet.http.HttpSession;
 
@@ -25,6 +25,8 @@ public class MemberController {
 
 	@Autowired
 	private MemberService ms;
+	
+
 	
 	@Autowired
     private BCryptPasswordEncoder bcrypt;
@@ -133,6 +135,9 @@ public class MemberController {
 			return "redirect:/mypage/delete";
 		}
 	}
+
+	
+	
 }
 
 
