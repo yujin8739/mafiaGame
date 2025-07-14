@@ -155,4 +155,92 @@
           AND DELETERECEIVER = 'N'
     </select>
 
+	<select id="getReceivedMessagesWithPaging" parameterType="map"
+		resultMap="messageResultMap">
+		SELECT * FROM (
+		SELECT ROWNUM as rn, sub.* FROM (
+		SELECT
+		m.PRIVATEMSGNO,
+		m.SENDERUSERNAME,
+		m.RECEIVERUSERNAME,
+		m.TITLE,
+		m.CONTENT,
+		m.SENDDATE,
+		m.READDATE,
+		m.READYN,
+		m.DELETESENDER,
+		m.DELETERECEIVER,
+		m.MESSAGETYPE,
+		m.PARENTPRIVATEMSGNO,
+		s.NICKNAME AS SENDER_NICKNAME,
+		r.NICKNAME AS RECEIVER_NICKNAME
+		FROM USER_MESSAGE m
+		LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+		LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+		WHERE m.RECEIVERUSERNAME = #{receiverUserName}
+		AND m.DELETERECEIVER = 'N'
+		ORDER BY m.SENDDATE DESC
+		) sub
+		WHERE ROWNUM &lt;= #{offset} + #{pageSize}
+		)
+		WHERE rn > #{offset}
+	</select>
+
+	<!-- 보낸 쪽지함 페이지네이션 조회 -->
+	<select id="getSentMessagesWithPaging" parameterType="map"
+		resultMap="messageResultMap">
+		SELECT * FROM (
+		SELECT ROWNUM as rn, sub.* FROM (
+		SELECT
+		m.PRIVATEMSGNO,
+		m.SENDERUSERNAME,
+		m.RECEIVERUSERNAME,
+		m.TITLE,
+		m.CONTENT,
+		m.SENDDATE,
+		m.READDATE,
+		m.READYN,
+		m.DELETESENDER,
+		m.DELETERECEIVER,
+		m.MESSAGETYPE,
+		m.PARENTPRIVATEMSGNO,
+		s.NICKNAME AS SENDER_NICKNAME,
+		r.NICKNAME AS RECEIVER_NICKNAME
+		FROM USER_MESSAGE m
+		LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+		LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+		WHERE m.SENDERUSERNAME = #{senderUserName}
+		AND m.DELETESENDER = 'N'
+		ORDER BY m.SENDDATE DESC
+		) sub
+		WHERE ROWNUM &lt;= #{offset} + #{pageSize}
+		)
+		WHERE rn > #{offset}
+	</select>
+
+	<!-- 받은 쪽지 전체 개수 조회 -->
+	<select id="getTotalReceivedMessagesCount"
+		parameterType="String" resultType="_int">
+		SELECT COUNT(*)
+		FROM USER_MESSAGE
+		WHERE RECEIVERUSERNAME = #{receiverUserName}
+		AND DELETERECEIVER = 'N'
+	</select>
+
+	<!-- 보낸 쪽지 전체 개수 조회 -->
+	<select id="getTotalSentMessagesCount" parameterType="String"
+		resultType="_int">
+		SELECT COUNT(*)
+		FROM USER_MESSAGE
+		WHERE SENDERUSERNAME = #{senderUserName}
+		AND DELETESENDER = 'N'
+	</select>
+
+
+
+
+
+
+
+
 </mapper>
