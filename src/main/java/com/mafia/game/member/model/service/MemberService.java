@@ -26,4 +26,6 @@ public interface MemberService {
 	
 	//회원 탈퇴
 	int deleteMember(String userName);
+
+	List<String> getUserNickList(String userList);
 }

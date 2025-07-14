@@ -83,4 +83,10 @@ public class GameRoomServiceImpl implements GameRoomService {
 	public Job getJobDetail(int myJob) {
 		return gameRoomDao.getJobDetail(sqlSession,myJob);
 	}
+
+	@Override
+	public List<String> getDeathList(int roomNo) {
+		// TODO Auto-generated method stub
+		return gameRoomDao.getDeathList(sqlSession, roomNo);
+	}
 }

@@ -79,4 +79,8 @@ public class GameRoomDao {
 	public Job getJobDetail(SqlSessionTemplate sqlSession, int myJob) {
 		return sqlSession.selectOne("gameRoomMapper.getJobDetail",myJob);
 	}
+
+	public List<String> getDeathList(SqlSessionTemplate sqlSession, int roomNo) {
+		return sqlSession.selectList("gameRoomMapper.getDeathList",roomNo);
+	}
 }

@@ -27,6 +27,10 @@
 				            onclick="ready()">Ready</button>
 				    <div id="readyCount">Ready: 0</div>
 				</div>
+				<div id="gamePhaseContainer">
+					<div id="phaseDisplay">현재 단계: -</div>
+					<div id="timerDisplay">남은 시간: - 초</div>
+				</div>
 		    </div>
 		    <div th:replace="game/phoneModal :: phoneModal" 
 		         id="phoneModal" 
@@ -63,15 +67,20 @@
 		const chatInput = document.getElementById('chat');
 		const readyDiv = document.getElementById('readyDiv');//게임 시작 혹은 레디 버튼
 		
+		let countdownInterval;
+		
+		let timerId = null;
+		let remainTime = 0;
+		
 		let room = /*[[${room}]]*/ 'NULL';
 		isGaming = room.isGaming==='Y';
 
-		if (isNight && job!=='mafia') {
+		if (isGaming) {
 			sendBtn.disabled = true;
 			sendBtn.classList.add('disabled-btn');
 
 			chatInput.disabled = true;
-			chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+			chatInput.placeholder = "재입장시 다음번 낮까지 채팅이 불가능합니다.";
 		}
 		
 		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
@@ -90,7 +99,7 @@
 			} else {
 				alert("서버 연결이 끊어졌습니다.");
 			}
-			loadUser(room);
+			userLoad(room);
 		};
 
 		socket.onerror = function (err) {
@@ -110,6 +119,29 @@
 		const messages = /*[[${messages}]]*/[];
 		const chatArea = document.querySelector("#chatArea");
 		chatLoad();
+		
+		function userLoad(room){
+			$.ajax({
+				url:"/room/userNickList",
+				data:{userList : room.userList},
+				success: function (userNickList){	
+					setUserNick(userNickList);
+					$.ajax({
+						url:"/room/userDeathList",
+						data:{roomNo : roomNo},
+						success: function (deathList){		
+							loadUser(deathList);
+						},
+						error: function () {
+							alert("이벤트를 불러오지 못했습니다.");
+						}
+					});
+				},
+				error: function () {
+					alert("이벤트를 불러오지 못했습니다.");
+				}
+			});
+		}
 		
 		function chatLoad() {
 		    if (isLoading || isLastPage) return;
@@ -136,7 +168,7 @@
 		            messages.forEach(msgData => {
 		                const div = document.createElement("div");
 
-		                if (msgData.type === "death") {
+		                if (msgData.type && msgData.type.includes("death")) {
 		                    if (job !== "ghost" && job !== "mafiaGhost" && job !== "spiritualists") {
 		                        return;
 		                    } else {
@@ -145,7 +177,7 @@
 		                        typeDiv.textContent = "『사망자』";
 		                        div.appendChild(typeDiv);
 		                    }
-		                } else if (msgData.type === "mafia") {
+		                } else if (msgData.type && msgData.type === "mafia") {
 		                    if (job !== "mafia") {
 		                        return;
 		                    } else {
@@ -191,8 +223,8 @@
 			const wasAtBottom = isScrolledToBottom(chatArea);
 			const msgData = JSON.parse(message.data);
 			const div = document.createElement("div");
-			
-			if (msgData.type === "death") {
+			/* console.log("메시지 수신:", msgData.type); */
+			if (msgData.type && msgData.type.includes("death")) {
 				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
 					return;
 				} else {
@@ -201,7 +233,7 @@
 					typeDiv.textContent = "『사망자』";
 					div.appendChild(typeDiv);
 				}
-			} else if (msgData.type === "mafia"){
+			} else if (msgData.type && msgData.type === "mafia"){
 				if(job !== "mafia") {
 					return;
 				} else {
@@ -210,14 +242,18 @@
 					typeDiv.textContent = "『마피아』";
 					div.appendChild(typeDiv);
 				}
-			} else if (msgData.type === "ready" || msgData.type === "unReady") {
+			} else if (msgData.type && msgData.type === "ready" || msgData.type === "unReady") {
 				setReadyCount();
-			} else if (msgData.type === "start") {
+			} else if (msgData.type && msgData.type === "start") {
 				setStart();
-			}  else if (msgData.type === "enter" || "leave") {
+			} else if (msgData.type && msgData.type === "enter" || msgData.type === "leave") {
 				roomReload();
+			} else if (msgData.type && msgData.type === "phase") {
+				console.log("메시지 수신:", msgData);
+			    startTimer(msgData.phase, msgData.remaining);
+			    return;
 			}
-			
+			console.log("메시지 phase수신:", msgData.type);
 			reciveMsg(msgData, div);
 			
 			scrollIfNeeded(wasAtBottom);
@@ -385,10 +421,40 @@
 				url:'/room/reloadRoom',
 				data:{roomNo:roomNo},
 				success: function(newRoom){
-					loadUser(newRoom);
+					userLoad(room);
 				}
 				
 			})
+		}
+
+		function startTimer(phase, seconds) {
+		  remainTime = seconds;
+		  if(timerId) clearInterval(timerId);
+		  
+		  console.log(remainTime)
+
+		  timerId = setInterval(() => {
+		    if(remainTime <= 0) {
+		      clearInterval(timerId);
+		      return;
+		    }
+		    console.log(remainTime);
+		    remainTime--;
+		    updateTimerUI(phase, remainTime);
+		  }, 1000);
+		}
+		
+		function setAlive() {
+			$.ajax({
+				url:"/room/userDeathList",
+				data:{roomNo : roomNo},
+				success: function (deathList){		
+					updateUserStatus(deathList);
+				},
+				error: function () {
+					alert("이벤트를 불러오지 못했습니다.");
+				}
+			});
 		}
 	</script>
 </body>

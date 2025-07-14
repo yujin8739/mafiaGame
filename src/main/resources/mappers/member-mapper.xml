@@ -63,13 +63,19 @@
 	</update>
 	
 	<delete id="deleteMember">
-    DELETE FROM USER_INFO 
-    WHERE USERNAME = #{userName}
-    AND STATUS = 'Y'
+	    DELETE FROM USER_INFO 
+	    WHERE USERNAME = #{userName}
+	    AND STATUS = 'Y'
 	</delete>
-	
 
-	
-	
+    <select id="getUserNickList" resultType="string" parameterType="list">
+        SELECT NICKNAME
+        FROM USER_INFO
+        WHERE USERNAME IN
+        <foreach item="userName" collection="list" open="(" separator="," close=")">
+            #{userName}
+        </foreach>
+    </select>
+
 	
 </mapper>

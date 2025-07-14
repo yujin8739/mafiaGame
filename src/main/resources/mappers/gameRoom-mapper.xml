@@ -101,4 +101,21 @@
 		WHERE JOBNO = #{myJob}
 	</select>
 	
+	<select id="getDeathList" resultType="string" parameterType="int">
+	   SELECT 
+	     CASE
+	       WHEN job_number = 0 THEN 'death'
+	       ELSE 'alive'
+	     END AS status
+	   FROM (
+	     SELECT 
+	       TO_NUMBER(REGEXP_REPLACE(REGEXP_SUBSTR(JOB, '[^,]+', 1, LEVEL), '[^0-9]', '')) AS job_number
+	     FROM GAME_ROOM
+	     WHERE ROOMNO = #{roomNo}
+	     CONNECT BY LEVEL &lt;= REGEXP_COUNT(JOB, ',') + 1
+	       AND PRIOR ROOMNO = ROOMNO
+	       AND PRIOR DBMS_RANDOM.VALUE IS NOT NULL
+	   )
+	</select>
+	
 </mapper>
