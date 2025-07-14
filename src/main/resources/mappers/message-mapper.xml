@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "Http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="messageMapper">
+
+    <!-- UserMessage ResultMap -->
+    <resultMap type="UserMessage" id="messageResultMap">
+        <result property="privateMsgNo" column="PRIVATEMSGNO"/>
+        <result property="senderUserName" column="SENDERUSERNAME"/>
+        <result property="receiverUserName" column="RECEIVERUSERNAME"/>
+        <result property="title" column="TITLE"/>
+        <result property="content" column="CONTENT"/>
+        <result property="sendDate" column="SENDDATE"/>
+        <result property="readDate" column="READDATE"/>
+        <result property="readYn" column="READYN"/>
+        <result property="deleteSender" column="DELETESENDER"/>
+        <result property="deleteReceiver" column="DELETERECEIVER"/>
+        <result property="messageType" column="MESSAGETYPE"/>
+        <result property="parentPrivateMsgNo" column="PARENTPRIVATEMSGNO"/>
+        <result property="senderNickName" column="SENDER_NICKNAME"/>
+        <result property="receiverNickName" column="RECEIVER_NICKNAME"/>
+    </resultMap>
+
+    <!-- 쪽지 보내기 -->
+<insert id="sendMessage" parameterType="UserMessage">
+    INSERT INTO USER_MESSAGE (
+        PRIVATEMSGNO,
+        SENDERUSERNAME,
+        RECEIVERUSERNAME,
+        TITLE,
+        CONTENT,
+        SENDDATE,
+        READYN,
+        DELETESENDER,
+        DELETERECEIVER,
+        MESSAGETYPE
+    ) VALUES (
+        SEQ_PRIVATEMSGNO.NEXTVAL,
+        #{senderUserName},
+        #{receiverUserName},
+        #{title},
+        #{content},
+        SYSDATE,
+        'N',
+        'N',
+        'N',
+        #{messageType}
+    )
+</insert>
+
+
+    <!-- 받은 쪽지함 조회 (인덱스 활용) -->
+    <select id="getReceivedMessages" parameterType="String" resultMap="messageResultMap">
+        SELECT 
+            m.PRIVATEMSGNO,
+            m.SENDERUSERNAME,
+            m.RECEIVERUSERNAME,
+            m.TITLE,
+            m.CONTENT,
+            m.SENDDATE,
+            m.READDATE,
+            m.READYN,
+            m.DELETESENDER,
+            m.DELETERECEIVER,
+            m.MESSAGETYPE,
+            m.PARENTPRIVATEMSGNO,
+            s.NICKNAME AS SENDER_NICKNAME,
+            r.NICKNAME AS RECEIVER_NICKNAME
+        FROM USER_MESSAGE m
+        LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+        LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+        WHERE m.RECEIVERUSERNAME = #{receiverUserName}
+          AND m.DELETERECEIVER = 'N'
+        ORDER BY m.SENDDATE DESC
+    </select>
+
+    <!-- 보낸 쪽지함 조회 (인덱스 활용) -->
+    <select id="getSentMessages" parameterType="String" resultMap="messageResultMap">
+        SELECT 
+            m.PRIVATEMSGNO,
+            m.SENDERUSERNAME,
+            m.RECEIVERUSERNAME,
+            m.TITLE,
+            m.CONTENT,
+            m.SENDDATE,
+            m.READDATE,
+            m.READYN,
+            m.DELETESENDER,
+            m.DELETERECEIVER,
+            m.MESSAGETYPE,
+            m.PARENTPRIVATEMSGNO,
+            s.NICKNAME AS SENDER_NICKNAME,
+            r.NICKNAME AS RECEIVER_NICKNAME
+        FROM USER_MESSAGE m
+        LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+        LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+        WHERE m.SENDERUSERNAME = #{senderUserName}
+          AND m.DELETESENDER = 'N'
+        ORDER BY m.SENDDATE DESC
+    </select>
+
+    <!-- 쪽지 상세 조회 -->
+    <select id="getMessageDetail" parameterType="_int" resultMap="messageResultMap">
+        SELECT 
+            m.PRIVATEMSGNO,
+            m.SENDERUSERNAME,
+            m.RECEIVERUSERNAME,
+            m.TITLE,
+            m.CONTENT,
+            m.SENDDATE,
+            m.READDATE,
+            m.READYN,
+            m.DELETESENDER,
+            m.DELETERECEIVER,
+            m.MESSAGETYPE,
+            m.PARENTPRIVATEMSGNO,
+            s.NICKNAME AS SENDER_NICKNAME,
+            r.NICKNAME AS RECEIVER_NICKNAME
+        FROM USER_MESSAGE m
+        LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+        LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+        WHERE m.PRIVATEMSGNO = #{privateMsgNo}
+    </select>
+
+    <!-- 쪽지 읽음 처리 -->
+    <update id="markAsRead" parameterType="map">
+        UPDATE USER_MESSAGE 
+        SET READYN = 'Y',
+            READDATE = SYSDATE
+        WHERE PRIVATEMSGNO = #{privateMsgNo}
+          AND RECEIVERUSERNAME = #{receiverUserName}
+          AND READYN = 'N'
+    </update>
+
+    <!-- 보낸사람 삭제 -->
+    <update id="deleteBySender" parameterType="_int">
+        UPDATE USER_MESSAGE 
+        SET DELETESENDER = 'Y'
+        WHERE PRIVATEMSGNO = #{privateMsgNo}
+    </update>
+
+    <!-- 받은사람 삭제 -->
+    <update id="deleteByReceiver" parameterType="_int">
+        UPDATE USER_MESSAGE 
+        SET DELETERECEIVER = 'Y'
+        WHERE PRIVATEMSGNO = #{privateMsgNo}
+    </update>
+
+    <!-- 안읽은 쪽지 개수 조회 (최적화된 인덱스 활용) -->
+    <select id="getUnreadCount" parameterType="String" resultType="_int">
+        SELECT COUNT(*)
+        FROM USER_MESSAGE
+        WHERE RECEIVERUSERNAME = #{receiverUserName}
+          AND READYN = 'N'
+          AND DELETERECEIVER = 'N'
+    </select>
+
+</mapper>

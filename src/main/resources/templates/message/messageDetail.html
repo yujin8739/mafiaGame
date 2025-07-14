@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쪽지 상세보기 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/message/message.css}" />
+</head>
+<body>
+    <!-- 메시지 표시 -->
+    <div th:if="${msg}">
+        <script th:inline="javascript">
+            alert(/*[[${msg}]]*/ '메시지');
+        </script>
+    </div>
+
+    <!-- 헤더 -->
+    <div th:replace="~{common/header :: header}"></div>
+
+    <!-- 쪽지 상세보기 컨테이너 -->
+    <div class="message-detail-container">
+        <div th:if="${message != null}">
+            <div class="message-header">
+                <h1 class="message-detail-title" th:text="${message.title}">쪽지 제목</h1>
+                
+                <div class="message-info">
+                    <div class="message-meta">
+                        <span><strong>보낸사람:</strong> 
+                            <span th:text="${message.senderNickName != null ? message.senderNickName : message.senderUserName}">보낸사람</span>
+                        </span>
+                        <span><strong>받는사람:</strong> 
+                            <span th:text="${message.receiverNickName != null ? message.receiverNickName : message.receiverUserName}">받는사람</span>
+                        </span>
+                        <span><strong>보낸시간:</strong> 
+                            <span th:text="${#dates.format(message.sendDate, 'yyyy년 MM월 dd일 HH:mm')}">2025년 01월 09일 14:30</span>
+                        </span>
+                    </div>
+                    
+                    <div>
+                        <span th:if="${message.readYn == 'Y'}" class="read-status read">읽음</span>
+                        <span th:if="${message.readYn == 'N'}" class="read-status unread">안읽음</span>
+                        <span th:if="${message.readDate != null}" class="message-meta">
+                            (<span th:text="${#dates.format(message.readDate, 'MM/dd HH:mm')}">01/09 15:30</span> 읽음)
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 쪽지 내용 -->
+            <div class="message-content" th:text="${message.content}">
+                쪽지 내용이 여기에 표시됩니다.
+                여러 줄의 내용도 잘 표시됩니다.
+            </div>
+
+            <!-- 쪽지 타입 정보 (있는 경우) -->
+            <div th:if="${message.messageType != null and message.messageType != ''}" class="message-type-info">
+                <h4>쪽지 분류</h4>
+                <p th:text="${message.messageType}">일반 쪽지</p>
+            </div>
+
+            <!-- 액션 버튼들 -->
+            <div class="message-actions">
+                <!-- ✅ 수정: currentUser 세션 정보 사용 -->
+                <!-- 답장 버튼 (받은 쪽지인 경우만) -->
+			    <a th:if="${currentUser != null and currentUser.userName == message.receiverUserName}" 
+			       th:href="@{/message/reply(privateMsgNo=${message.privateMsgNo})}" 
+			       class="mypage-btn primary">답장하기</a>
+                
+                <!-- 삭제 버튼 - 보낸 사람 -->
+                <button th:if="${currentUser != null and currentUser.userName == message.senderUserName}" 
+                        th:onclick="|deleteMessage(${message.privateMsgNo}, 'sender')|" 
+                        class="mypage-btn delete">삭제</button>
+                
+                <!-- 삭제 버튼 - 받은 사람 -->
+                <button th:if="${currentUser != null and currentUser.userName == message.receiverUserName}" 
+                        th:onclick="|deleteMessage(${message.privateMsgNo}, 'receiver')|" 
+                        class="mypage-btn delete">삭제</button>
+                
+                <!-- 목록으로 돌아가기 -->
+                <a href="javascript:history.back()" class="mypage-btn">이전으로</a>
+                <a href="/message/inbox" class="mypage-btn">받은편지함</a>
+                <a href="/message/outbox" class="mypage-btn">보낸편지함</a>
+            </div>
+        </div>
+
+        <!-- 쪽지가 없는 경우 -->
+        <div th:if="${message == null}" class="no-messages">
+            <h2>쪽지를 찾을 수 없습니다.</h2>
+            <p>요청하신 쪽지가 삭제되었거나 존재하지 않습니다.</p>
+            <div class="message-actions">
+                <a href="/message/inbox" class="mypage-btn primary">받은편지함으로</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <script th:inline="javascript">
+        // ✅ 쪽지 삭제 함수 - 에러 처리 강화
+        function deleteMessage(privateMsgNo, deleteType) {
+            // 입력값 검증
+            if (!privateMsgNo || !deleteType) {
+                alert('잘못된 요청입니다.');
+                return;
+            }
+            
+            const confirmDelete = confirm('이 쪽지를 삭제하시겠습니까?');
+            
+            if (confirmDelete) {
+                // 버튼 비활성화
+                const deleteBtn = event.target;
+                const originalText = deleteBtn.textContent;
+                deleteBtn.textContent = '삭제중...';
+                deleteBtn.disabled = true;
+                
+                $.ajax({
+                    url: '/message/delete',
+                    type: 'POST',
+                    data: { 
+                        privateMsgNo: privateMsgNo,
+                        deleteType: deleteType 
+                    },
+                    success: function(response) {
+                        if (response && response.success) {
+                            alert(response.message || '쪽지가 삭제되었습니다.');
+                            // 삭제 후 목록으로 이동
+                            if (deleteType === 'sender') {
+                                location.href = '/message/outbox';
+                            } else {
+                                location.href = '/message/inbox';
+                            }
+                        } else {
+                            alert(response.message || '쪽지 삭제에 실패했습니다.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('삭제 요청 실패:', {xhr, status, error});
+                        
+                        // 상세한 에러 처리
+                        let errorMessage = '서버 오류가 발생했습니다.';
+                        if (xhr.status === 403) {
+                            errorMessage = '권한이 없습니다.';
+                        } else if (xhr.status === 404) {
+                            errorMessage = '삭제할 쪽지를 찾을 수 없습니다.';
+                        } else if (xhr.status === 500) {
+                            errorMessage = '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                        }
+                        
+                        alert(errorMessage);
+                    },
+                    complete: function() {
+                        // 버튼 상태 복원
+                        deleteBtn.textContent = originalText;
+                        deleteBtn.disabled = false;
+                    }
+                });
+            }
+        }
+
+        // 페이지 로드 시 실행
+        $(document).ready(function() {
+            console.log('쪽지 상세보기 페이지 로드 완료');
+            
+            // ✅ 추가: 메시지 자동 읽음 처리 확인
+            const currentUser = /*[[${currentUser?.userName}]]*/ null;
+            const receiverUserName = /*[[${message?.receiverUserName}]]*/ null;
+            const readYn = /*[[${message?.readYn}]]*/ null;
+            
+            if (currentUser && receiverUserName && currentUser === receiverUserName && readYn === 'N') {
+                console.log('새 메시지 읽음 처리됨');
+            }
+        });
+    </script>
+
+</body>
+</html>
