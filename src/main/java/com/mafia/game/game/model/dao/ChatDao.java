@@ -37,4 +37,12 @@ public class ChatDao {
 
     	return sqlSession.selectOne("chatMapper.selectEvent", param);
     }
+
+	public List<Message> selectMessagesByRoom(SqlSessionTemplate sqlSession, int roomNo, String type,
+			RowBounds rowBounds) {
+		Map<String, Object> param = new HashMap<>();
+    	param.put("roomNo", roomNo);
+    	param.put("type", type);
+		return sqlSession.selectList("chatMapper.selectTypeMessagesByRoom", param, rowBounds);
+	}
 }
