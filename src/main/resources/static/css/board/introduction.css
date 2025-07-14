@@ -1,0 +1,150 @@
+body {
+  background-color: #0b0b0b !important;
+  font-family: 'Noto Sans KR', sans-serif !important;
+  color: #fff !important;
+}
+
+.team-select {
+    margin-top: 40px;
+    gap: 40px;
+}
+
+.team-icon {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    color: #ccc;
+    text-align: center;
+}
+
+.team-icon:hover {
+    transform: scale(1.05);
+    color: #fff;
+}
+
+.team-icon.active .team-img,
+.team-icon:hover .team-img {
+    filter: grayscale(0%) brightness(1.2);
+}
+
+.team-img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    transition: filter 0.2s ease;
+    box-shadow: 0px 0px 10px 2px white;
+}
+
+.team-name {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* 직업 리스트 영역 (하단) */
+.job-list-container {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.job-card {
+    width: 80px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.job-card:hover {
+    transform: scale(1.05);
+}
+
+.job-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.job-name {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+/* 직업 설명 카드 영역 (중앙) */
+.job-description-container {
+    margin-top: 50px;
+    padding: 30px;
+    background-color: #1b1b1b;
+    border-radius: 16px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+.job-description-container h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.job-description-container p {
+    line-height: 1.6;
+    color: #ccc;
+    font-size: 1rem;
+}
+
+/* 반응형 처리 */
+@media (max-width: 768px) {
+    .team-img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .job-card {
+        width: 70px;
+    }
+
+    .job-card img {
+        width: 70px;
+        height: 70px;
+    }
+
+    .job-description-container {
+        padding: 20px;
+    }
+}
+
+.team-name.text-danger {
+    color: #e74c3c;
+}
+.team-name.text-primary {
+    color: #3498db;
+}
+.team-name.text-warning {
+    color: #f1c40f;
+}
+
+.role-detail-container {
+    max-width: 800px;
+    margin: 0 auto; /* 중앙 정렬 */
+    display: flex;
+    gap: 30px;
+}
+
+.role-detail-img {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.role-detail-text {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}

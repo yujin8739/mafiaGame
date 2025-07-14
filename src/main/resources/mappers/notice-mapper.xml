@@ -47,5 +47,50 @@
 			</otherwise>
 		</choose>
 	</select>
+	
+	<update id="increaseCount" parameterType="int">
+		UPDATE NOTICE
+		SET COUNT = COUNT + 1
+		WHERE NOTICENO = #{noticeNo}
+	</update>
+	
+	<resultMap type="Notice" id="noticeResultMap">
+		<result property="noticeNo" column="NOTICENO"/>
+	</resultMap>
+	
+	<select id="selectNotice" parameterType="int" resultType="Notice">
+		SELECT *
+		FROM NOTICE
+		WHERE NOTICENO = #{noticeNo}
+	</select>
+	
+	<update id="deleteNotice">
+		UPDATE NOTICE
+		SET STATUS = 'N'
+		WHERE NOTICENO = #{noticeNo}
+	</update>
+	
+	<update id="updateNotice">
+		UPDATE NOTICE
+		SET TITLE = #{title}
+		   ,CONTENT = #{content}
+		   ,CREATEDATE = SYSDATE
+		WHERE NOTICENO = #{noticeNo}
+	</update>
+	
+	<insert id="writeNotice">
+		INSERT INTO NOTICE(NOTICENO
+						  ,USERNAME
+						  ,TITLE
+						  ,CONTENT
+						  ,ORIGINNAME
+						  ,CHANGENAME)
+					VALUES(SEQ_NNO.NEXTVAL
+						  ,#{userName}
+						  ,#{title}
+						  ,#{content}
+						  ,#{originName}
+						  ,#{changeName})
+	</insert>
 
 </mapper>
