@@ -63,5 +63,19 @@
 		FROM NOTICE
 		WHERE NOTICENO = #{noticeNo}
 	</select>
+	
+	<update id="deleteNotice">
+		UPDATE NOTICE
+		SET STATUS = 'N'
+		WHERE NOTICENO = #{noticeNo}
+	</update>
+	
+	<update id="updateNotice">
+		UPDATE NOTICE
+		SET TITLE = #{title}
+		   ,CONTENT = #{content}
+		   ,CREATEDATE = SYSDATE
+		WHERE NOTICENO = #{noticeNo}
+	</update>
 
 </mapper>

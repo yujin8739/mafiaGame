@@ -16,18 +16,32 @@
 	<div th:replace="common/header :: header"></div>
 	
 	<div class="noticeWrapper">
-		<form id="sortForm" th:action="@{/notice/list}" method="get" class="mb-3 d-flex justify-content-end">
-		    <!-- 기존 검색 조건 유지 -->
-		    <input type="hidden" name="condition" th:value="${noticeMap.condition}">
-		    <input type="hidden" name="keyword" th:value="${noticeMap.keyword}">
-		    <input type="hidden" name="currentPage" th:value="${pi.currentPage}">
+	
+		<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    
+		    <!-- 공지사항 작성 버튼 -->
+		    <div th:if="${session.loginUser.userName == 'sh'}">
+		        <a th:href="@{/notice/write}" class="searchBtn btn btn-secondary ml-2">공지사항 작성</a>
+		    </div>
+		    
+		    <div th:unless="${session.loginUser.userName == 'sh'}" style="visibility: hidden;">
+		        <a class="searchBtn btn btn-secondary ml-2">공지사항 작성</a>
+		    </div>
+		    
+			<form id="sortForm" th:action="@{/notice/list}" method="get" class="d-flex align-items-center mt-2 mt-md-0">
+			    <!-- 기존 검색 조건 유지 -->
+			    <input type="hidden" name="condition" th:value="${noticeMap.condition}">
+			    <input type="hidden" name="keyword" th:value="${noticeMap.keyword}">
+			    <input type="hidden" name="currentPage" th:value="${pi.currentPage}">
+			
+			    <label class="mr-2 text-white font-weight-bold align-self-center">정렬 기준:</label>
+			    <select class="custom-select w-auto" name="sort" onchange="document.getElementById('sortForm').submit();">
+			        <option value="byDate" th:selected="${noticeMap.sort == 'byDate'}">게시일 순</option>
+			        <option value="count" th:selected="${noticeMap.sort == 'count'}">조회수 순</option>
+			    </select>
+			</form>
+		</div>
 		
-		    <label class="mr-2 text-white font-weight-bold align-self-center">정렬 기준:</label>
-		    <select class="custom-select w-auto" name="sort" onchange="document.getElementById('sortForm').submit();">
-		        <option value="byDate" th:selected="${noticeMap.sort == 'byDate'}">게시일 순</option>
-		        <option value="count" th:selected="${noticeMap.sort == 'count'}">조회수 순</option>
-		    </select>
-		</form>
 		<table>
 			<thead>
 				<tr>
@@ -59,7 +73,8 @@
 			</tbody>
 		</table>
 		<br>
-		<div id="pagingArea">
+		
+		<div id="pagingArea" th:if="${!#lists.isEmpty(noticeList)}">
 		    <ul class="pagination justify-content-center">
 		
 		        <!-- Previous 버튼 -->
@@ -68,7 +83,8 @@
 		               th:href="@{/notice/list(
 		                            currentPage=${pi.currentPage - 1},
 		                            condition=${noticeMap.condition},
-		                            keyword=${noticeMap.keyword}
+		                            keyword=${noticeMap.keyword},
+		                            sort=${noticeMap.sort}
 		                        )}">
 		                이전
 		            </a>
@@ -80,7 +96,8 @@
 		               th:href="@{/notice/list(
 		                            currentPage=${i},
 		                            condition=${noticeMap.condition},
-		                            keyword=${noticeMap.keyword}
+		                            keyword=${noticeMap.keyword},
+		                            sort=${noticeMap.sort}
 		                        )}"
 		               th:text="${i}">
 		            </a>
@@ -92,7 +109,8 @@
 		               th:href="@{/notice/list(
 		                            currentPage=${pi.currentPage + 1},
 		                            condition=${noticeMap.condition},
-		                            keyword=${noticeMap.keyword}
+		                            keyword=${noticeMap.keyword},
+		                            sort=${noticeMap.sort}
 		                        )}">
 		                다음
 		            </a>
@@ -104,6 +122,7 @@
 		
 		<!-- 검색 폼 -->
 		<form id="searchForm" th:action="@{/notice/list}" method="get" class="text-center">
+			<input type="hidden" name="sort" th:value="${noticeMap.sort}" />
 		    <div class="select d-inline-block">
 		        <select class="custom-select" name="condition">
 		            <option value="title"

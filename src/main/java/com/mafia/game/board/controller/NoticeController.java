@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -72,8 +73,45 @@ public class NoticeController {
 	
 	@GetMapping("/delete/{noticeNo}")
 	public String deleteNotice(@PathVariable int noticeNo, Model model) {
+		int result = service.deleteNotice(noticeNo);
 		
+		if(result > 0) {
+			model.addAttribute("msg", "공지사항 삭제 완료");
+			return "redirect:/notice/list";
+		}else {
+			model.addAttribute("msg", "공지사항 삭제 실패");
+			return "redirect:/notice/detail/" + noticeNo;
+		}
+	}
+	
+	@GetMapping("/update/{noticeNo}")
+	public String updateNotice(@PathVariable int noticeNo, Model model) {
+		Notice notice = service.selectNotice(noticeNo);
+		model.addAttribute("notice", notice);
 		
+		return "board/noticeUpdateForm";
+	}
+	
+	@PostMapping("/update")
+	public String updateNotice(Notice notice, Model model) {
+		int result = service.updateNotice(notice);
+		
+		if(result > 0) {
+			model.addAttribute("msg", "공지사항 수정 완료");
+			return "redirect:/notice/detail/" + notice.getNoticeNo();
+		}else {
+			model.addAttribute("msg", "공지사항 수정 실패");
+			return "redirect:/notice/detail/" + notice.getNoticeNo();
+		}
+	}
+	
+	@GetMapping("/write")
+	public String writeNotice() {
+		return "board/noticeWriteForm";
+	}
+	
+	@PostMapping("/write")
+	public String writeNotice(Notice notice) {
 		return null;
 	}
 	

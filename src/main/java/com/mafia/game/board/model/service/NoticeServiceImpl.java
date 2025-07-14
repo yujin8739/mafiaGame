@@ -41,4 +41,14 @@ public class NoticeServiceImpl implements NoticeService {
 		dao.increaseCount(sqlSession, noticeNo);
 	}
 	
+	@Override
+	public int deleteNotice(int noticeNo) {
+		return dao.deleteNotice(sqlSession, noticeNo);
+	}
+	
+	@Override
+	public int updateNotice(Notice notice) {
+		return dao.updateNotice(sqlSession, notice);
+	}
+	
 }

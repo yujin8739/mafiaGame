@@ -15,5 +15,9 @@ public interface NoticeService {
 	Notice selectNotice(int noticeNo);
 
 	void increaseCount(int noticeNo);
+
+	int deleteNotice(int noticeNo);
+
+	int updateNotice(Notice notice);
 	
 }
