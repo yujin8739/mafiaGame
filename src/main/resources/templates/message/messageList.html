@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쪽지함 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/message/message.css}" />
+</head>
+<body>
+    <!-- 메시지 표시 -->
+    <div th:if="${msg}">
+        <script th:inline="javascript">
+            alert(/*[[${msg}]]*/ '메시지');
+        </script>
+    </div>
+
+    <!-- 헤더 -->
+    <div th:replace="~{common/header :: header}"></div>
+
+    <!-- 쪽지함 컨테이너 -->
+    <div class="message-container">
+        <h1 class="mypage-title">📬 쪽지함</h1>
+
+        <!-- 탭 메뉴 -->
+        <div class="message-tabs">
+            <button class="tab-button" th:classappend="${messageType == 'received'} ? 'active' : ''" 
+                    onclick="location.href='/message/inbox'">
+                받은편지함
+                <span th:if="${unreadCount > 0}" class="unread-badge" th:text="${unreadCount}">0</span>
+            </button>
+            <button class="tab-button" th:classappend="${messageType == 'sent'} ? 'active' : ''" 
+                    onclick="location.href='/message/outbox'">
+                보낸편지함
+            </button>
+        </div>
+
+        <!-- 쪽지 목록 -->
+        <div class="profile-section">
+            <!-- 쪽지가 있을 때 -->
+            <div th:if="${messages != null and !#lists.isEmpty(messages)}">
+                <table class="message-table">
+                    <thead>
+                        <tr>
+                            <th>번호</th>
+                            <th th:if="${messageType == 'received'}">보낸사람</th>
+                            <th th:if="${messageType == 'sent'}">받는사람</th>
+                            <th>제목</th>
+                            <th>날짜</th>
+                            <th th:if="${messageType == 'received'}">읽음</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="message, iterStat : ${messages}">
+                            <td th:text="${iterStat.count}">1</td>
+                            <td th:if="${messageType == 'received'}" 
+                                th:text="${message.senderNickName != null ? message.senderNickName : message.senderUserName}">
+                                보낸사람
+                            </td>
+                            <td th:if="${messageType == 'sent'}" 
+                                th:text="${message.receiverNickName != null ? message.receiverNickName : message.receiverUserName}">
+                                받는사람
+                            </td>
+                            <td class="message-title" 
+                                th:classappend="${message.readYn == 'N' and messageType == 'received'} ? 'unread' : 'read'"
+                                style="cursor: pointer;">
+                                <!-- ✅ 수정: data-* 속성 사용 -->
+                                <span th:data-message-id="${message.privateMsgNo}" 
+                                      onclick="goToDetail(this.getAttribute('data-message-id'))">
+                                    <span th:text="${message.title}">쪽지 제목</span>
+                                    <span th:if="${message.readYn == 'N' and messageType == 'received'}" 
+                                          style="color: #4CAF50; font-weight: bold;"> [새 메시지]</span>
+                                </span>
+                            </td>
+                            <td th:text="${#dates.format(message.sendDate, 'yyyy-MM-dd HH:mm')}">2025-01-09 14:30</td>
+                            <td th:if="${messageType == 'received'}">
+                                <span th:if="${message.readYn == 'Y'}" style="color: #888;">읽음</span>
+                                <span th:if="${message.readYn == 'N'}" style="color: #4CAF50; font-weight: bold;">안읽음</span>
+                            </td>
+                            <td>
+                                <!-- ✅ 수정: data-* 속성 사용 -->
+                                <button class="delete-btn" 
+                                        th:data-message-id="${message.privateMsgNo}"
+                                        th:data-delete-type="${messageType == 'received' ? 'receiver' : 'sender'}"
+                                        onclick="deleteMessage(this.getAttribute('data-message-id'), this.getAttribute('data-delete-type'))">
+                                    삭제
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 쪽지가 없을 때 -->
+            <div th:if="${messages == null or #lists.isEmpty(messages)}" class="no-messages">
+                <p th:if="${messageType == 'received'}">받은 쪽지가 없습니다.</p>
+                <p th:if="${messageType == 'sent'}">보낸 쪽지가 없습니다.</p>
+            </div>
+        </div>
+
+        <!-- 액션 버튼들 -->
+        <div class="action-buttons">
+            <a href="/message/write" class="mypage-btn primary">쪽지 쓰기</a>
+            <a href="/mypage" class="mypage-btn">마이페이지로</a>
+            <button onclick="location.reload()" class="mypage-btn">새로고침</button>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <script>
+        // ✅ 수정: 안전한 JavaScript 함수들
+        
+        // 쪽지 상세보기로 이동
+        function goToDetail(privateMsgNo) {
+            if (privateMsgNo) {
+                location.href = '/message/detail?privateMsgNo=' + privateMsgNo;
+            }
+        }
+
+        // 쪽지 삭제 함수
+        function deleteMessage(privateMsgNo, deleteType) {
+            if (!privateMsgNo || !deleteType) {
+                alert('오류가 발생했습니다.');
+                return;
+            }
+            
+            const confirmDelete = confirm('이 쪽지를 삭제하시겠습니까?');
+            
+            if (confirmDelete) {
+                $.ajax({
+                    url: '/message/delete',
+                    type: 'POST',
+                    data: { 
+                        privateMsgNo: privateMsgNo,
+                        deleteType: deleteType 
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload(); // 페이지 새로고침
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('서버 오류가 발생했습니다.');
+                    }
+                });
+            }
+        }
+
+        // 안읽은 메시지 개수 업데이트 (주기적으로)
+        function updateUnreadCount() {
+            $.ajax({
+                url: '/message/unreadCount',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success && response.unreadCount > 0) {
+                        const badge = document.querySelector('.unread-badge');
+                        if (badge) {
+                            badge.textContent = response.unreadCount;
+                        }
+                    }
+                },
+                error: function() {
+                    console.log('안읽은 메시지 개수 조회 실패');
+                }
+            });
+        }
+
+        // 페이지 로드 시 실행
+        $(document).ready(function() {
+            console.log('쪽지함 페이지 로드 완료');
+            
+            // 5분마다 안읽은 메시지 개수 업데이트
+            setInterval(updateUnreadCount, 300000);
+        });
+    </script>
+
+</body>
+</html>

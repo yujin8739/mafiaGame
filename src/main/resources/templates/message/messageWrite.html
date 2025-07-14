@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쪽지 쓰기 - GodFather 0805</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/message/message.css}" />
+</head>
+<body>
+
+    <!-- 메시지 표시 -->
+    <div th:if="${msg}">
+        <script th:inline="javascript">
+            alert(/*[[${msg}]]*/ '메시지');
+        </script>
+    </div>
+
+    <!-- 헤더 -->
+    <div th:replace="~{common/header :: header}"></div>
+
+    <!-- 쪽지 쓰기 컨테이너 -->
+    <div class="message-write-container">
+        <h1 class="mypage-title">
+            <span th:if="${isReply}">📝 답장하기</span>
+            <span th:unless="${isReply}">📝 쪽지 쓰기</span>
+        </h1>
+
+        <!-- 원본 메시지 표시 (답장인 경우) -->
+        <div th:if="${isReply and originalMessage != null}" class="original-message">
+            <h4>원본 메시지</h4>
+            <div class="message-meta" style="margin-bottom: 10px; font-size: 12px; color: #888;">
+                <strong>보낸사람:</strong> <span th:text="${originalMessage.senderNickName != null ? originalMessage.senderNickName : originalMessage.senderUserName}">보낸사람</span> |
+                <strong>날짜:</strong> <span th:text="${#dates.format(originalMessage.sendDate, 'yyyy-MM-dd HH:mm')}">2025-01-09 14:30</span>
+            </div>
+            <div class="original-content" th:text="${originalMessage.content}">
+                원본 메시지 내용
+            </div>
+        </div>
+
+        <!-- 쪽지 작성 폼 -->
+        <form class="write-form" action="/message/send" method="POST" onsubmit="return validateForm()">
+            
+            <div class="form-group">
+                <label for="receiverUserName">받는사람 <span class="required">*</span></label>
+                <input type="text" id="receiverUserName" name="receiverUserName" 
+                       th:value="${receiverUserName}" 
+                       placeholder="받는 사람의 사용자명을 입력하세요" required>
+                <small class="help-text">정확한 사용자명을 입력해주세요. (대소문자 구분)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="title">제목 <span class="required">*</span></label>
+                <input type="text" id="title" name="title" 
+                       th:value="${replyTitle}" 
+                       placeholder="쪽지 제목을 입력하세요" 
+                       maxlength="100" required>
+                <div class="char-counter">
+                    <span id="titleCounter">0</span>/100자
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="content">내용 <span class="required">*</span></label>
+                <textarea id="content" name="content" 
+                          placeholder="쪽지 내용을 입력하세요&#10;&#10;정중하고 예의바른 언어를 사용해주세요." 
+                          maxlength="1000" required></textarea>
+                <div class="char-counter">
+                    <span id="contentCounter">0</span>/1000자
+                </div>
+            </div>
+
+            <div class="form-group">
+			    <label for="messageType">쪽지 분류</label>
+			    <select id="messageType" name="messageType">
+			        <option value="">일반 쪽지</option>
+			        <option value="답장">답장</option>
+			        <option value="친구요청">친구 요청</option>
+			        <option value="거래">거래</option>
+			        <option value="게임초대">게임 초대</option>
+			        <!-- 시스템은 관리자용이므로 제외 -->
+			    </select>
+            </div>
+
+            <!-- 답장이 아닌 경우에만 parentPrivateMsgNo 필드 제거 -->
+            <input th:if="${isReply and originalMessage != null}" 
+                   type="hidden" name="parentPrivateMsgNo" 
+                   th:value="${originalMessage.privateMsgNo}">
+
+            <div class="form-buttons">
+                <button type="submit" class="mypage-btn primary">
+                    <span th:if="${isReply}">답장 보내기</span>
+                    <span th:unless="${isReply}">쪽지 보내기</span>
+                </button>
+                <button type="button" onclick="saveDraft()" class="mypage-btn">임시저장</button>
+                <button type="button" onclick="resetForm()" class="mypage-btn">다시쓰기</button>
+                <a href="javascript:history.back()" class="mypage-btn">취소</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 푸터 -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // 글자 수 카운터
+            updateCharCounter();
+            
+            $('#title').on('input', updateCharCounter);
+            $('#content').on('input', updateCharCounter);
+
+            // 임시저장된 내용 불러오기
+            loadDraft();
+            
+            console.log('쪽지 쓰기 페이지 로드 완료');
+        });
+
+        // 글자 수 카운터 업데이트
+        function updateCharCounter() {
+            const titleLength = $('#title').val().length;
+            const contentLength = $('#content').val().length;
+            
+            $('#titleCounter').text(titleLength);
+            $('#contentCounter').text(contentLength);
+            
+            // 글자 수 제한 경고
+            if (titleLength > 90) {
+                $('#titleCounter').css('color', '#ff3b3b');
+            } else {
+                $('#titleCounter').css('color', '#888');
+            }
+            
+            if (contentLength > 900) {
+                $('#contentCounter').css('color', '#ff3b3b');
+            } else {
+                $('#contentCounter').css('color', '#888');
+            }
+        }
+
+        // 폼 유효성 검사
+        function validateForm() {
+            const receiverUserName = $('#receiverUserName').val().trim();
+            const title = $('#title').val().trim();
+            const content = $('#content').val().trim();
+            
+            if (!receiverUserName) {
+                alert('받는 사람을 입력해주세요.');
+                $('#receiverUserName').focus();
+                return false;
+            }
+            
+            if (!title) {
+                alert('제목을 입력해주세요.');
+                $('#title').focus();
+                return false;
+            }
+            
+            if (!content) {
+                alert('내용을 입력해주세요.');
+                $('#content').focus();
+                return false;
+            }
+            
+            if (title.length > 100) {
+                alert('제목은 100자를 초과할 수 없습니다.');
+                $('#title').focus();
+                return false;
+            }
+            
+            if (content.length > 1000) {
+                alert('내용은 1000자를 초과할 수 없습니다.');
+                $('#content').focus();
+                return false;
+            }
+
+            // 자기 자신에게 보내는지 확인
+            const currentUser = /*[[${senderUserName}]]*/ '';
+            if (receiverUserName === currentUser) {
+                alert('자기 자신에게는 쪽지를 보낼 수 없습니다.');
+                $('#receiverUserName').focus();
+                return false;
+            }
+            
+            return confirm('쪽지를 보내시겠습니까?');
+        }
+
+        // 임시저장
+        function saveDraft() {
+            const draftData = {
+                receiverUserName: $('#receiverUserName').val(),
+                title: $('#title').val(),
+                content: $('#content').val(),
+                messageType: $('#messageType').val(),
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('messageDraft', JSON.stringify(draftData));
+            alert('임시저장되었습니다.');
+        }
+
+        // 임시저장 불러오기
+        function loadDraft() {
+            const draft = localStorage.getItem('messageDraft');
+            if (draft) {
+                try {
+                    const draftData = JSON.parse(draft);
+                    
+                    // 24시간이 지난 임시저장은 삭제
+                    const draftTime = new Date(draftData.timestamp);
+                    const now = new Date();
+                    const hoursDiff = (now - draftTime) / (1000 * 60 * 60);
+                    
+                    if (hoursDiff > 24) {
+                        localStorage.removeItem('messageDraft');
+                        return;
+                    }
+                    
+                    // 현재 폼이 비어있고 답장이 아닌 경우에만 불러오기
+                    const isReply = /*[[${isReply}]]*/ false;
+                    if (!isReply && !$('#receiverUserName').val() && !$('#title').val() && !$('#content').val()) {
+                        if (confirm('임시저장된 내용이 있습니다. 불러오시겠습니까?')) {
+                            $('#receiverUserName').val(draftData.receiverUserName || '');
+                            $('#title').val(draftData.title || '');
+                            $('#content').val(draftData.content || '');
+                            $('#messageType').val(draftData.messageType || '');
+                            updateCharCounter();
+                        }
+                    }
+                } catch (e) {
+                    console.error('임시저장 데이터 로드 실패:', e);
+                    localStorage.removeItem('messageDraft');
+                }
+            }
+        }
+
+        // 폼 초기화
+        function resetForm() {
+            if (confirm('작성 중인 내용이 모두 삭제됩니다. 계속하시겠습니까?')) {
+                const isReply = /*[[${isReply}]]*/ false;
+                if (!isReply) {
+                    $('#receiverUserName').val('');
+                    $('#title').val('');
+                }
+                $('#content').val('');
+                $('#messageType').val('');
+                updateCharCounter();
+                
+                // 임시저장 삭제
+                localStorage.removeItem('messageDraft');
+            }
+        }
+
+        // 페이지 떠날 때 임시저장 확인
+        window.addEventListener('beforeunload', function(e) {
+            const hasContent = $('#content').val().trim() || $('#title').val().trim();
+            if (hasContent) {
+                saveDraft();
+            }
+        });
+    </script>
+
+</body>
+</html>
