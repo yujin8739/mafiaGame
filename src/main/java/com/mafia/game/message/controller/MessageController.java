@@ -26,9 +26,6 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
 
-    // ================================
-    // 유틸리티 메서드
-    // ================================
 
     /**
      * 로그인 상태 확인
@@ -73,15 +70,13 @@ public class MessageController {
         }
     }
 
-    // ================================
-    // 페이지 조회
-    // ================================
 
     /**
      * 받은편지함
      */
     @GetMapping("/inbox")
-    public String inbox(@SessionAttribute(name = "loginUser", required = false) Member loginUser, 
+    public String inbox(@SessionAttribute(name = "loginUser", required = false) Member loginUser,
+                       @RequestParam(defaultValue = "1") int page,
                        Model model) {
         
         if (!isLoggedIn(loginUser)) {
@@ -90,7 +85,19 @@ public class MessageController {
         
         try {
             String userName = loginUser.getUserName();
-            ArrayList<UserMessage> messages = messageService.getReceivedMessages(userName);
+            
+            // 페이지네이션 설정
+            int pageSize = 5;
+            int offset = (page - 1) * pageSize;
+            
+            // 페이지별 메시지 조회
+            ArrayList<UserMessage> messages = messageService.getReceivedMessagesWithPaging(userName, offset, pageSize);
+            
+            // 전체 메시지 개수 조회
+            int totalMessages = messageService.getTotalReceivedMessagesCount(userName);
+            int totalPages = (int) Math.ceil((double) totalMessages / pageSize);
+            
+            // 안읽은 메시지 개수
             int unreadCount = messageService.getUnreadCount(userName);
             
             // messageType을 한글로 변환
@@ -102,6 +109,13 @@ public class MessageController {
             model.addAttribute("unreadCount", unreadCount);
             model.addAttribute("messageType", "received");
             model.addAttribute("currentUser", loginUser);
+            
+            // 페이지네이션 정보 추가
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("totalMessages", totalMessages);
+            model.addAttribute("hasNext", page < totalPages);
+            model.addAttribute("hasPrevious", page > 1);
             
             return "message/messageList";
             
@@ -116,7 +130,8 @@ public class MessageController {
      * 보낸편지함
      */
     @GetMapping("/outbox")
-    public String outbox(@SessionAttribute(name = "loginUser", required = false) Member loginUser, 
+    public String outbox(@SessionAttribute(name = "loginUser", required = false) Member loginUser,
+                        @RequestParam(defaultValue = "1") int page,
                         Model model) {
         
         if (!isLoggedIn(loginUser)) {
@@ -125,7 +140,17 @@ public class MessageController {
         
         try {
             String userName = loginUser.getUserName();
-            ArrayList<UserMessage> messages = messageService.getSentMessages(userName);
+            
+            // 페이지네이션 설정
+            int pageSize = 5;
+            int offset = (page - 1) * pageSize;
+            
+            // 페이지별 메시지 조회
+            ArrayList<UserMessage> messages = messageService.getSentMessagesWithPaging(userName, offset, pageSize);
+            
+            // 전체 메시지 개수 조회
+            int totalMessages = messageService.getTotalSentMessagesCount(userName);
+            int totalPages = (int) Math.ceil((double) totalMessages / pageSize);
             
             // messageType을 한글로 변환
             for (UserMessage message : messages) {
@@ -135,6 +160,13 @@ public class MessageController {
             model.addAttribute("messages", messages);
             model.addAttribute("messageType", "sent");
             model.addAttribute("currentUser", loginUser);
+            
+            // 페이지네이션 정보 추가
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("totalMessages", totalMessages);
+            model.addAttribute("hasNext", page < totalPages);
+            model.addAttribute("hasPrevious", page > 1);
             
             return "message/messageList";
             
@@ -263,9 +295,6 @@ public class MessageController {
         }
     }
 
-    // ================================
-    // 쪽지 전송 및 삭제
-    // ================================
 
     /**
      * 쪽지 보내기
@@ -417,9 +446,6 @@ public class MessageController {
         return response;
     }
 
-    // ================================
-    // 유틸리티 API
-    // ================================
 
     /**
      * 안읽은 쪽지 개수 조회 (AJAX)

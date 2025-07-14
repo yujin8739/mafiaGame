@@ -29,4 +29,17 @@ public interface MessageService {
 
     // 안읽은 쪽지 개수 조회
     int getUnreadCount(String receiverUserName);
+    
+    // 받은 쪽지함 페이지네이션 조회
+    ArrayList<UserMessage> getReceivedMessagesWithPaging(String receiverUserName, int offset, int pageSize);
+
+    // 보낸 쪽지함 페이지네이션 조회  
+    ArrayList<UserMessage> getSentMessagesWithPaging(String senderUserName, int offset, int pageSize);
+
+    // 받은 쪽지 전체 개수 조회
+    int getTotalReceivedMessagesCount(String receiverUserName);
+
+    // 보낸 쪽지 전체 개수 조회
+    int getTotalSentMessagesCount(String senderUserName);
+    
 }

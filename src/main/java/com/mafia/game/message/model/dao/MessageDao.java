@@ -54,4 +54,32 @@ public class MessageDao {
     public int getUnreadCount(SqlSessionTemplate sqlSession, String receiverUserName) {
         return sqlSession.selectOne("messageMapper.getUnreadCount", receiverUserName);
     }
+    
+    public ArrayList<UserMessage> getReceivedMessagesWithPaging(SqlSessionTemplate sqlSession, String receiverUserName, int offset, int pageSize) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("receiverUserName", receiverUserName);
+        params.put("offset", offset);
+        params.put("pageSize", pageSize);
+        return new ArrayList<>(sqlSession.selectList("messageMapper.getReceivedMessagesWithPaging", params));
+    }
+
+    // 보낸 쪽지함 페이지네이션 조회
+    public ArrayList<UserMessage> getSentMessagesWithPaging(SqlSessionTemplate sqlSession, String senderUserName, int offset, int pageSize) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("senderUserName", senderUserName);
+        params.put("offset", offset);
+        params.put("pageSize", pageSize);
+        return new ArrayList<>(sqlSession.selectList("messageMapper.getSentMessagesWithPaging", params));
+    }
+
+    // 받은 쪽지 전체 개수 조회
+    public int getTotalReceivedMessagesCount(SqlSessionTemplate sqlSession, String receiverUserName) {
+        return sqlSession.selectOne("messageMapper.getTotalReceivedMessagesCount", receiverUserName);
+    }
+
+    // 보낸 쪽지 전체 개수 조회
+    public int getTotalSentMessagesCount(SqlSessionTemplate sqlSession, String senderUserName) {
+        return sqlSession.selectOne("messageMapper.getTotalSentMessagesCount", senderUserName);
+    }
+    
 }
