@@ -1,0 +1,14 @@
+<div th:fragment="roleDetail">
+    <div class="role-detail-container d-flex justify-content-center align-items-center">
+        <!-- 이미지 영역 (1) -->
+        <div class="role-detail-img me-4">
+            <img th:src="@{${imagePath}}" alt="직업 이미지" class="img-fluid" />
+        </div>
+
+        <!-- 설명 영역 (2) -->
+        <div class="role-detail-text text-start">
+            <h4 class="text-white fw-bold" th:text="${roleName}">직업명</h4>
+            <p class="text-white" th:text="|&quot;${description}&quot;|">직업 설명</p>
+        </div>
+    </div>
+</div>

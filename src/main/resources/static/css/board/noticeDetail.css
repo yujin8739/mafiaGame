@@ -1,0 +1,31 @@
+body {
+  background-color: #0b0b0b !important;
+  font-family: 'Noto Sans KR', sans-serif !important;
+  color: #fff !important;
+}
+
+.wrapper {
+  max-width: 1000px;
+  margin: 40px auto;
+  background-color: #444; /* 좀 더 자연스럽게 */
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+.notice-content {
+    min-height: 400px; /* 최소 높이 지정 (원하는 값으로 조절 가능) */
+    white-space: pre-line; /* 줄바꿈(\n) 반영 */
+    padding: 20px;
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+h4 {
+  font-weight: 600;
+  color: #fff;
+}

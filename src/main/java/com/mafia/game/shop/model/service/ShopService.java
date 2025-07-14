@@ -21,4 +21,13 @@ public interface ShopService {
 	
 	int purchaseBuyArt(int artId, String buyerName);
 	
+	int updateProfileImageByUserName(String userName, String profileImgPath);
+    
+    String getProfileImage(int userName);
+
+	
+
+
+
+	
 }

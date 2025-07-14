@@ -13,6 +13,7 @@ public class Member {
 	private String nickName;
 	private String email;
 	private char status;
+	private String profileImage;
 	
 	
 }
