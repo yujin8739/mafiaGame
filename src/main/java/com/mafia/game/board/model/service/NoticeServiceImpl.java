@@ -51,4 +51,9 @@ public class NoticeServiceImpl implements NoticeService {
 		return dao.updateNotice(sqlSession, notice);
 	}
 	
+	@Override
+	public int writeNotice(Notice notice) {
+		return dao.writeNotice(sqlSession, notice);
+	}
+	
 }

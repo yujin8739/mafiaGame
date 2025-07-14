@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.board.model.service.NoticeService;
 import com.mafia.game.board.model.vo.Notice;
@@ -61,7 +62,9 @@ public class NoticeController {
 	}
 	
 	@GetMapping("/detail/{noticeNo}")
-	public String noticeDetail(@PathVariable int noticeNo, Model model, HttpSession session) {
+	public String noticeDetail(@PathVariable int noticeNo,
+							   HttpSession session,
+							   Model model) {
 		String userName = ((Member) session.getAttribute("loginUser")).getUserName();
 	    logger.info("세션에 저장된 userName: {}", userName);
 		service.increaseCount(noticeNo);
@@ -72,14 +75,14 @@ public class NoticeController {
 	}
 	
 	@GetMapping("/delete/{noticeNo}")
-	public String deleteNotice(@PathVariable int noticeNo, Model model) {
+	public String deleteNotice(@PathVariable int noticeNo, RedirectAttributes redirectAttributes) {
 		int result = service.deleteNotice(noticeNo);
 		
 		if(result > 0) {
-			model.addAttribute("msg", "공지사항 삭제 완료");
+			redirectAttributes.addFlashAttribute("msg", "공지사항 삭제 성공");
 			return "redirect:/notice/list";
 		}else {
-			model.addAttribute("msg", "공지사항 삭제 실패");
+			redirectAttributes.addFlashAttribute("msg", "공지사항 삭제 실패");
 			return "redirect:/notice/detail/" + noticeNo;
 		}
 	}
@@ -93,14 +96,14 @@ public class NoticeController {
 	}
 	
 	@PostMapping("/update")
-	public String updateNotice(Notice notice, Model model) {
+	public String updateNotice(Notice notice, RedirectAttributes redirectAttributes) {
 		int result = service.updateNotice(notice);
 		
 		if(result > 0) {
-			model.addAttribute("msg", "공지사항 수정 완료");
+			redirectAttributes.addFlashAttribute("msg", "공지사항 수정 완료");
 			return "redirect:/notice/detail/" + notice.getNoticeNo();
 		}else {
-			model.addAttribute("msg", "공지사항 수정 실패");
+			redirectAttributes.addFlashAttribute("msg", "공지사항 수정 실패");
 			return "redirect:/notice/detail/" + notice.getNoticeNo();
 		}
 	}
@@ -111,8 +114,16 @@ public class NoticeController {
 	}
 	
 	@PostMapping("/write")
-	public String writeNotice(Notice notice) {
-		return null;
+	public String writeNotice(Notice notice, RedirectAttributes redirectAttributes) {
+		int result = service.writeNotice(notice);
+		
+		if(result > 0) {
+			redirectAttributes.addFlashAttribute("msg", "공지사항 등록");
+			return "redirect:/notice/list";
+		}else {
+			redirectAttributes.addFlashAttribute("msg", "공지사항 등록 실패");
+			return "redirect:/notice/write";
+		}
 	}
 	
 }

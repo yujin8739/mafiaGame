@@ -39,5 +39,9 @@ public class NoticeDao {
 	public int updateNotice(SqlSessionTemplate sqlSession, Notice notice) {
 		return sqlSession.update("noticeMapper.updateNotice", notice);
 	}
+
+	public int writeNotice(SqlSessionTemplate sqlSession, Notice notice) {
+		return sqlSession.insert("noticeMapper.writeNotice", notice);
+	}
 	
 }

@@ -77,5 +77,16 @@
 		   ,CREATEDATE = SYSDATE
 		WHERE NOTICENO = #{noticeNo}
 	</update>
+	
+	<insert id="writeNotice">
+		INSERT INTO NOTICE(NOTICENO
+						  ,USERNAME
+						  ,TITLE
+						  ,CONTENT)
+					VALUES(SEQ_NNO.NEXTVAL
+						  ,#{userName}
+						  ,#{title}
+						  ,#{content})
+	</insert>
 
 </mapper>

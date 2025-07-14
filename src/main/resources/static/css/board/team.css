@@ -1,0 +1,29 @@
+/* 직업 리스트 컨테이너 */
+.role-list-container {
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+/* 개별 직업 아이템 */
+.role-item {
+    width: 100px;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+}
+.role-item:hover {
+    transform: scale(1.05);
+}
+
+/* 직업 이미지 */
+.role-img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+/* 직업 이름 텍스트 */
+.role-name {
+    margin-top: 8px;
+    font-size: 14px;
+}
