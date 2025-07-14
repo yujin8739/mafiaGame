@@ -76,14 +76,14 @@ public class BoardController {
 		PageInfo pi = Pagination.getPageInfo(listCount, currentPage, pageLimit, boardLimit); // 페이징 처리를 위한 정보
 
 		ArrayList<Board> boardList = service.boardList(filterMap, pi); // 가져올 게시글 목록
-		//ArrayList<Board> topLikedList = service.topLikedList(filterMap);//가져올 top5 게시글 목록
+		ArrayList<Board> topLikedList = service.topLikedList(filterMap);//가져올 top5 게시글 목록
 		
 		
 		boardList = enrichBoardInfo(boardList);
-		//topLikedList = enrichBoardInfo(topLikedList);
+		topLikedList = enrichBoardInfo(topLikedList);
 		
 		
-		//model.addAttribute("topLikedList", topLikedList);
+		model.addAttribute("topLikedList", topLikedList);
 		model.addAttribute("boardList", boardList);
 		model.addAttribute("pi", pi);
 		model.addAttribute("filterMap", filterMap);
@@ -95,13 +95,6 @@ public class BoardController {
 	//게시글리스트 정보 가공을 위한 메소드
 	public ArrayList<Board> enrichBoardInfo(ArrayList<Board> boardList) {
 		for(Board b : boardList) {
-			int replyCount = 0;
-			for(Reply r : b.getReplyList()) {
-				if("Y".equals(r.getStatus())) {
-					replyCount++;
-				}
-			}
-			b.setReplyCount(replyCount);
 			
 			b.setNew(b.getCreateDate().toLocalDate().isEqual(LocalDate.now()));
 			
@@ -202,7 +195,8 @@ public class BoardController {
 	}
 
 	@GetMapping("/lounge/detail/{boardNo}") // 라운지 게시글 상세보기
-	public String loungeDetail(@PathVariable int boardNo, Model model,RedirectAttributes redirectAttributes) {
+	public String loungeDetail(@SessionAttribute Member loginUser,
+			@PathVariable int boardNo, Model model,RedirectAttributes redirectAttributes) {
 		
 		int result = service.increaseCount(boardNo); //게시글 들어가면 조회수 1증가시키기
 		
@@ -365,6 +359,9 @@ public class BoardController {
 		for(Reply r : replyList) {
 			int rankPoint = r.getRankPoint();
 			setProfileUrl(r, rankPoint);
+			if(r.getReplyContent() == null) {
+				r.setReplyContent("");
+			}
 		}
 		
 		return replyList;

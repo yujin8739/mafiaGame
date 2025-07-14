@@ -10,33 +10,34 @@
 	<!-- 직업 탭만 누르면(직업 전체) type값 lounge_job임 -->
 	<select id="listCount" resultType="_int">
 		SELECT COUNT(*)
-		FROM BOARD
-		JOIN BOARD_TYPE USING(TYPENO)
+		FROM BOARD B
+		JOIN BOARD_TYPE T USING(TYPENO)
+		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
 		<choose>
 			<when test="type == null || type ==''">
-				WHERE TYPENAME LIKE 'lounge%'
+				WHERE T.TYPENAME LIKE 'lounge%'
 			</when>
 			<when test="type == 'lounge_job'">
-				WHERE TYPENAME LIKE 'lounge_job%'
+				WHERE T.TYPENAME LIKE 'lounge_job%'
 			</when>
 			<otherwise>
-				WHERE TYPENAME LIKE #{type}
+				WHERE T.TYPENAME LIKE #{type}
 			</otherwise>
 		</choose>
 		<if test="condition != ''">
 			<choose>
 				<when test="condition == 'title'">
-					AND TITLE LIKE '%'||#{keyword}||'%'
+					AND LOWER(B.TITLE) LIKE '%'||LOWER(#{keyword})||'%'
 				</when>
 				<when test="condition == 'writer'">
-					AND USERNAME LIKE '%'||#{keyword}||'%'				
+					AND LOWER(U.NICKNAME) LIKE '%'||LOWER(#{keyword})||'%'				
 				</when>
 				<otherwise>
-					AND DETAIL LIKE '%'||#{keyword}||'%'
+					AND LOWER(B.DETAIL) LIKE '%'||LOWER(#{keyword})||'%'
 				</otherwise>
 			</choose>
 		</if>
-		AND BOARD.STATUS = 'Y'
+		AND B.STATUS = 'Y'
 	</select>
 	
 	
@@ -70,56 +71,154 @@
 		</collection>
 	</resultMap>
 	
+	<resultMap type="Board" id="boardListMap">
+		<result property="boardNo" column="BOARDNO"/>
+		<result property="nickName" column="NICKNAME"/>
+		<result property="title" column="TITLE"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="viewCount" column="VIEWCOUNT"/>
+		<result property="displayName" column="DISPLAYNAME"/>
+		<result property="rankPoint" column="RANKPOINT"/>
+		<result property="likeCount" column="LIKECOUNT"/>
+		
+		<result property="replyCount" column="REPLY_COUNT"/>
+		<result property="hasFile" column="HAS_FILE"/>
+	</resultMap>
+	
 	<!-- 라운지 게시글 목록 조회용 -->
-	<select id="boardList" resultMap="boardDetailResultMap">
-		SELECT B.BOARDNO
-			  ,B.TITLE
-		      ,U.NICKNAME
-		      ,B.CREATEDATE
-		      ,B.VIEWCOUNT
-		      ,B.STATUS
-		      ,T.DISPLAYNAME
-		      ,U.RANKPOINT
-		      ,F.STATUS AS FILE_STATUS
-		      ,R.REPLYNO
-		      ,R.STATUS AS REPLY_STATUS
+	<select id="boardList" resultMap="boardListMap">
+		SELECT 
+		    B.BOARDNO,
+		    B.TITLE,
+		    B.CREATEDATE,
+		    B.VIEWCOUNT,
+		    
+		    U.RANKPOINT,
+		    U.NICKNAME,
+		    T.DISPLAYNAME,
+		
+		    NVL(R.REPLY_COUNT, 0) AS REPLY_COUNT,
+		    CASE WHEN F.FILE_EXISTS > 0 THEN 'Y' ELSE 'N' END AS HAS_FILE
+		
 		FROM BOARD B
-		JOIN BOARD_TYPE T USING(TYPENO)
-		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
-		LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
-		LEFT JOIN REPLY R ON(B.BOARDNO = R.BOARDNO)
+		
+		JOIN USER_INFO U ON B.USERNAME = U.USERNAME
+		
+		JOIN BOARD_TYPE T ON B.TYPENO = T.TYPENO
+		
+		LEFT JOIN (
+		    SELECT BOARDNO, COUNT(*) AS REPLY_COUNT
+		    FROM REPLY
+		    WHERE STATUS = 'Y'
+		    GROUP BY BOARDNO
+		  ) R ON B.BOARDNO = R.BOARDNO
+		
+		LEFT JOIN (
+		    SELECT BOARDNO, COUNT(*) AS FILE_EXISTS
+		    FROM BOARD_FILE
+		    WHERE STATUS = 'Y'
+		    GROUP BY BOARDNO
+		  ) F ON B.BOARDNO = F.BOARDNO
+		
+		WHERE B.STATUS = 'Y'
 		<choose>
 			<when test="type == null || type ==''">
-				WHERE T.TYPENAME LIKE 'lounge%'
+				AND T.TYPENAME LIKE 'lounge%'
 			</when>
 			<when test="type == 'lounge_job'">
-				WHERE T.TYPENAME LIKE 'lounge_job%'
+				AND T.TYPENAME LIKE 'lounge_job%'
 			</when>
 			<otherwise>
-				WHERE T.TYPENAME LIKE #{type}
+				AND T.TYPENAME LIKE #{type}
 			</otherwise>
 		</choose>
 		<if test="condition != ''">
 			<choose>
 				<when test="condition == 'title'">
-					AND B.TITLE LIKE '%'||#{keyword}||'%'
+					AND LOWER(B.TITLE) LIKE '%'||LOWER(#{keyword})||'%'
 				</when>
 				<when test="condition == 'writer'">
-					AND U.NICKNAME LIKE '%'||#{keyword}||'%'				
+					AND LOWER(U.NICKNAME) LIKE '%'||LOWER(#{keyword})||'%'				
 				</when>
 				<otherwise>
-					AND B.DETAIL LIKE '%'||#{keyword}||'%'
+					AND LOWER(B.DETAIL) LIKE '%'||LOWER(#{keyword})||'%'
 				</otherwise>
 			</choose>
 		</if>
-		AND B.STATUS = 'Y'
-		ORDER BY CREATEDATE DESC
+		
+		ORDER BY B.CREATEDATE DESC
 	</select>
 	
+	
+	
 	<!-- 라운지 상위top5 게시글 목록 조회용 -->
-	<select id="topLikedList" resultMap="boardDetailResultMap">
-		select *
-		from board
+	<select id="topLikedList" resultMap="boardListMap">
+		SELECT *
+		FROM (
+		  SELECT 
+		    B.BOARDNO,
+		    B.TITLE,
+		    B.CREATEDATE,
+		    B.LIKECOUNT,
+		    B.VIEWCOUNT,
+		
+			U.RANKPOINT,
+		    U.NICKNAME,
+		    T.DISPLAYNAME,
+		
+		    NVL(R.REPLY_COUNT, 0) AS REPLY_COUNT,
+		    CASE WHEN F.FILE_EXISTS > 0 THEN 'Y' ELSE 'N' END AS HAS_FILE
+		
+		  FROM BOARD B
+		
+		  JOIN USER_INFO U ON B.USERNAME = U.USERNAME
+		
+		  JOIN BOARD_TYPE T ON B.TYPENO = T.TYPENO
+		
+		  LEFT JOIN (
+		    SELECT BOARDNO, COUNT(*) AS REPLY_COUNT
+		    FROM REPLY
+		    WHERE STATUS = 'Y'
+		    GROUP BY BOARDNO
+		  ) R ON B.BOARDNO = R.BOARDNO
+		
+		  LEFT JOIN (
+		    SELECT BOARDNO, COUNT(*) AS FILE_EXISTS
+		    FROM BOARD_FILE
+		    WHERE STATUS = 'Y'
+		    GROUP BY BOARDNO
+		  ) F ON B.BOARDNO = F.BOARDNO
+		
+		  WHERE B.STATUS = 'Y'
+		  <choose>
+			<when test="type == null || type ==''">
+				AND T.TYPENAME LIKE 'lounge%'
+			</when>
+			<when test="type == 'lounge_job'">
+				AND T.TYPENAME LIKE 'lounge_job%'
+			</when>
+			<otherwise>
+				AND T.TYPENAME LIKE #{type}
+			</otherwise>
+		</choose>
+		<if test="condition != ''">
+			<choose>
+				<when test="condition == 'title'">
+					AND LOWER(B.TITLE) LIKE '%'||LOWER(#{keyword})||'%'
+				</when>
+				<when test="condition == 'writer'">
+					AND LOWER(U.NICKNAME) LIKE '%'||LOWER(#{keyword})||'%'				
+				</when>
+				<otherwise>
+					AND LOWER(B.DETAIL) LIKE '%'||LOWER(#{keyword})||'%'
+				</otherwise>
+			</choose>
+		</if>
+		
+		  ORDER BY B.LIKECOUNT DESC, B.CREATEDATE DESC
+		
+		) 
+		WHERE <![CDATA[ROWNUM <= 5]]>
 	</select>
 	
 	<update id="increaseCount">
@@ -130,6 +229,7 @@
 	
 	<select id="loungeBoardDetail" resultMap="boardDetailResultMap">
 		SELECT B.BOARDNO
+			  ,B.USERNAME
 		      ,U.NICKNAME
 		      ,B.DETAIL
 		      ,B.TITLE
@@ -243,7 +343,14 @@
 	</insert>
 	
 	<select id="getReplyList" resultType="Reply">
-		SELECT *
+		SELECT R.REPLYNO
+			  ,R.REPLYCONTENT
+			  ,R.CREATEDATE
+			  ,R.USERNAME
+			  ,F.FILENO
+			  ,F.CHANGENAME
+			  ,U.NICKNAME
+			  ,U.RANKPOINT
 		FROM REPLY R
 		JOIN BOARD B ON (R.BOARDNO = B.BOARDNO)
 		LEFT JOIN BOARD_FILE F ON (R.FILENO = F.FILENO)
