@@ -136,6 +136,14 @@ public class BoardDao {
 		return sqlSession.update("boardMapper.increaseReplyLike", needed);
 	}
 
+	public ArrayList<BoardFile> videoList(SqlSessionTemplate sqlSession) {
+		return (ArrayList)sqlSession.selectList("boardMapper.videoList");
+	}
+
+	public int getViewCount(SqlSessionTemplate sqlSession, int boardNo) {
+		return sqlSession.selectOne("boardMapper.getViewCount", boardNo);
+	}
+
 
 
 	
