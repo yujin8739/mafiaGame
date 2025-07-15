@@ -162,15 +162,22 @@
 			function voteTo(targetNick, index) {
 			    if (!confirm(`${targetNick}에게 투표하시겠습니까?`)) return;
 			    
-			    let userNameList = [];
+			    let userNameList = []; 
 			    try {
-					userNameList = JSON.parse(rawString);
+					userNameList = JSON.parse(room.userList);
 					voteUser(userNameList[index]);
 				} catch (e) {
 					console.error("userNameList 파싱 실패", e);
 					userNameList = [];
+			    } finally {
+					const slots = document.querySelectorAll('.slot');
+					slots.forEach((slot) => {
+						const img = slot.querySelector('img.someNails');
+						if (!img) return;
+						img.style.cursor = 'default';
+						img.onclick = null;
+					});
 			    }
-
 			}
 			
 			function killTo(targetNick) {

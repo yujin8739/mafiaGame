@@ -6,6 +6,9 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.webSocket.server.GameRoomManager;
+
 import java.util.List;
 
 public class PhaseBroadcaster {
@@ -17,9 +20,13 @@ public class PhaseBroadcaster {
     private int phaseIndex = 0;
     private final String[] phases = { "NIGHT", "DAY", "VOTE" };
     private final int[] durations = { 60, 60, 30 }; // 초 단위
+    private int roomNo;
+    private GameRoomManager gameRoomManager;
 
-    public PhaseBroadcaster(List<WebSocketSession> sessions) {
+    public PhaseBroadcaster(List<WebSocketSession> sessions, int roomNo, GameRoomManager gameRoomManager) {
         this.sessions = sessions;
+        this.roomNo = roomNo;
+        this.gameRoomManager = gameRoomManager;
     }
 
     public void startPhases() {
@@ -43,7 +50,14 @@ public class PhaseBroadcaster {
             String message = mapper.writeValueAsString(
                 new PhaseMessage(phase, duration)
             );
-
+            try {
+            	if(phase.equals("DAY")) {
+	                gameRoomManager.updateDayNo(roomNo);
+            	}
+            } catch (Exception dbEx) {
+                System.err.println("[DB 오류] broadcastPhase 중 DB 접근 실패: " + dbEx.getMessage());
+                dbEx.printStackTrace();
+            }
             for (WebSocketSession session : sessions) {
                 if (session.isOpen()) {
                     session.sendMessage(new TextMessage(message));
