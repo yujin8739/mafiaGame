@@ -363,7 +363,7 @@ public class MessageController {
             int result = messageService.sendMessage(message);
             
             if (result > 0) {
-                redirectAttributes.addFlashAttribute("msg", "쪽지를 성공적으로 보냈습니다.");
+                redirectAttributes.addFlashAttribute("successMsg", "쪽지를 성공적으로 보냈습니다.");
                 return "redirect:/message/outbox";
             } else {
                 redirectAttributes.addFlashAttribute("msg", "쪽지 전송에 실패했습니다.");
