@@ -10,7 +10,9 @@ import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
+import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.vo.Member;
 
 
@@ -33,7 +35,6 @@ public class GameMainServer extends TextWebSocketHandler {
             // 👉 userList에 userId를 저장하는 서비스 호출 등 처리
             roomManager.addUserToRoom(roomNo, userId);
         }
-
         roomManager.addSession(roomNo, session);
     }
     
@@ -71,8 +72,16 @@ public class GameMainServer extends TextWebSocketHandler {
                 	roomManager.removeReady(roomNo, userName);
                 } else if(type != null && type.equals("start")) {
                 	roomManager.updateStart(roomNo);
+                	roomManager.addJobToSession(roomNo, s);
                 }
-                s.sendMessage(new TextMessage(json));
+                GameRoom room = roomManager.selectRoom(roomNo);
+                Job job = (Job) s.getAttributes().get("job");
+                if(!room.getIsGaming().equals("Y") //게임중이 아니거나
+                		|| (!msg.getType().equals("mafia") && !msg.getType().equals("death")) //죽은사람 채팅이거나 마피아 둘다 아니거나
+                		|| (msg.getType().equals("mafia") && (job.getJobName().equals("mafia") || job.getJobName().equals("mafiaGhost"))) //직업조건에 맞거나
+                		|| (msg.getType().equals("death") && (job.getJobName().equals("death")|| job.getJobName().equals("spiritualists")))) {
+                	s.sendMessage(new TextMessage(json));
+                }
             }
         }
     }

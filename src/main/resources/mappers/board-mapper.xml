@@ -464,6 +464,28 @@
 		WHERE REPLYNO = #{replyNo}
 	</update>
 	
+	
+	
+	<select id="videoList" resultType="BoardFile">
+		SELECT B.TITLE
+			  ,U.NICKNAME
+			  ,B.CREATEDATE
+			  ,B.VIEWCOUNT
+			  ,F.CHANGENAME
+			  ,F.BOARDNO
+		FROM BOARD_FILE F
+		JOIN BOARD B ON (F.BOARDNO = B.BOARDNO)
+		JOIN USER_INFO U ON (B.USERNAME = U.USERNAME)
+		WHERE F.TYPE = 'video'
+        AND F.STATUS = 'Y'
+	</select>
+	
+	<select id="getViewCount" resultType="_int">
+		SELECT VIEWCOUNT
+		FROM BOARD
+		WHERE BOARDNO = #{boardNo}
+	</select>
+	
 
 	
 	

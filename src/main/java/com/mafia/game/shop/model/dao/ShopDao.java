@@ -52,5 +52,27 @@ public class ShopDao {
         return sqlSession.update("artshopMapper.purchaseArt", paramMap);
     }
 
+
+    public int updateProfileImageByUserName(SqlSession sqlSession, String userName, String profileImgPath) {
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("userName", userName);
+        paramMap.put("profileImgPath", profileImgPath);
+
+        return sqlSession.update("artshopMapper.updateProfileImageByUserName", paramMap);
+    }
+
+    public String getProfileImage(SqlSession sqlSession, int userName) {
+        return sqlSession.selectOne("artshopMapper.getProfileImage", userName);
+    }
+
+
+
+
+    
+    
+    
+  
+
+
     
 }

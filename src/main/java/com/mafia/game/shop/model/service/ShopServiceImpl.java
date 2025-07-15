@@ -59,5 +59,17 @@ public class ShopServiceImpl implements ShopService {
     public int purchaseBuyArt(int artId, String buyerName) {
         return shopDao.purchaseArt(sqlSession, artId, buyerName);
     }
+    
+    @Override
+    public int updateProfileImageByUserName(String userName, String profileImgPath) {
+        return shopDao.updateProfileImageByUserName(sqlSession, userName, profileImgPath);
+    }
+
+    @Override
+    public String getProfileImage(int userName) {
+        return shopDao.getProfileImage(sqlSession, userName);
+    }
+    
+
   
 }

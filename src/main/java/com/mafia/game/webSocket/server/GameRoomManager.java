@@ -1,5 +1,8 @@
 package com.mafia.game.webSocket.server;
 
+import java.io.Reader;
+import java.io.StringWriter;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,9 +12,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
@@ -20,6 +26,9 @@ import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.webSocket.timer.PhaseBroadcaster;
+
+import jakarta.servlet.http.HttpSession;
+
 import com.mafia.game.job.model.vo.Job;
 
 /**
@@ -82,7 +91,7 @@ public class GameRoomManager {
                         String updatedList = mapper.writeValueAsString(userList);
                         String updateReady = mapper.writeValueAsString(readyList);
                         //게임 진행중에는 유저 리스트 업데이트 막기
-                        if(!room.getIsGaming().equals('Y')) {
+                        if(!room.getIsGaming().equals("Y")) {
 	                        gameRoomService.updateUserList(roomNo, updatedList);
 	                        if(userList.size() >= 1) { //유저 갱신될때마다 방장 변경
 	                        	gameRoomService.updateRoomMaster(roomNo, userList.get(0));
@@ -216,7 +225,9 @@ public class GameRoomManager {
     	    
     		if(room.getCount() == null || jobCounts.size()<1) {
     			// 일반 모드일때 
-	    	    if (totalPlayers == 6) {
+    			if (totalPlayers == 3) {
+	    	        mafiaCount = 2; citizenCount = 1; neutralCount = 0;
+	    	    } else if (totalPlayers == 6) {
 	    	        mafiaCount = 2; citizenCount = 4; neutralCount = 0;
 	    	    } else if (totalPlayers == 7) {
 	    	        mafiaCount = 2; citizenCount = 5; neutralCount = 0;
@@ -272,6 +283,43 @@ public class GameRoomManager {
 	        broadcaster.stop();
 	    }
 	}
+	
+    public void addJobToSession(int roomNo, WebSocketSession session) {
+		Member loginUser = (Member) session.getAttributes().get("loginUser");
+		if (loginUser == null) {
+		    return;
+		}
+		String userName = loginUser.getUserName();
+		System.out.println(">> 로그인 유저: " + userName);
+		Map<String, Object> result = gameRoomService.getRoomJob(roomNo,userName);
+		String userListJson = clobToString((Clob) result.get("USERLIST"));
+		String jobJson = (String) result.get("JOB");
+		
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			if(userListJson != null &&jobJson != null) {
+				System.out.println(">> userListJson: " + userListJson);
+				 System.out.println(">> jobJson: " + jobJson);
+		    	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+				
+				int index = userList.indexOf(userName);
+				if(!jobList.isEmpty()) {
+					int myJob = jobList.get(index);
+					session.getAttributes().put("job",gameRoomService.getJobDetail(myJob));
+				}
+								
+			}
+			
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+    
+    public GameRoom selectRoom(int roomNo) {
+		return gameRoomService.selectRoom(roomNo);
+    }
 
     public List<WebSocketSession> getSessions(int roomNo) {
         return roomSessions.getOrDefault(roomNo, Collections.emptyList());
@@ -288,4 +336,21 @@ public class GameRoomManager {
 	public void sendMessage(Message msg) {
 		chatService.sendMessage(msg);
 	}
+	
+    public static String clobToString(Clob clob) {
+        if (clob == null) return null;
+
+        try (Reader reader = clob.getCharacterStream();
+             StringWriter writer = new StringWriter()) {
+            char[] buffer = new char[2048];
+            int length;
+            while ((length = reader.read(buffer)) != -1) {
+                writer.write(buffer, 0, length);
+            }
+            return writer.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

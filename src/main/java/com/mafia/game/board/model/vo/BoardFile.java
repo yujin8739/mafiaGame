@@ -20,4 +20,10 @@ public class BoardFile {
 	private String status;//	status	CHAR(1 BYTE)
 	private String changeName;//	CHANGENAME	VARCHAR2(255 BYTE)
 	private int fileLevel;//	FILELEVEL	NUMBER(1,0)
+	
+	private String title;
+	private String detail;
+	private Date createDate;
+	private String nickName;
+	private int viewCount;
 }

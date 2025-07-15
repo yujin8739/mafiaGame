@@ -28,8 +28,10 @@ import com.mafia.game.board.model.vo.BoardLikeDTO;
 import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.common.template.Pagination;
+import com.mafia.game.common.template.VideoUploadUtil;
 import com.mafia.game.member.model.vo.Member;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,6 +57,9 @@ public class BoardController {
 	
 	@Value("${file.deletedLoungeImage.path}")
 	private String deletedLoungeImagePath;
+	
+	@Value("${file.uploadVideo.path}")
+	private String mp4Path;
 	
 	/*=======================================라운지============================================*/
 	
@@ -182,7 +187,7 @@ public class BoardController {
 			if(file != null) {
 				saveLoungeImage(uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
 			}
-			redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
+			redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다.");
 			
 
 		} else { // 게시글 등록 실패
@@ -411,10 +416,100 @@ public class BoardController {
 	
 	/*=======================================하이라이트 영상============================================*/
 	@GetMapping("/video")
-	public String videoBoardList() {
+	public String videoBoardList(Model model) {
+		
+		ArrayList<BoardFile> videoList = service.videoList();
+		
+		model.addAttribute("videoList", videoList);
+		
+		
 		return "board/video";
 	}
 	
+	
+	@GetMapping("/video/upload")
+	public String videoUploadForm() {
+		
+		return "board/videoUploadForm";
+	}
+	
+	@PostMapping("/video/upload")
+	public String uploadVideo(Board board,
+	                          @RequestParam("videoFile") MultipartFile file,
+	                          HttpServletRequest request,
+	                          RedirectAttributes redirectAttributes) {
+		String changeName = "";
+		File dir = null;
+	    try {
+	        dir = new File(mp4Path);
+	        if (!dir.exists()) dir.mkdirs();
+
+	        // 1. mp4 저장
+	        changeName = VideoUploadUtil.saveMp4File(file, mp4Path);
+
+	        // 2. ffmpeg → m3u8, ts, 썸네일 생성
+	        VideoUploadUtil.convertToHLS(mp4Path, changeName);
+
+	        // 3. DB 저장
+	        BoardFile f = new BoardFile();
+	        f.setType("video");
+	        f.setOriginName(file.getOriginalFilename());
+	        f.setChangeName(changeName);
+	        f.setFileLevel(1);
+
+	        int result = service.writeLoungeBoard(board, f);
+
+	        if (result > 0) {
+	            redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
+	        } else {
+	            // DB 저장 실패 시, 관련된 파일들 전부 삭제
+	            String baseName = changeName.substring(0, changeName.lastIndexOf("."));
+	            File[] files = dir.listFiles((d, name) ->
+	                name.startsWith(baseName) &&
+	                (name.endsWith(".ts") || name.endsWith(".m3u8") || name.endsWith(".jpg") || name.endsWith(".mp4"))
+	            );
+
+	            if (files != null) {
+	                for (File f1 : files) f1.delete();
+	            }
+
+	            redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
+	        }
+
+	    } catch (Exception e) {
+	    	// DB 저장 실패 시, 관련된 파일들 전부 삭제
+            String baseName = changeName.substring(0, changeName.lastIndexOf("."));
+            File[] files = dir.listFiles((d, name) ->
+                name.startsWith(baseName) &&
+                (name.endsWith(".ts") || name.endsWith(".m3u8") || name.endsWith(".jpg") || name.endsWith(".mp4"))
+            );
+
+            if (files != null) {
+                for (File f1 : files) f1.delete();
+            }
+	    	
+	        e.printStackTrace();
+	        redirectAttributes.addFlashAttribute("msg", "업로드 중 오류가 발생했습니다.");
+	    }
+
+	    return "redirect:/board/video";
+	}
+	
+	@PostMapping("/video/increaseCount/{boardNo}")
+	@ResponseBody
+	public int increaseCount(@PathVariable int boardNo) {
+		
+		return service.increaseCount(boardNo);
+	}
+	
+	
+	@GetMapping("/video/getViewCount/{boardNo}")
+	@ResponseBody
+	public int getViewCount(@PathVariable int boardNo) {
+		
+		return service.getViewCount(boardNo);
+	}
+
 
 	/*=======================================공통============================================*/
 	

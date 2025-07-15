@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.shop.model.service.ShopService;
@@ -19,7 +20,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
+
 
 @Controller
 public class ShopController {
@@ -215,19 +216,58 @@ public class ShopController {
     
     
     
-    // 내가 구매한 일러스트 목록 조회
     @GetMapping("/mypage/myitems")
-    public String myPurchaseList(HttpSession session, Model model) {
-        String buyerName = (String) session.getAttribute("loginUser");
+    public String myPurchaseList(
+            HttpSession session,
+            Model model,
+            @RequestParam(value = "selectedImagePath", required = false) String selectedImagePath) {
 
-        if (buyerName == null) {
+        Member loginUser = (Member) session.getAttribute("loginUser");
+
+        if (loginUser == null) {
             model.addAttribute("msg", "로그인이 필요합니다.");
             return "redirect:/login";
         }
 
+        String buyerName = loginUser.getUserName();
         List<Shop> myItems = shopService.selectMyPurchaseList(buyerName);
         model.addAttribute("myItems", myItems);
 
-        return "member/myitems"; // myitems.html 뷰로 이동
+        // ✅ 프로필 이미지 설정 요청이 있는 경우
+        if (selectedImagePath != null && !selectedImagePath.isEmpty()) {
+            int result = shopService.updateProfileImageByUserName(loginUser.getUserName(), selectedImagePath);  // userName 기준
+            if (result > 0) {
+                loginUser.setProfileImage(selectedImagePath); // 세션 반영
+                session.setAttribute("loginUser", loginUser);
+            } else {
+                model.addAttribute("msg", "프로필 이미지 업데이트 실패");
+                return "common/error";
+            }
+        }
+
+        return "member/myitems";
     }
+    
+    @PostMapping("/profile/setImage")
+    public String setProfileImage(@RequestParam("imagePath") String imagePath,
+                                  HttpSession session,
+                                  RedirectAttributes redirectAttrs) {
+
+        Member loginUser = (Member) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        int result = shopService.updateProfileImageByUserName(loginUser.getUserName(), imagePath);
+        if (result > 0) {
+            loginUser.setProfileImage(imagePath);
+            session.setAttribute("loginUser", loginUser);
+            redirectAttrs.addFlashAttribute("msg", "프로필 이미지가 변경되었습니다.");
+        } else {
+            redirectAttrs.addFlashAttribute("msg", "프로필 이미지 변경 실패");
+        }
+
+        return "redirect:/mypage/myitems";
+    }
+    
 }
