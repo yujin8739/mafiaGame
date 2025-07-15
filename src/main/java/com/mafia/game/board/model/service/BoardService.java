@@ -39,6 +39,10 @@ public interface BoardService {
 
 	int toggleReplyLike(HashMap<String, Object> needed);
 
+	ArrayList<BoardFile> videoList();
+
+	int getViewCount(int boardNo);
+
 
 
 

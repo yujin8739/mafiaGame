@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>하이라이트 영상</title>
 
-  <!-- Bootstrap 4.5.2 + jQuery -->
+  <!-- Bootstrap 4.5.2-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+  <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+  <!-- Bootstrap JS + Popper.js 포함된 번들 -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
   <!-- HLS.js -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
@@ -20,19 +22,18 @@
     body {
       background-color: #0b0b0b;
       font-family: 'Noto Sans KR', sans-serif;
-      padding: 40px 8%;
       color: #fff;
     }
 
     .board-wrapper {
       background-color: #fff;
-      color: #333;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
-      
-       max-width: 1000px;   /* ✅ 이 부분 추가 */
-	  margin: 0 auto;      /* ✅ 중앙 정렬 */
+	  color: #333;
+	  border-radius: 12px;
+	  padding: 30px;
+	  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+	
+	  max-width: 1000px;   /* ✅ 이 부분 추가 */
+	  margin: 40px auto;      /* ✅ 중앙 정렬 */
     }
 
     .main-tabs a {
@@ -123,14 +124,24 @@
       <a th:href="@{/board/video}" class="active">하이라이트 영상</a>
     </div>
 
-    <h4 class="mb-0 font-weight-bold">🎥 마피아 하이라이트</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+	  <h4 class="mb-0 font-weight-bold">🎥 마피아 하이라이트</h4>
+	  <a th:href="@{/board/video/upload}" class="btn btn-danger font-weight-bold">
+	    🎬 영상 업로드
+	  </a>
+	</div>
 
     <div class="video-grid">
-      <div class="video-card" th:each="v : ${videoList}" th:data-src="${v.videoUrl}" onclick="openVideoModal(this)">
-        <img th:src="${v.thumbnailUrl}" alt="썸네일" />
+      <div th:with="m3u8FileName=${#strings.replace(v.changeName, '.mp4', '.m3u8')}
+      			   ,thumbnailName=${#strings.replace(v.changeName, '.mp4', '_thumb.jpg')}"
+       th:data-src="@{/godDaddy_uploadVideo/hls/{m3u8FileName}(m3u8FileName=${m3u8FileName})}"
+       class="video-card" th:each="v : ${videoList}"
+       th:data-board-id="${v.boardNo}" 
+       onclick="openVideoModal(this)">
+        <img th:src="@{/godDaddy_uploadVideo/hls/{thumbnailName}(thumbnailName=${thumbnailName})}" alt="썸네일" />
         <div class="video-info">
           <div class="video-title" th:text="${v.title}"></div>
-          <div class="video-meta" th:text="'by ' + ${v.writer} + ' · ' + ${v.createDate} + ' · 조회수 ' + ${v.viewCount}"></div>
+          <div th:id="'view-meta-' + ${v.boardNo}" class="video-meta" th:text="'by ' + ${v.nickName} + ' · ' + ${v.createDate} + ' · 조회수 ' + ${v.viewCount}"></div>
         </div>
       </div>
     </div>
@@ -143,7 +154,7 @@
 
   <!-- 영상 재생 모달 -->
   <div class="modal fade" id="videoModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-body">
           <video id="hlsPlayer" controls></video>
@@ -155,20 +166,54 @@
   <div th:replace="common/footer :: footer"></div>
 
   <script>
-    function openVideoModal(el) {
-      const videoUrl = el.dataset.src;
-      const video = document.getElementById('hlsPlayer');
+	  function openVideoModal(el) {
+		  const videoUrl = el.dataset.src;
+		  const boardNo = el.getAttribute('data-board-id'); // 게시글 식별번호
+		  const video = document.getElementById('hlsPlayer');
+	
+		  // 1. 모달 열릴 때 조회수 증가 (DB에 반영)
+		  $.ajax({
+		    url: `/board/video/increaseCount/${boardNo}`,
+		    method: 'POST',
+		    success : function(result){
+		    	if(result === 0){
+		    		alert("영상이 정상적으로 조회되지 않습니다");
+		    		return;
+		    	}
+		    }
+		  });
+	
+		  // 2. HLS.js 재생 설정
+		  if (Hls.isSupported()) {
+		    const hls = new Hls();
+		    hls.loadSource(videoUrl);
+		    hls.attachMedia(video);
+		  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+		    video.src = videoUrl;
+		  }
+	
+		  // 3. 모달 열기
+		  $('#videoModal').modal('show');
+	
+		  // 4. 모달 닫힐 때 -> 최신 조회수 가져와서 화면 갱신
+		  $('#videoModal').on('hidden.bs.modal', function () {
+		    $.ajax({
+		      url: `/board/video/getViewCount/${boardNo}`,
+		      method: 'GET',
+		      success: function(viewCount) {
+		        const metaEl = document.getElementById('view-meta-' + boardNo);
+		        if (metaEl) {
+		          const parts = metaEl.textContent.split('·');
+		          if (parts.length === 3) {
+		            parts[2] = ' 조회수 ' + viewCount;
+		            metaEl.textContent = parts.join('·');
+		          }
+		        }
+		      }
+		    });
+		  });
+		}
 
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(videoUrl);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoUrl;
-      }
-
-      $('#videoModal').modal('show');
-    }
   </script>
 </body>
 </html>
