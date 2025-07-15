@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mafia.game.game.model.dao.GameRoomDao;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Vote;
 import com.mafia.game.job.model.vo.Job;
 
 
@@ -88,5 +89,21 @@ public class GameRoomServiceImpl implements GameRoomService {
 	public List<String> getDeathList(int roomNo) {
 		// TODO Auto-generated method stub
 		return gameRoomDao.getDeathList(sqlSession, roomNo);
+	}
+
+	@Override
+	public void updateVote(int roomNo, int dayNo, String updatedList) {
+		gameRoomDao.updateVote(sqlSession, roomNo, dayNo, updatedList);
+	}
+
+	@Override
+	public Vote selectVote(int roomNo, int dayNo) {
+		return gameRoomDao.selectVote(sqlSession, roomNo, dayNo);
+	}
+
+	@Override
+	public void updateDayNo(int roomNo, int dayNo) {
+		gameRoomDao.updateDayNo(sqlSession, roomNo, dayNo);
+		
 	}
 }

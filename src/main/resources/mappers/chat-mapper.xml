@@ -14,7 +14,18 @@
     </insert>
 
     <select id="selectMessagesByRoom" parameterType="int" resultType="Message">
-        SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} ORDER BY CHATDATE DESC
+        SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} 
+        AND (TYPE = 'chat' OR TYPE = 'event' OR TYPE = 'ready' 
+        OR TYPE = 'unReady' OR TYPE = 'enter' OR TYPE = 'leave') 
+        ORDER BY CHATDATE DESC
+    </select>  
+    
+    <select id="selectTypeMessagesByRoom" resultType="Message">
+        SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} AND 
+        (TYPE = #{type} OR TYPE = 'chat' 
+        OR TYPE = 'event' OR TYPE = 'ready' 
+        OR TYPE = 'unReady' OR TYPE = 'enter' OR TYPE = 'leave') 
+        ORDER BY CHATDATE DESC
     </select>
     
     <select id="selectEvent" resultType="String" parameterType="map">

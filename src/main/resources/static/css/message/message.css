@@ -1,0 +1,478 @@
+/* messageList   */
+.message-container {
+	max-width: 1000px;
+	margin: 50px auto;
+	padding: 40px;
+	background-color: #1a1a1a;
+	border-radius: 12px;
+	box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+	border: 1px solid #333;
+}
+
+.message-tabs {
+	display: flex;
+	margin-bottom: 30px;
+	border-bottom: 2px solid #333;
+}
+
+.tab-button {
+	padding: 12px 24px;
+	background-color: transparent;
+	color: #ccc;
+	border: none;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	font-size: 16px;
+	transition: all 0.3s ease;
+}
+
+.tab-button.active {
+	color: #ff3b3b;
+	border-bottom-color: #ff3b3b;
+}
+
+.tab-button:hover {
+	color: #ff3b3b;
+}
+
+.message-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
+
+.message-table th, .message-table td {
+	padding: 12px;
+	text-align: center;
+	border-bottom: 1px solid #333;
+}
+
+.message-table th {
+	background-color: #222;
+	font-weight: bold;
+	color: #ff3b3b;
+	border-bottom: 2px solid #444;
+}
+
+.message-table td {
+	color: #f5f5f5;
+}
+
+.message-title {
+	text-align: left !important;
+	max-width: 300px;
+	cursor: pointer;
+	transition: color 0.3s ease;
+}
+
+.message-title:hover {
+	color: #ff3b3b;
+}
+
+.unread {
+	font-weight: bold;
+	color: #4CAF50;
+}
+
+.read {
+	color: #888;
+}
+
+.no-messages {
+	text-align: center;
+	padding: 60px 20px;
+	color: #888;
+	font-size: 16px;
+}
+
+.action-buttons {
+	text-align: center;
+	margin-top: 30px;
+	padding-top: 20px;
+	border-top: 1px solid #333;
+}
+
+.delete-btn {
+	padding: 6px 12px;
+	font-size: 12px;
+	background-color: #dc3545;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+	background-color: #c82333;
+}
+
+.unread-badge {
+	background-color: #ff3b3b;
+	color: white;
+	border-radius: 12px;
+	padding: 2px 8px;
+	font-size: 12px;
+	margin-left: 8px;
+}
+
+/* 메시지 테이블 전체 */
+.message-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #222;
+}
+
+/* 테이블 헤더 */
+.message-table th {
+    padding: 15px 12px;
+    text-align: center;
+    font-weight: bold;
+    color: #fff;
+    background-color: #333;
+    border-bottom: 2px solid #444;
+    font-size: 14px;
+}
+
+/* 테이블 셀 */
+.message-table td {
+    padding: 15px 12px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    color: #f5f5f5;
+}
+
+/* 메시지 제목 셀 */
+.message-title {
+    text-align: left !important;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.message-title:hover {
+    background-color: #2a2a2a;
+}
+
+/* 읽음/안읽음 상태별 스타일 */
+.message-title.unread {
+    background-color: rgba(76, 175, 80, 0.1); /* 연한 초록 배경 */
+    border-left: 4px solid #4CAF50; /* 왼쪽 초록 테두리 */
+    font-weight: bold;
+}
+
+.message-title.read {
+    background-color: transparent;
+    border-left: 4px solid transparent;
+    font-weight: normal;
+    color: #ccc; /* 읽은 메시지는 조금 흐리게 */
+}
+
+/* 새 메시지 표시 */
+.new-message-badge {
+    background-color: #4CAF50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+/* 읽음 상태 표시 */
+.read-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.read-status.read {
+    background-color: #666;
+    color: #ccc;
+}
+
+.read-status.unread {
+    background-color: #4CAF50;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+/* 안읽은 메시지 깜빡임 효과 */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* 테이블 행 호버 효과 */
+.message-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.message-table tbody tr:hover {
+    background-color: #2a2a2a;
+}
+
+/* 안읽은 메시지 행 전체 스타일 */
+.message-table tbody tr.unread-row {
+    background-color: rgba(76, 175, 80, 0.05);
+}
+
+/* 읽은 메시지 행 전체 스타일 */
+.message-table tbody tr.read-row {
+    opacity: 0.8;
+}
+
+/* 페이지네이션 스타일 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            gap: 10px;
+        }
+        
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination a:hover {
+            background-color: #ff3b3b;
+            border-color: #ff3b3b;
+        }
+        
+        .pagination .current {
+            background-color: #ff3b3b;
+            border-color: #ff3b3b;
+        }
+        
+        .pagination .disabled {
+            background-color: #222;
+            color: #666;
+            cursor: not-allowed;
+        }
+        
+        .pagination-info {
+            color: #ccc;
+            font-size: 14px;
+            margin-left: 20px;
+        }
+
+
+/* messagedetail  */
+.message-detail-container {
+	max-width: 1000px;
+	margin: 50px auto;
+	padding: 40px;
+	background-color: #1a1a1a;
+	border-radius: 12px;
+	box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+	border: 1px solid #333;
+}
+
+.message-header {
+	border-bottom: 2px solid #333;
+	padding-bottom: 20px;
+	margin-bottom: 30px;
+}
+
+.message-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 15px;
+}
+
+.message-title {
+	font-size: 24px;
+	font-weight: bold;
+	color: #ff3b3b;
+	margin-bottom: 20px;
+}
+
+.message-meta {
+	color: #ccc;
+	font-size: 14px;
+	display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* 각 정보 사이의 간격 */
+    align-items: center;
+}
+
+.message-meta span {
+	margin-right: nowrap;
+}
+
+.message-content {
+	background-color: #222;
+	border-radius: 8px;
+	padding: 30px;
+	margin-bottom: 30px;
+	min-height: 200px;
+	line-height: 1.8;
+	color: #f5f5f5;
+	font-size: 16px;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
+
+.message-actions {
+	display: flex;
+	gap: 15px;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.read-status {
+	padding: 4px 12px;
+	border-radius: 20px;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+.read-status.read {
+	background-color: #4CAF50;
+	color: white;
+}
+
+.read-status.unread {
+	background-color: #FFC107;
+	color: #333;
+}
+
+.message-type-info {
+	background-color: #2a2a2a;
+	border-left: 4px solid #ff3b3b;
+	padding: 15px;
+	margin-bottom: 20px;
+	border-radius: 4px;
+}
+
+.message-type-info h4 {
+	margin: 0 0 10px 0;
+	color: #ff3b3b;
+}
+
+.message-type-info p {
+	margin: 0;
+	color: #ccc;
+	font-size: 14px;
+}
+
+/* messageWrite */
+.message-write-container {
+	max-width: 1000px;
+	margin: 50px auto;
+	padding: 40px;
+	background-color: #1a1a1a;
+	border-radius: 12px;
+	box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+	border: 1px solid #333;
+}
+
+.write-form {
+	margin-top: 30px;
+}
+
+.form-group {
+	margin-bottom: 25px;
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: bold;
+	font-size: 14px;
+	color: #ccc;
+}
+
+.form-group input, .form-group textarea, .form-group select {
+	width: 100%;
+	padding: 12px;
+	box-sizing: border-box;
+	border-radius: 6px;
+	border: 1px solid #444;
+	background-color: #111;
+	color: #eee;
+	font-size: 14px;
+	transition: border-color 0.3s ease;
+	font-family: inherit;
+}
+
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus
+	{
+	outline: none;
+	border-color: #ff3b3b;
+	box-shadow: 0 0 5px rgba(255, 59, 59, 0.3);
+}
+
+.form-group textarea {
+	min-height: 200px;
+	resize: vertical;
+}
+
+.form-group input:readonly {
+	background-color: #222;
+	color: #999;
+	cursor: not-allowed;
+}
+
+.help-text {
+	display: block;
+	margin-top: 5px;
+	font-size: 12px;
+	color: #888;
+}
+
+.char-counter {
+	text-align: right;
+	font-size: 12px;
+	color: #888;
+	margin-top: 5px;
+}
+
+.form-buttons {
+	display: flex;
+	gap: 15px;
+	justify-content: center;
+	margin-top: 40px;
+	flex-wrap: wrap;
+}
+
+.original-message {
+	background-color: #2a2a2a;
+	border-left: 4px solid #ff3b3b;
+	padding: 20px;
+	margin-bottom: 30px;
+	border-radius: 4px;
+}
+
+.original-message h4 {
+	margin: 0 0 15px 0;
+	color: #ff3b3b;
+	font-size: 16px;
+}
+
+.original-content {
+	background-color: #1a1a1a;
+	padding: 15px;
+	border-radius: 4px;
+	color: #ccc;
+	font-size: 14px;
+	max-height: 150px;
+	overflow-y: auto;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
+
+.required {
+	color: #ff3b3b;
+}
