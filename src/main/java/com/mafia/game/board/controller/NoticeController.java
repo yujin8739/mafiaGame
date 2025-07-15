@@ -29,7 +29,7 @@ import com.mafia.game.member.model.vo.Member;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
-@RequestMapping("notice")
+@RequestMapping("/notice")
 public class NoticeController {
 	private static final Logger logger = LoggerFactory.getLogger(NoticeController.class);
 	@Autowired
