@@ -12,9 +12,11 @@
   <!-- 공통 CSS -->
   <link rel="stylesheet" th:href="@{/css/common/header.css}" />
   <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
+  <!-- HEAD 부분에 Cinzel 폰트 추가 -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet" />
 
   <style>
+  
     body {
       background-color: #0b0b0b;
       font-family: 'Noto Sans KR', sans-serif;
@@ -645,7 +647,6 @@
 	    </tr>
 	  </tbody>
 	</table>
-
     <!-- 페이지네이션 -->
     <ul class="pagination" th:if="${pi.endPage != 0}" th:object="${filterMap}">
       <li th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">

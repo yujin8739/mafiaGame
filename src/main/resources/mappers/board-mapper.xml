@@ -81,6 +81,8 @@
 		<result property="rankPoint" column="RANKPOINT"/>
 		<result property="likeCount" column="LIKECOUNT"/>
 		
+		<result property="changeName" column="CHANGENAME"/>
+		
 		<result property="replyCount" column="REPLY_COUNT"/>
 		<result property="hasFile" column="HAS_FILE"/>
 	</resultMap>
@@ -92,10 +94,13 @@
 		    B.TITLE,
 		    B.CREATEDATE,
 		    B.VIEWCOUNT,
+		    B.LIKECOUNT,
 		    
 		    U.RANKPOINT,
 		    U.NICKNAME,
 		    T.DISPLAYNAME,
+		    
+		    F.CHANGENAME,
 		
 		    NVL(R.REPLY_COUNT, 0) AS REPLY_COUNT,
 		    CASE WHEN F.FILE_EXISTS > 0 THEN 'Y' ELSE 'N' END AS HAS_FILE
@@ -114,10 +119,10 @@
 		  ) R ON B.BOARDNO = R.BOARDNO
 		
 		LEFT JOIN (
-		    SELECT BOARDNO, COUNT(*) AS FILE_EXISTS
+		    SELECT BOARDNO,CHANGENAME,COUNT(*) AS FILE_EXISTS
 		    FROM BOARD_FILE
 		    WHERE STATUS = 'Y'
-		    GROUP BY BOARDNO
+		    GROUP BY BOARDNO,CHANGENAME
 		  ) F ON B.BOARDNO = F.BOARDNO
 		
 		WHERE B.STATUS = 'Y'
@@ -159,12 +164,14 @@
 		    B.BOARDNO,
 		    B.TITLE,
 		    B.CREATEDATE,
-		    B.LIKECOUNT,
 		    B.VIEWCOUNT,
-		
-			U.RANKPOINT,
+		    B.LIKECOUNT,
+		    
+		    U.RANKPOINT,
 		    U.NICKNAME,
 		    T.DISPLAYNAME,
+		    
+		    F.CHANGENAME,
 		
 		    NVL(R.REPLY_COUNT, 0) AS REPLY_COUNT,
 		    CASE WHEN F.FILE_EXISTS > 0 THEN 'Y' ELSE 'N' END AS HAS_FILE
@@ -183,10 +190,10 @@
 		  ) R ON B.BOARDNO = R.BOARDNO
 		
 		  LEFT JOIN (
-		    SELECT BOARDNO, COUNT(*) AS FILE_EXISTS
+		    SELECT BOARDNO, CHANGENAME, COUNT(*) AS FILE_EXISTS
 		    FROM BOARD_FILE
 		    WHERE STATUS = 'Y'
-		    GROUP BY BOARDNO
+		    GROUP BY BOARDNO, CHANGENAME
 		  ) F ON B.BOARDNO = F.BOARDNO
 		
 		  WHERE B.STATUS = 'Y'
@@ -347,6 +354,7 @@
 			  ,R.REPLYCONTENT
 			  ,R.CREATEDATE
 			  ,R.USERNAME
+			  ,R.LIKECOUNT
 			  ,F.FILENO
 			  ,F.CHANGENAME
 			  ,U.NICKNAME
@@ -464,28 +472,69 @@
 		WHERE REPLYNO = #{replyNo}
 	</update>
 	
+	<resultMap type="BoardFile" id="BoardFileResultMap">
+		<result property="boardNo" column="BOARDNO"/>
+		<result property="nickName" column="NICKNAME"/>
+		<result property="title" column="TITLE"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="viewCount" column="VIEWCOUNT"/>
+		<result property="likeCount" column="LIKECOUNT"/>
+		
+		<result property="replyCount" column="REPLY_COUNT"/>
+	</resultMap>
 	
-	
-	<select id="videoList" resultType="BoardFile">
+	<select id="videoList" resultMap="BoardFileResultMap">
 		SELECT B.TITLE
 			  ,U.NICKNAME
 			  ,B.CREATEDATE
 			  ,B.VIEWCOUNT
 			  ,F.CHANGENAME
 			  ,F.BOARDNO
+			  ,NVL(A.REPLY_COUNT,0) REPLY_COUNT
+              ,B.LIKECOUNT
 		FROM BOARD_FILE F
 		JOIN BOARD B ON (F.BOARDNO = B.BOARDNO)
 		JOIN USER_INFO U ON (B.USERNAME = U.USERNAME)
+		LEFT JOIN (
+					SELECT B.BOARDNO 
+						  ,COUNT(*) REPLY_COUNT
+					FROM BOARD B
+					JOIN REPLY R ON (B.BOARDNO=R.BOARDNO)
+					WHERE R.STATUS = 'Y'
+                    GROUP BY B.BOARDNO
+				  ) A ON (B.BOARDNO = A.BOARDNO)		
 		WHERE F.TYPE = 'video'
-        AND F.STATUS = 'Y'
+        AND B.STATUS = 'Y'
 	</select>
 	
-	<select id="getViewCount" resultType="_int">
-		SELECT VIEWCOUNT
-		FROM BOARD
-		WHERE BOARDNO = #{boardNo}
+	<select id="videoDetail" resultMap="BoardFileResultMap">
+		SELECT B.TITLE
+			  ,B.DETAIL
+			  ,B.USERNAME
+			  ,U.NICKNAME
+			  ,U.RANKPOINT
+			  ,B.CREATEDATE
+			  ,B.VIEWCOUNT
+			  ,F.CHANGENAME
+			  ,F.BOARDNO
+			  ,NVL(A.REPLY_COUNT,0) REPLY_COUNT
+              ,B.LIKECOUNT
+              ,B.DISLIKECOUNT
+		FROM BOARD_FILE F
+		JOIN BOARD B ON (F.BOARDNO = B.BOARDNO)
+		JOIN USER_INFO U ON (B.USERNAME = U.USERNAME)
+		LEFT JOIN (
+					SELECT B.BOARDNO 
+						  ,COUNT(*) REPLY_COUNT
+					FROM BOARD B
+					JOIN REPLY R ON (B.BOARDNO=R.BOARDNO)
+					WHERE R.STATUS = 'Y'
+                    GROUP BY B.BOARDNO
+				  ) A ON (B.BOARDNO = A.BOARDNO)		
+		WHERE F.TYPE = 'video'
+		AND B.BOARDNO = #{boardNo}
+        AND B.STATUS = 'Y'
 	</select>
-	
 
 	
 	

@@ -24,6 +24,13 @@ public class BoardFile {
 	private String title;
 	private String detail;
 	private Date createDate;
+	private String userName;
 	private String nickName;
 	private int viewCount;
+	private int likeCount;
+	private int dislikeCount;
+	private int replyCount;
+	private int rankPoint;
+	private String profileUrl;
 }
+
