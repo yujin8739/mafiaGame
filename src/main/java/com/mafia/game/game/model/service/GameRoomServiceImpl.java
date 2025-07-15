@@ -106,4 +106,9 @@ public class GameRoomServiceImpl implements GameRoomService {
 		gameRoomDao.updateDayNo(sqlSession, roomNo, dayNo);
 		
 	}
+
+	@Override
+	public void insertVote(int roomNo, int dayNo, String updatedList) {
+		gameRoomDao.insertVote(sqlSession, roomNo, dayNo, updatedList);
+	}
 }

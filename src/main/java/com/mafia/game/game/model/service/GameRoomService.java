@@ -40,4 +40,6 @@ public interface GameRoomService {
 	Vote selectVote(int roomNo, int dayNo);
 
 	void updateDayNo(int roomNo, int dayNo);
+
+	void insertVote(int roomNo, int dayNo, String updatedList);
 }
