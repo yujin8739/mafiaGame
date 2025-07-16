@@ -125,8 +125,8 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <h4 class="mb-0 font-weight-bold">🖼 마피아 갤러리</h4>
-      <button class="upload-btn" onclick="location.href='/board/gallery/write'">+ 업로드</button>
+      <h4 class="mb-0 font-weight-bold">갤러리</h4>
+      <button class="upload-btn" th:onclick="'location.href=\'' + @{/gallery/upload} + '\';'">업로드</button>
     </div>
 
     <!-- 갤러리 카드 뷰 -->

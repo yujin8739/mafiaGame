@@ -43,6 +43,8 @@ public interface BoardService {
 
 	int getViewCount(int boardNo);
 
+	BoardFile videoDetail(int boardNo);
+
 
 
 

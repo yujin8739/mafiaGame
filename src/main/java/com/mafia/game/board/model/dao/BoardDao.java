@@ -144,6 +144,10 @@ public class BoardDao {
 		return sqlSession.selectOne("boardMapper.getViewCount", boardNo);
 	}
 
+	public BoardFile videoDetail(SqlSessionTemplate sqlSession, int boardNo) {
+		return sqlSession.selectOne("boardMapper.videoDetail", boardNo);
+	}
+
 
 
 	
