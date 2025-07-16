@@ -8,7 +8,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.mafia.game.game.model.vo.GameRoom;
-import com.mafia.game.game.model.vo.Vote;
+import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
 
 @Repository
@@ -70,11 +70,8 @@ public class GameRoomDao {
 		return sqlSession.selectList("gameRoomMapper.selectRandomJobs",param);
 	}
 
-	public Map<String, Object> getRoomJob(SqlSessionTemplate sqlSession, int roomNo, String userName) {
-		Map<String, Object> param = new HashMap<>();
-		param.put("userName", userName);
-		param.put("roomNo", roomNo);
-		return sqlSession.selectOne("gameRoomMapper.getRoomJob",param);
+	public Map<String, Object> getRoomJob(SqlSessionTemplate sqlSession, int roomNo) {
+		return sqlSession.selectOne("gameRoomMapper.getRoomJob",roomNo);
 	}
 
 	public Job getJobDetail(SqlSessionTemplate sqlSession, int myJob) {
@@ -85,21 +82,16 @@ public class GameRoomDao {
 		return sqlSession.selectList("gameRoomMapper.getDeathList",roomNo);
 	}
 	
-	public Vote selectVote(SqlSessionTemplate sqlSession, int roomNo, int dayNo) {
+	public Kill selectKill(SqlSessionTemplate sqlSession, int roomNo, int dayNo) {
 		Map<String, Object> param = new HashMap<>();
 		param.put("roomNo", roomNo);
 		param.put("dayNo", dayNo);
 		
-		return sqlSession.selectOne("gameRoomMapper.selectVote",param);
+		return sqlSession.selectOne("gameRoomMapper.selectKill",param);
 	}
 
-	public void updateVote(SqlSessionTemplate sqlSession, int roomNo, int dayNo, String updatedList) {
-		Map<String, Object> param = new HashMap<>();
-		param.put("roomNo", roomNo);
-		param.put("dayNo", dayNo);
-		param.put("updatedList", updatedList);
-		
-		sqlSession.update("gameRoomMapper.updateVote", param);
+	public void updateKill(SqlSessionTemplate sqlSession, Kill kill) {		
+		sqlSession.update("gameRoomMapper.updateKill", kill);
 	}
 
 	public void updateDayNo(SqlSessionTemplate sqlSession, int roomNo, int dayNo) {
@@ -109,12 +101,15 @@ public class GameRoomDao {
 		sqlSession.update("gameRoomMapper.updateDayNo", param);
 	}
 
-	public void insertVote(SqlSessionTemplate sqlSession, int roomNo, int dayNo, String updatedList) {
+	public void insertKill(SqlSessionTemplate sqlSession, Kill kill) {
+		sqlSession.insert("gameRoomMapper.insertKill", kill);
+	}
+
+	public void updateJob(SqlSessionTemplate sqlSession, int roomNo, String updatedJobJson) {
 		Map<String, Object> param = new HashMap<>();
 		param.put("roomNo", roomNo);
-		param.put("dayNo", dayNo);
-		param.put("updatedList", updatedList);
+		param.put("job", updatedJobJson);
 		
-		sqlSession.insert("gameRoomMapper.insertVote", param);
+        sqlSession.update("gameRoomMapper.updateJob", param);
 	}
 }

@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.webSocket.server.GameRoomManager;
 
 import java.util.List;
@@ -52,7 +51,9 @@ public class PhaseBroadcaster {
             );
             try {
             	if(phase.equals("DAY")) {
-	                gameRoomManager.updateDayNo(roomNo);
+            		gameRoomManager.mafiaKill(roomNo);
+            	} else if (phase.equals("NIGHT")) {
+            		gameRoomManager.voteKill(roomNo);
             	}
             } catch (Exception dbEx) {
                 System.err.println("[DB 오류] broadcastPhase 중 DB 접근 실패: " + dbEx.getMessage());

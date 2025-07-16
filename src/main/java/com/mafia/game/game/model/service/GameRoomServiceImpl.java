@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mafia.game.game.model.dao.GameRoomDao;
 import com.mafia.game.game.model.vo.GameRoom;
-import com.mafia.game.game.model.vo.Vote;
+import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
 
 
@@ -76,8 +76,8 @@ public class GameRoomServiceImpl implements GameRoomService {
 	}
 
 	@Override
-	public Map<String, Object> getRoomJob(int roomNo, String userName) {
-		return gameRoomDao.getRoomJob(sqlSession,roomNo,userName);
+	public Map<String, Object> getRoomJob(int roomNo) {
+		return gameRoomDao.getRoomJob(sqlSession,roomNo);
 	}
 
 	@Override
@@ -92,13 +92,13 @@ public class GameRoomServiceImpl implements GameRoomService {
 	}
 
 	@Override
-	public void updateVote(int roomNo, int dayNo, String updatedList) {
-		gameRoomDao.updateVote(sqlSession, roomNo, dayNo, updatedList);
+	public void updateKill(Kill kill) {
+		gameRoomDao.updateKill(sqlSession, kill);
 	}
 
 	@Override
-	public Vote selectVote(int roomNo, int dayNo) {
-		return gameRoomDao.selectVote(sqlSession, roomNo, dayNo);
+	public Kill selectKill(int roomNo, int dayNo) {
+		return gameRoomDao.selectKill(sqlSession, roomNo, dayNo);
 	}
 
 	@Override
@@ -108,7 +108,12 @@ public class GameRoomServiceImpl implements GameRoomService {
 	}
 
 	@Override
-	public void insertVote(int roomNo, int dayNo, String updatedList) {
-		gameRoomDao.insertVote(sqlSession, roomNo, dayNo, updatedList);
+	public void insertKill(Kill kill) {
+		gameRoomDao.insertKill(sqlSession, kill);
+	}
+
+	@Override
+	public void updateJob(int roomNo, String updatedJobJson) {
+		gameRoomDao.updateJob(sqlSession,roomNo,updatedJobJson);
 	}
 }

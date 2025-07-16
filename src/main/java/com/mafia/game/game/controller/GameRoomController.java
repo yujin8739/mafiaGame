@@ -5,6 +5,8 @@ import java.io.StringWriter;
 import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,7 +33,7 @@ import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
-import com.mafia.game.game.model.vo.Vote;
+import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
@@ -233,7 +236,7 @@ public class GameRoomController {
         }
         String userName = loginUser.getUserName();
         System.out.println(">> 로그인 유저: " + userName);
-        Map<String, Object> result = gameRoomService.getRoomJob(roomNo,userName);
+        Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
         String userListJson = clobToString((Clob) result.get("USERLIST"));
         String jobJson = (String) result.get("JOB");
 
@@ -266,41 +269,108 @@ public class GameRoomController {
     	return gameRoomService.getDeathList(roomNo);
     }
     
-    @GetMapping("/voteUser")
+    @GetMapping("/voteResult")
     @ResponseBody
-    public Vote voteUser (@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {
+    public Kill voteUser (@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {   
+    	Kill kill = gameRoomService.selectKill(roomNo,dayNo);
         
-    	Vote vote = gameRoomService.selectVote(roomNo,dayNo);
-    	List<String> votes = new ArrayList<>();
-        
-        if (vote == null) { 
-        	vote = new Vote(roomNo,dayNo,"[]");
-        	try {
-        		votes = new ObjectMapper().readValue(vote.getVote(), new TypeReference<List<String>>() {});
-	        	votes.add(targetName);
-	        	
-	        	String updatedList = new ObjectMapper().writeValueAsString(votes);
-	        	
-	        	gameRoomService.insertVote(roomNo, dayNo, updatedList);
-	        	return gameRoomService.selectVote(roomNo,dayNo);
-        	} catch (Exception e) {
-	            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
-	        }
+        if (kill == null) { 
+        	return createNewKill(roomNo,dayNo,targetName,null,null);
         } else {
-	        try {
-	        	votes = new ObjectMapper().readValue(vote.getVote(), new TypeReference<List<String>>() {});
-	        	votes.add(targetName);
-	        	
-	        	String updatedList = new ObjectMapper().writeValueAsString(votes);
-	        	gameRoomService.updateVote(roomNo, dayNo, updatedList);
-	        	
-	        	return gameRoomService.selectVote(roomNo,dayNo);
-	        } catch (Exception e) {
-	            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
-	        }
+        	return updateKill(kill,roomNo,dayNo,targetName,null,null);
         }
-		return null;
     }
+    
+    @GetMapping("/healResult")
+    @ResponseBody
+    public Kill healUser (@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {
+    	Kill kill = gameRoomService.selectKill(roomNo,dayNo);
+        
+        if (kill == null) { 
+        	return createNewKill(roomNo,dayNo,null,targetName,null);
+        } else {
+	        return updateKill(kill,roomNo,dayNo,null,targetName,null);
+        }
+    }
+    
+    @GetMapping("/mafiaKillResult")
+    @ResponseBody
+    public Kill killUser (@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {
+    	Kill kill = gameRoomService.selectKill(roomNo,dayNo);
+        
+        if (kill == null) { 
+        	return createNewKill(roomNo,dayNo,null,null,targetName);
+        } else {
+	        return updateKill(kill,roomNo,dayNo,null,null,targetName);
+        }
+    }
+    
+    public Kill createNewKill(int roomNo, int dayNo, String targetVote, String tagetDoctor, String targetMafia) {
+    	try {
+    		List<String> votes = new ObjectMapper().readValue("[]", new TypeReference<List<String>>() {});
+    		List<String> mafias = new ObjectMapper().readValue("[]", new TypeReference<List<String>>() {});
+    		List<String> doctors = new ObjectMapper().readValue("[]", new TypeReference<List<String>>() {});
+    		
+    		if(targetVote != null && !targetVote.equals("")) {
+    			votes.add(targetVote);
+    		}
+    		
+    		if(targetMafia != null && !targetMafia.equals("")) {
+    			mafias.add(targetMafia);
+    		}
+    		
+    		if(tagetDoctor != null && !tagetDoctor.equals("")) {
+    			doctors.add(tagetDoctor);
+    		}
+        	
+        	String updatedVotes = new ObjectMapper().writeValueAsString(votes);
+        	String updateDoctors = new ObjectMapper().writeValueAsString(doctors);
+        	String updatedMafias = new ObjectMapper().writeValueAsString(mafias);
+        	
+        	Kill kill = new Kill(roomNo, dayNo, updatedVotes, updatedMafias, updateDoctors);
+        	
+        	gameRoomService.insertKill(kill);
+    	} catch (Exception e) {
+            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+        }
+    	
+    	return gameRoomService.selectKill(roomNo,dayNo);
+    }
+    
+    public Kill updateKill(Kill kill, int roomNo, int dayNo, String targetVote, String tagetDoctor, String targetMafia) {
+        try {
+        	List<String> votes = new ObjectMapper().readValue(kill.getVote(), new TypeReference<List<String>>() {});
+    		List<String> mafias = new ObjectMapper().readValue(kill.getKillUser(), new TypeReference<List<String>>() {});
+    		List<String> doctors = new ObjectMapper().readValue(kill.getHealUser(), new TypeReference<List<String>>() {});
+    		
+    		if(targetVote != null && !targetVote.equals("")) {
+    			votes.add(targetVote);
+    		}
+    		
+    		if(targetMafia != null && !targetMafia.equals("")) {
+    			mafias.add(targetMafia);
+    		}
+    		
+    		if(tagetDoctor != null && !tagetDoctor.equals("")) {
+    			doctors.add(tagetDoctor);
+    		}
+        	
+    		String updatedVotes = new ObjectMapper().writeValueAsString(votes);
+        	String updateDoctors = new ObjectMapper().writeValueAsString(doctors);
+        	String updatedMafias = new ObjectMapper().writeValueAsString(mafias);
+        	
+        	kill.setVote(updatedVotes);
+        	kill.setKillUser(updatedMafias);
+        	kill.setHealUser(updateDoctors);
+        	
+        	gameRoomService.updateKill(kill);
+        	
+        } catch (Exception e) {
+            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+        }
+        return gameRoomService.selectKill(roomNo,dayNo);
+    }
+    
     
     public static String clobToString(Clob clob) {
     	if (clob == null) return null;

@@ -28,7 +28,7 @@
 				    <div id="readyCount">Ready: 0</div>
 				</div>
 				<div id="dayCount">일차 : 0</div>
-				<div id="voteCount">투표 : 0</div>
+				<div id="killCount">투표 : 0</div>
 				<div id="gamePhaseContainer">
 					<div id="phaseDisplay">현재 단계: -</div>
 					<div id="timerDisplay">남은 시간: - 초</div>
@@ -77,6 +77,8 @@
 		let room = /*[[${room}]]*/ 'NULL';
 		let dayNo = 0;
 		isGaming = room.isGaming==='Y';
+		
+		let hasKilld = false;
 
 		if (isGaming) {
 			sendBtn.disabled = true; 
@@ -257,7 +259,7 @@
 				//접속시 동작은 저장후 불러오기 때문에 리턴
 				return;
 			} else if (msgData.type && msgData.type === "phase") {
-			    startTimer(msgData.phase, msgData.remaining);
+			    setTimer(msgData.phase, msgData.remaining);
 			    return;
 			} 
 			reciveMsg(msgData, div);
@@ -408,6 +410,7 @@
 					jobObj = myJob;
 					job = myJob.jobName;
 					chatLoad(job);
+					console.log()
 				}
 			})
 			
@@ -438,17 +441,19 @@
 		}
 
 		function startTimer(phase, seconds) {
-		  remainTime = seconds;
-		  if(timerId) clearInterval(timerId);
-
-		  timerId = setInterval(() => {
-		    if(remainTime <= 0) {
-		      clearInterval(timerId);
-		      return;
-		    }
-		    remainTime--;
-		    updateTimerUI(phase, remainTime);
-		  }, 1000);
+			remainTime = seconds;
+			if(timerId) clearInterval(timerId);
+			
+			hasKilld = false;
+					  
+			timerId = setInterval(() => {
+				if(remainTime <= 0) {
+					clearInterval(timerId);
+					return;
+				}
+				remainTime--;
+				updateTimerUI(phase, remainTime);
+			}, 1000);
 		}
 		
 		function setAlive() {
@@ -464,31 +469,60 @@
 			});
 		}
 		
-		function voteUser(targetName) {
+		function voteKill(targetName) {
 		    $.ajax({
-		        url: "/room/voteUser",
+		        url: "/room/voteResult",
+		        method: "GET",
 		        data: {
 		            roomNo: roomNo,
 		            dayNo: dayNo,
 		            targetName: targetName,
 		        },
-		        success: function (vote) {
-		            if (!vote) return;
-
-		            let voteList = [];
-
+		        success: function (kill) {
+		            if (!kill) return;
+		            
+		            let killList = [];
 		            try {
-		                voteList = JSON.parse(vote);
-
-		                // 총 인원 수는 .slot 요소 수 - 1
-		                const total = document.querySelectorAll(".slot").length - 1;
-		                const current = voteList.length;
-
-		                document.getElementById("voteCount").innerText = "투표: " + current + " / " + total;
+		                killList = JSON.parse(kill);
+		                const total = document.querySelectorAll(".slot").length;
+		                const current = killList.length;
+		                document.getElementById("killCount").innerText = "투표: " + current + " / " + total;
 		            } catch (e) {
 		                console.error("투표 리스트 파싱 실패", e);
 		            }
 		        },
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function mafiaKill(targetName) {
+		    $.ajax({
+		        url: "/room/mafiaKillResult",
+		        method: "GET",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (kill) {},
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function doctorHeal(targetName) {
+		    $.ajax({
+		        url: "/room/healResult",
+		        method: "GET",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (kill) {},
 		        error: function () {
 		            alert("투표 요청 중 오류가 발생했습니다.");
 		        }
