@@ -212,8 +212,7 @@ public class GameRoomController {
     
     @GetMapping("/reloadRoom")
     @ResponseBody
-    public GameRoom reloadRoom(@RequestParam int roomNo, int dayNo) {
-    	gameRoomService.updateDayNo(roomNo, dayNo);
+    public GameRoom reloadRoom(@RequestParam int roomNo) { 
     	return gameRoomService.selectRoom(roomNo);
     }
     
@@ -272,25 +271,35 @@ public class GameRoomController {
     public Vote voteUser (@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {
         
     	Vote vote = gameRoomService.selectVote(roomNo,dayNo);
+    	List<String> votes = new ArrayList<>();
         
         if (vote == null) { 
         	vote = new Vote(roomNo,dayNo,"[]");
+        	try {
+        		votes = new ObjectMapper().readValue(vote.getVote(), new TypeReference<List<String>>() {});
+	        	votes.add(targetName);
+	        	
+	        	String updatedList = new ObjectMapper().writeValueAsString(votes);
+	        	
+	        	gameRoomService.insertVote(roomNo, dayNo, updatedList);
+	        	return gameRoomService.selectVote(roomNo,dayNo);
+        	} catch (Exception e) {
+	            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+	        }
+        } else {
+	        try {
+	        	votes = new ObjectMapper().readValue(vote.getVote(), new TypeReference<List<String>>() {});
+	        	votes.add(targetName);
+	        	
+	        	String updatedList = new ObjectMapper().writeValueAsString(votes);
+	        	gameRoomService.updateVote(roomNo, dayNo, updatedList);
+	        	
+	        	return gameRoomService.selectVote(roomNo,dayNo);
+	        } catch (Exception e) {
+	            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+	        }
         }
-        
-        List<String> votes = new ArrayList<>();
-		
-        try {
-        	votes = new ObjectMapper().readValue(vote.getVote(), new TypeReference<List<String>>() {});
-        	votes.add(targetName);
-        	
-        	String updatedList = new ObjectMapper().writeValueAsString(votes);
-        	gameRoomService.updateVote(roomNo, dayNo, updatedList);
-        	
-        	return gameRoomService.selectVote(roomNo,dayNo);
-        } catch (Exception e) {
-            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
-        }
-        return null;
+		return null;
     }
     
     public static String clobToString(Clob clob) {

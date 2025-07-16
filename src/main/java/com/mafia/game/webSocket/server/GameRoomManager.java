@@ -271,7 +271,12 @@ public class GameRoomManager {
         }
         
         List<WebSocketSession> sessions = getSessions(roomNo);
-        PhaseBroadcaster broadcaster = new PhaseBroadcaster(sessions);
+        
+        if (phaseBroadcasters.containsKey(roomNo)) {
+            phaseBroadcasters.get(roomNo).stop(); // 기존 타이머 종료 (필요시)
+        }
+        
+        PhaseBroadcaster broadcaster = new PhaseBroadcaster(sessions,roomNo,this);
         broadcaster.startPhases();
 
         phaseBroadcasters.put(roomNo, broadcaster); // Map에 등록
@@ -337,7 +342,20 @@ public class GameRoomManager {
 		chatService.sendMessage(msg);
 	}
 	
-    public static String clobToString(Clob clob) {
+    public GameRoomService getGameRoomService() {
+		return gameRoomService;
+	}
+
+	public void setGameRoomService(GameRoomService gameRoomService) {
+		this.gameRoomService = gameRoomService;
+	}
+	
+	public void updateDayNo(int roomNo) {
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		gameRoomService.updateDayNo(roomNo, room.getDayNo()+1);
+	}
+
+	public static String clobToString(Clob clob) {
         if (clob == null) return null;
 
         try (Reader reader = clob.getCharacterStream();

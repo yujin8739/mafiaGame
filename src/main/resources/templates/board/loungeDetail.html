@@ -1,494 +1,572 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>게시글 상세보기</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>게시글 상세보기</title>
 
-  <!-- Bootstrap -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
-  <!-- font-awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <link rel="stylesheet" th:href="@{/css/common/header.css}" />
-  <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+<!-- Bootstrap -->
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+<!-- font-awesome -->
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
 
-  <!-- 커스텀 스타일 -->
-  <style>
-    body {
-      color: #f0f0f0; /* 기존 #f5f5f5 보다 더 선명한 흰색 */
-      font-family: 'Noto Sans KR', sans-serif;
-      padding: 40px 8%;
-    }
+<!-- 커스텀 스타일 -->
+<style>
+body {
+	background-color: #0b0b0b;
+	font-family: 'Noto Sans KR', sans-serif;
+	color: #fff;
+}
 
-    .card {
-      background-color: #232323; /* 기존보다 밝은 회색 */
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-    }
+.board-wrapper {
+	color: #333;
+	border-radius: 12px;
+	padding: 0; /* ❌ 패딩 제거 */
+	box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+	max-width: 1000px;
+	margin: 40px auto;
+}
 
-    .card-header {
-      background-color: transparent;
-      border-bottom: 1px solid #333;
-      font-size: 24px;
-      font-weight: bold;
-      color: #fff;
-    }
+.card {
+	background-color: #232323;
+	border: none;
+	border-radius: 12px;
+	padding: 30px; /* ✅ 패딩은 여기로 */
+	box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+	width: 100%; /* ✅ 가로 꽉 채우기 */
+}
 
-    .card-body {
-      font-size: 16px;
-      line-height: 1.7;
-      color: #f0f0f0;
-    }
+.card-header {
+	background-color: transparent;
+	border-bottom: 1px solid #333;
+	font-size: 24px;
+	font-weight: bold;
+	color: #fff;
+}
 
-    .meta-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      color: #bbb;
-      margin-bottom: 20px;
-    }
+.card-body {
+	font-size: 16px;
+	line-height: 1.7;
+	color: #f0f0f0;
+}
 
-    .btn-group-custom {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 30px;
-    }
+.meta-info {
+	display: flex;
+	justify-content: space-between;
+	font-size: 14px;
+	color: #bbb;
+	margin-bottom: 20px;
+}
 
-    .btn-custom {
-      padding: 6px 16px;
-      border: none;
-      border-radius: 4px;
-      font-weight: bold;
-      color: #fff;
-      transition: background-color 0.2s ease;
-    }
+.btn-group-custom {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-top: 30px;
+}
 
-    .btn-list {
-      background-color: #555;
-    }
+.btn-custom {
+	padding: 6px 16px;
+	border: none;
+	border-radius: 4px;
+	font-weight: bold;
+	color: #fff;
+	transition: background-color 0.2s ease;
+}
 
-    .btn-update {
-      background-color: #3498db;
-    }
+.btn-list {
+	background-color: #555;
+}
 
-    .btn-delete {
-      background-color: #c82e38;
-    }
+.btn-update {
+	background-color: #3498db;
+}
 
-    .btn-list:hover {
-      background-color: #777;
-    }
+.btn-delete {
+	background-color: #c82e38;
+}
 
-    .btn-update:hover {
-      background-color: #2980b9;
-    }
+.btn-list:hover {
+	background-color: #777;
+}
 
-    .btn-delete:hover {
-      background-color: #a8232d;
-    }
+.btn-update:hover {
+	background-color: #2980b9;
+}
 
-    .attachments {
-      margin-top: 20px;
-    }
+.btn-delete:hover {
+	background-color: #a8232d;
+}
 
-    .attachments a {
-      color: #f1c40f;
-      text-decoration: underline;
-      font-size: 14px;
-    }
+.attachments {
+	margin-top: 20px;
+}
 
-    .attachments a:hover {
-      color: #f39c12;
-    }
+.attachments a {
+	color: #f1c40f;
+	text-decoration: underline;
+	font-size: 14px;
+}
 
-    hr {
-      border-color: #444;
-    }
-    
-    .attachment-list {
-	  display: flex;
-	  flex-direction: column;
-	  gap: 8px;
-	  margin-top: 10px;
-	}
-	
-	.attachment-item {
-	  display: flex;
-	  align-items: center;
-	  gap: 10px;
-	  font-size: 15px;
-	  color: #f1c40f;
-	}
-	
-	.attachment-item i {
-	  color: #f1c40f;
-	}
-	
-	.attachment-item a {
-	  color: #f1c40f;
-	  text-decoration: underline;
-	  transition: color 0.2s ease;
-	}
-	
-	.attachment-item a:hover {
-	  color: #f39c12;
-	}
-	
-	.comments-section {
-	  margin-top: 40px;
-	  color: #ddd;
-	}
-	
-	.comment-list {
-	  margin-top: 15px;
-	  display: flex;
-	  flex-direction: column;
-	  gap: 15px;
-	}
-	
-	.comment-item {
-	  background-color: #303030;
-	  border-radius: 6px;
-	  padding: 12px 15px;
-	  box-shadow: 0 0 5px rgba(255,255,255,0.05);
-	}
-	
-	.comment-item .comment-author {
-	  font-weight: bold;
-	  color: #f1c40f;
-	  margin-bottom: 1px;
-	  padding : 1px;
-	}
-	
-	.comment-item .comment-date {
-	  font-size: 12px;
-	  color: #bbb;
-	}
-	
-	.comment-item .comment-text {
-	  font-size: 14px;
-	  margin-top: 4px;
-	   color: #f0f0f0;
-	}
-	
-	.comment-form textarea {
-	  background-color: #1c1c1c;
-	  border: 1px solid #333;
-	  color: #f5f5f5;
-	}
-	
-	.comment-form textarea::placeholder {
-	  color: #888;
-	}
-	
-	.comment-form button {
-	  background-color: #3498db;
-	  border: none;
-	}
-	
-	.comment-form button:hover {
-	  background-color: #2980b9;
-	}
-	
-	.comment-actions {
-	  position: absolute;
-	  top: 10px;
-	  right: 12px;
-	  display: flex;
-	  gap: 12px;
-	  align-items: center;
-	}
-	
-	.comment-actions i {
-	  cursor: pointer;
-	  font-size: 14px;
-	  opacity: 0.7;
-	  transition: opacity 0.2s ease, transform 0.2s ease;
-	}
-	
-	.comment-actions .like-btn {
-	  font-size: 14px;
-	  color: #f39c12;
-	  opacity: 0.85;
-	  transition: color 0.2s ease;
-	}
-	
-	.comment-actions .report-btn {
-	  color: #f1c40f;
-	}
-	
-	.comment-actions .delete-btn {
-	  color: #c0392b;
-	}
-	
-	.comment-actions i:hover {
-	  opacity: 1;
-	  transform: scale(1.1);
-	}
-	
-	.comment-actions .like-wrapper {
-	  display: flex;
-	  align-items: center;
-	  gap: 4px;
-	  padding : 5px 0px;
-	}
-	
-	.comment-like-badge:hover {
-	  background-color: rgba(255, 255, 255, 0.08);
-	  transform: scale(1.05);
-	}
-		
-	.like-wrapper .like-btn {
-	  font-size: 14px;
-	  color: #f39c12;
-	  opacity: 0.85;
-	  transition: color 0.2s ease;
-	}
-	
-	.like-wrapper .like-btn:hover {
-	  color: #f1c40f;
-	  transform: scale(1.1);
-	}
-		
-	.comment-like-badge {
-	  background-color: rgba(255, 255, 255, 0.05);
-	  color: #f0f0f0;
-	  padding: 2px 8px;
-	  border-radius: 12px;
-	  font-size: 13px;
-	  font-weight: 500;
-	  margin-left: 4px;
-	  transition: background-color 0.2s ease, transform 0.2s ease;
-	  display: inline-block;
-	}
+.attachments a:hover {
+	color: #f39c12;
+}
 
-	.badge-image {
-	  width: 36px;
-	  height: 36px;
-	  border-radius: 8px;
-	  object-fit: cover;
-	  border: none; /* 테두리 제거 */
-	  transition: transform 0.3s ease, box-shadow 0.3s ease;
-	}
-	
-	.badge-image:hover {
-	  transform: scale(1.05);
-	}
-		
-	.post-like-dislike button {
-	  font-weight: 600;
-	  border-radius: 25px;
-	  padding: 6px 14px;
-	  font-size: 14px;
-	  transition: background-color 0.3s ease, color 0.3s ease;
-	}
-	
-	.post-like-dislike button i {
-	  font-size: 18px;
-	}
-	
-	.post-like-dislike button:hover {
-	  background-color: #c82e38;
-	  color: #fff;
-	  border-color: #c82e38;
-	}
-	
-	.post-like-dislike button.btn-outline-primary:hover {
-	  background-color: #2980b9;
-	  border-color: #2980b9;
-	}
-	
-	.profile-img {
-	  width: 44px;
-	  height: 44px;
-	  border-radius: 50%;
-	  transition: transform 0.3s ease, box-shadow 0.3s ease;
-	  object-fit: cover;
-	  border: none; /* 테두리 완전 제거 */
-	}
-	
-	.profile-img:hover {
-	  transform: scale(1.15);
-	}
-	
-		    
-  </style>
+hr {
+	border-color: #444;
+}
+
+.attachment-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.attachment-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 15px;
+	color: #f1c40f;
+}
+
+.attachment-item i {
+	color: #f1c40f;
+}
+
+.attachment-item a {
+	color: #f1c40f;
+	text-decoration: underline;
+	transition: color 0.2s ease;
+}
+
+.attachment-item a:hover {
+	color: #f39c12;
+}
+
+.comments-section {
+	margin-top: 40px;
+	color: #ddd;
+}
+
+.comment-list {
+	margin-top: 15px;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+
+.comment-item {
+	background-color: #303030;
+	border-radius: 6px;
+	padding: 12px 15px;
+	box-shadow: 0 0 5px rgba(255, 255, 255, 0.05);
+}
+
+.comment-item .comment-author {
+	font-weight: bold;
+	color: #f1c40f;
+	margin-bottom: 1px;
+	padding: 1px;
+}
+
+.comment-item .comment-date {
+	font-size: 12px;
+	color: #bbb;
+}
+
+.comment-item .comment-text {
+	font-size: 14px;
+	margin-top: 4px;
+	color: #f0f0f0;
+}
+
+.comment-form textarea {
+	background-color: #1c1c1c;
+	border: 1px solid #333;
+	color: #f5f5f5;
+}
+
+.comment-form textarea::placeholder {
+	color: #888;
+}
+
+.comment-form button {
+	background-color: #3498db;
+	border: none;
+}
+
+.comment-form button:hover {
+	background-color: #2980b9;
+}
+
+.comment-actions {
+	position: absolute;
+	top: 10px;
+	right: 12px;
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+
+.comment-actions i {
+	cursor: pointer;
+	font-size: 14px;
+	opacity: 0.7;
+	transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.comment-actions .like-btn {
+	font-size: 14px;
+	color: #f39c12;
+	opacity: 0.85;
+	transition: color 0.2s ease;
+}
+
+.comment-actions .report-btn {
+	color: #f1c40f;
+}
+
+.comment-actions .delete-btn {
+	color: #c0392b;
+}
+
+.comment-actions i:hover {
+	opacity: 1;
+	transform: scale(1.1);
+}
+
+.comment-actions .like-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 0px;
+}
+
+.comment-like-badge:hover {
+	background-color: rgba(255, 255, 255, 0.08);
+	transform: scale(1.05);
+}
+
+.like-wrapper .like-btn {
+	font-size: 14px;
+	color: #f39c12;
+	opacity: 0.85;
+	transition: color 0.2s ease;
+}
+
+.like-wrapper .like-btn:hover {
+	color: #f1c40f;
+	transform: scale(1.1);
+}
+
+.comment-like-badge {
+	background-color: rgba(255, 255, 255, 0.05);
+	color: #f0f0f0;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 13px;
+	font-weight: 500;
+	margin-left: 4px;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+	display: inline-block;
+}
+
+.badge-image {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	object-fit: cover;
+	border: none; /* 테두리 제거 */
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.badge-image:hover {
+	transform: scale(1.05);
+}
+
+.post-like-dislike button {
+	font-weight: 600;
+	border-radius: 25px;
+	padding: 6px 14px;
+	font-size: 14px;
+	transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.post-like-dislike button i {
+	font-size: 18px;
+}
+
+.post-like-dislike button:hover {
+	background-color: #c82e38;
+	color: #fff;
+	border-color: #c82e38;
+}
+
+.post-like-dislike button.btn-outline-primary:hover {
+	background-color: #2980b9;
+	border-color: #2980b9;
+}
+
+.profile-img {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	object-fit: cover;
+	border: none; /* 테두리 완전 제거 */
+}
+
+.profile-img:hover {
+	transform: scale(1.15);
+}
+
+.best-comment {
+  background-color: #3a2e18;
+  border-left: 4px solid gold;
+  padding: 14px 18px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+.best-badge {
+  background-color: gold;
+  color: #000;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-right: 8px;
+  font-size: 13px;
+}
+</style>
 </head>
 <body>
 
-  <!-- 헤더 -->
-  <div th:replace="~{common/header :: header}"></div>
+	<!-- 헤더 -->
+	<div th:replace="~{common/header :: header}"></div>
 
-  <div class="container">
-    <div class="card">
-      <div class="card-header" th:text="${board.title}">게시글 제목</div>
-      <div class="card-body">
+	<div class="board-wrapper">
+		<div class="card">
+			<div class="card-header" th:text="${board.title}">게시글 제목</div>
+			<div class="card-body">
 
-        <div class="meta-info">
-          <span style="display: flex; align-items: center; gap: 8px;">
-			  <img th:src="@{${board.profileUrl}}" 
-				     alt="Badge"
-				     class="profile-img"/>
-			  <strong th:text="${board.nickName}">작성자</strong>
-		  </span>
-          <span style="display: flex; align-items: center; gap: 12px;">작성일: <span th:text="${board.createDate}">2025-07-04</span></span>
-          <span style="display: flex; align-items: center; gap: 12px;">조회수: <span th:text="${board.viewCount}">80</span></span>
-        </div>
-		
-		
-		<th:block th:if="${board.fileList[0].status == 'Y'}">
-	        <div class="attachments" th:if="${board.fileList[0].fileNo != 0}">
-			  <hr />
-			  <h6>📎 첨부파일</h6>
-			  <div class="attachment-list">
-			    <div class="attachment-item" th:object="${board.fileList[0]}">
-			      <i class="fas fa-paperclip"></i>
-			      <a th:href="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=*{changeName})}"
-			         th:text="*{originName}"
-			         th:download="*{originName}"></a>
-			    </div>
-			  </div>
+				<div class="meta-info">
+					<span style="display: flex; align-items: center; gap: 8px;">
+						<img th:src="@{${board.profileUrl}}" alt="Badge"
+						class="profile-img" /> <strong th:text="${board.nickName}">작성자</strong>
+					</span> <span style="display: flex; align-items: center; gap: 12px;">작성일:
+						<span th:text="${board.createDate}">2025-07-04</span>
+					</span> <span style="display: flex; align-items: center; gap: 12px;">조회수:
+						<span th:text="${board.viewCount}">80</span>
+					</span>
+				</div>
+
+
+				<th:block th:if="${board.fileList[0].status == 'Y'}">
+					<div class="attachments" th:if="${board.fileList[0].fileNo != 0}">
+						<hr />
+						<h6>📎 첨부파일</h6>
+						<div class="attachment-list">
+							<div class="attachment-item" th:object="${board.fileList[0]}">
+								<i class="fas fa-paperclip"></i> <a
+									th:href="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=*{changeName})}"
+									th:text="*{originName}" th:download="*{originName}"></a>
+							</div>
+						</div>
+					</div>
+				</th:block>
+
+				<hr />
+
+
+				<div th:utext="${board.detail}">게시글 내용 출력 부분 (HTML 포함 가능)</div>
+
+
+				<!-- ✅ 게시글 좋아요/싫어요 버튼: 본문 바로 아래에 위치 -->
+				<div
+					class="post-like-dislike d-flex justify-content-center align-items-center"
+					style="gap: 15px; margin: 30px 0;">
+					<button id="btnLike" type="button"
+						class="btn btn-outline-danger d-flex align-items-center"
+						style="gap: 6px;">
+						<i class="fas fa-heart"></i> 좋아요 <span id="likeCount"
+							th:text="${board.likeCount}">0</span>
+					</button>
+					<button id="btnDislike" type="button"
+						class="btn btn-outline-primary d-flex align-items-center"
+						style="gap: 6px;">
+						<i class="fas fa-thumbs-down"></i> 싫어요 <span id="dislikeCount"
+							th:text="${board.dislikeCount}">0</span>
+					</button>
+				</div>
+
+
+
+
+
+				<div class="btn-group-custom">
+					<a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
+					<th:block th:if="${loginUser.userName == board.userName}">
+						<a
+							th:href="@{/board/lounge/update/{boardNo}(boardNo=${board.boardNo})}"
+							class="btn btn-custom btn-update">수정</a>
+					</th:block>
+					<th:block th:if="${loginUser.userName == board.userName}">
+						<form
+							th:action="@{/board/lounge/delete/{boardNo}(boardNo=${board.boardNo})}"
+							method="POST">
+							<button class="btn btn-custom btn-delete"
+								onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</button>
+						</form>
+					</th:block>
+				</div>
+
+
+				<!-- 댓글 영역 -->
+				<div class="comments-section">
+					<hr />
+					<!-- ✅ BEST 댓글 영역 -->
+					<div class="best-comments-section" style="margin-top: 40px;">
+					  <h6>🔥 베스트 댓글</h6>
+					  <div id="bestCommentList" class="comment-list"></div>
+					  <hr />
+					</div>
+					
+					
+					<h6>💬 댓글</h6>
+
+					<!-- 댓글 목록 -->
+					<div id="commentList" class="comment-list">
+						<!-- 비동기로 불러온 댓글이 여기에 삽입될 예정 -->
+					</div>
+
+					<!-- 댓글 작성 폼 -->
+					<div class="comment-form mt-3">
+						<textarea class="form-control" id="commentContent" rows="3"
+							placeholder="댓글을 입력하세요..."></textarea>
+						<!-- 이미지 파일 업로드 추가 -->
+						<div class="mt-2">
+							<input type="file" id="commentImage" accept="image/*"
+								class="form-control-file text-light">
+						</div>
+						<img id="previewImage"
+							style="max-width: 100px; margin-top: 10px; display: none;" />
+
+						<div class="text-right mt-2">
+							<button class="btn btn-primary btn-sm" id="submitComment">등록</button>
+						</div>
+
+					</div>
+				</div>
 			</div>
-		</th:block>
-		
-        <hr />
-        
-
-        <div th:utext="${board.detail}">
-          게시글 내용 출력 부분 (HTML 포함 가능)
-        </div>
-        
-        
-		<!-- ✅ 게시글 좋아요/싫어요 버튼: 본문 바로 아래에 위치 -->
-		<div class="post-like-dislike d-flex justify-content-center align-items-center" style="gap: 15px; margin: 30px 0;">
-		  <button id="btnLike" type="button" class="btn btn-outline-danger d-flex align-items-center" style="gap:6px;">
-		    <i class="fas fa-heart"></i> 좋아요 <span id="likeCount" th:text="${board.likeCount}">0</span>
-		  </button>
-		  <button id="btnDislike" type="button" class="btn btn-outline-primary d-flex align-items-center" style="gap:6px;">
-		    <i class="fas fa-thumbs-down"></i> 싫어요 <span id="dislikeCount" th:text="${board.dislikeCount}">0</span>
-		  </button>
 		</div>
-		
-		        
-        
-		
+	</div>
 
-        <div class="btn-group-custom">
-          <a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
-          <th:block th:if="${loginUser.userName == board.userName}">
-          	<a th:href="@{/board/lounge/update/{boardNo}(boardNo=${board.boardNo})}" class="btn btn-custom btn-update">수정</a>
-          </th:block>
-          <th:block th:if="${loginUser.userName == board.userName}">
-          	<form th:action="@{/board/lounge/delete/{boardNo}(boardNo=${board.boardNo})}" method="POST">
-          		<button class="btn btn-custom btn-delete" onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</button>
-          	</form>
-         </th:block>
-        </div>
-        
-        
-        <!-- 댓글 영역 -->
-		<div class="comments-section">
-		  <hr />
-		  <h6>💬 댓글</h6>
-		
-		  <!-- 댓글 목록 -->
-		  <div id="commentList" class="comment-list">
-		    <!-- 비동기로 불러온 댓글이 여기에 삽입될 예정 -->
-		  </div>
-		
-		  <!-- 댓글 작성 폼 -->
-		  <div class="comment-form mt-3">
-		    <textarea class="form-control" id="commentContent" rows="3" placeholder="댓글을 입력하세요..."></textarea>
-		    <!-- 이미지 파일 업로드 추가 -->
-		    <div class="mt-2">
-		    	<input type="file" id="commentImage" accept="image/*" class="form-control-file text-light">
-		  	</div>
-			  <img id="previewImage" style="max-width: 100px; margin-top: 10px; display: none;" />
-
-  			<div class="text-right mt-2">
-    			<button class="btn btn-primary btn-sm" id="submitComment">등록</button>
-  			</div>
-  			
-		  </div>
-		</div>
-      </div>
-    </div>
-  </div>
-  
-    <!-- 댓글 불러오기/등록 JS -->
+	<!-- 댓글 불러오기/등록 JS -->
 	<script th:inline="javascript">
 		
 	
-		function loadComments() {
-		      // 댓글 목록 불러오는 AJAX 작성 위치
-		      var loginUserName = /*[[${loginUser.userName}]]*/ '';
-		      
-		      $.ajax({
-		    	  url : '/board/lounge/getReplyList',
-		    	  data : {
-		    		  boardNo : /*[[${board.boardNo}]]*/ 0
-		          },
-		    	  success : function(replyList){
-		    		  $('#commentList').empty(); // 기존 댓글 지우고
-	
-		    		  replyList.forEach(function(reply) {
-			  			  const replyHtml = `
-			  				<div class="comment-item position-relative">
-			  				  <!-- 오른쪽 상단 액션 버튼들 -->
-			  				  <div class="comment-actions">
-				  				<span class="like-wrapper">
-					  			  <i class="fas fa-heart like-btn" title="좋아요"></i>
-					  			  <span class="comment-like-badge">${reply.likeCount}</span>
-					  			</span>
-			  				    <i class="fas fa-flag report-btn" title="신고"></i>
-			  				    <i class="fas fa-trash delete-btn" title="삭제"></i>
-			  				    <div style="display: none;" id="replyNo">${reply.replyNo}</div>
-			  				  </div>
+	function loadComments() {
+		  var loginUserName = /*[[${loginUser.userName}]]*/ '';
 
-			  				  <!-- 댓글 작성자 (닉네임 + 뱃지) -->
-			  				  <div style="display: flex; align-items: center; gap: 8px;">
-			  				    <img src="${reply.profileUrl}" 
-			  				         alt="Badge"
-			  				         class="badge-image" />
-			  				    <span class="comment-author">${reply.nickName}</span>
-			  				  </div>
+		  $.ajax({
+		    url: '/board/getReplyList',
+		    data: {
+		      boardNo: /*[[${board.boardNo}]]*/ 0
+		    },
+		    success: function (replyList) {
+		      $('#bestCommentList').empty();
+		      $('#commentList').empty();
 
-			  				  <!-- 댓글 날짜 -->
-			  				  <div class="comment-date">${reply.createDate}</div>
+		      // 좋아요 3개 이상 댓글들 중 BEST 선정
+		      const bestReplies = [];
+		      const normalReplies = [];
 
-			  				  <!-- 댓글 텍스트 -->
-			  				  <div class="comment-text">${reply.replyContent}</div>
+		      for (var i = 0; i < replyList.length; i++) {
+		        if (replyList[i].likeCount >= 3) {
+		          bestReplies.push(replyList[i]);
+		        } else {
+		          normalReplies.push(replyList[i]);
+		        }
+		      }
 
-			  				  <!-- 댓글 이미지 (있을 경우) -->
-			  				  ${reply.changeName ? `<img src="/godDaddy_uploadImage/replyImage/${reply.changeName}" style="max-width: 100px; margin-top: 10px;" />` : ''}
+		      // BEST 댓글 정렬 (좋아요 높은 순)
+		      for (var i = 0; i < bestReplies.length - 1; i++) {
+		        for (var j = i + 1; j < bestReplies.length; j++) {
+		          if (bestReplies[i].likeCount < bestReplies[j].likeCount) {
+		            var temp = bestReplies[i];
+		            bestReplies[i] = bestReplies[j];
+		            bestReplies[j] = temp;
+		          }
+		        }
+		      }
 
-			  				  <!-- 작성자 아이디 숨김 (삭제/신고용 비교용) -->
-			  				  <div style="display: none;" id="replyWriter">${reply.userName}</div>
-			  				</div>
-			  				`;
-		    		      $('#commentList').append(replyHtml);
-		    		      
-		    		  });
-		    		  
-		    		  var replyDivs= $('.comment-item.position-relative'); //리뷰 Div 영역들
-		    		  replyDivs.each(function(index,replyDiv){
-		    			  if($(this).children("#replyWriter").text() !== loginUserName){ //로그인 아이디와 리뷰 아이디와 같지 않다면
-		    				  $(this).find(".delete-btn").remove();
-		    			  }
-		    		  })
-	    		      if($('.comment-author').text() ){
-	    		    	  $('.comment-actions delete-btn').remove();
-	    		      }
-		    	  }
+		      // 최대 2개만 BEST 댓글로
+		      var bestToShow = bestReplies.slice(0, 2);
+		      var restBest = bestReplies.slice(2);
+		      normalReplies.push(...restBest);
+
+		      // BEST 댓글 출력
+		      bestToShow.forEach(function (reply) {
+		        const html = generateReplyHtml(reply, true);
+		        $('#bestCommentList').append(html);
 		      });
-		    }  
+
+		      // 일반 댓글 출력
+		      normalReplies.forEach(function (reply) {
+		        const html = generateReplyHtml(reply, false);
+		        $('#commentList').append(html);
+		      });
+
+		      // 삭제 버튼 제어
+		      var replyDivs = $('.comment-item.position-relative');
+		      replyDivs.each(function () {
+		        if ($(this).children("#replyWriter").text() !== loginUserName) {
+		          $(this).find(".delete-btn").remove();
+		        }
+		      });
+		    }
+		  });
+		}
+
+		function generateReplyHtml(reply, isBest) {
+		  return `
+		    <div class="comment-item position-relative ${isBest ? 'best-comment' : ''}">
+		      <div class="comment-actions">
+		        <span class="like-wrapper">
+		          <i class="fas fa-heart like-btn" title="좋아요"></i>
+		          <span class="comment-like-badge">${reply.likeCount}</span>
+		        </span>
+		        <i class="fas fa-flag report-btn" title="신고"></i>
+		        <i class="fas fa-trash delete-btn" title="삭제"></i>
+		        <div style="display: none;" id="replyNo">${reply.replyNo}</div>
+		      </div>
+
+		      <div style="display: flex; align-items: center;">
+		        <img src="${reply.profileUrl}" alt="Badge" class="badge-image" />
+		        ${isBest ? `<span class="best-badge">BEST</span>` : ''}
+		        <span class="comment-author">${reply.nickName}</span>
+		      </div>
+
+		      <div class="comment-date">${reply.createDate}</div>
+		      <div class="comment-text">${reply.replyContent}</div>
+
+		      ${reply.changeName ? `<img src="/godDaddy_uploadImage/replyImage/${reply.changeName}" style="max-width: 100px; margin-top: 10px;" />` : ''}
+
+		      <div style="display: none;" id="replyWriter">${reply.userName}</div>
+		    </div>
+		  `;
+		}
 	
 	
 	  $(function () {
-		  // 댓글 불러오기 함수 호출
+			// 댓글 불러오기 함수 호출
 		  loadComments();
 		
 		  $('#commentImage').on('change', function (e) {
@@ -503,51 +581,51 @@
 			    $('#previewImage').hide();
 			  }
 			});
-	    
-	
-	    // 댓글 등록 버튼 클릭
-	    $('#submitComment').click(function () {
-			  const content = $('#commentContent').val();
-			  const imageFile = $('#commentImage')[0].files[0];
-			
-			  const formData = new FormData();
-			  formData.append('replyContent', content);
-			  formData.append('boardNo',/*[[${board.boardNo}]]*/ 0);
-			  formData.append('userName',/*[[${loginUser.userName}]]*/ '');
-			  if (imageFile) formData.append('image', imageFile);
-			  if(content === '' && !imageFile){
-				  alert('내용을 입력해주세요');
-				  return;
-			  }
-			
-			  $.ajax({
-			    url: '/board/lounge/uploadReply', 
-			    type: 'POST',
-			    data: formData,
-			    processData: false,
-			    contentType: false,
-			    success: function (result) {
-			      if(result > 0){
-				      $('#commentContent').val('');
-				      $('#commentImage').val('');
-				      $('#previewImage').hide();
-				      loadComments(); // 다시 불러오기
-			    	  
-			      }else{
-			    	  alert("댓글이 정상적으로 등록되지 않았습니다");
-			      }
-			      
-			    },
-			    error : function(){
-			    	alert("서버 오류가 발생하였습니다. 잠시 후 다시 시도해주세요");
-			    }
-			  	
-			  });
-		});
-	    
+		    
+		
+		    // 댓글 등록 버튼 클릭
+		    $('#submitComment').click(function () {
+				  const content = $('#commentContent').val();
+				  const imageFile = $('#commentImage')[0].files[0];
+				
+				  const formData = new FormData();
+				  formData.append('replyContent', content);
+				  formData.append('boardNo',/*[[${board.boardNo}]]*/ 0);
+				  formData.append('userName',/*[[${loginUser.userName}]]*/ '');
+				  if (imageFile) formData.append('image', imageFile);
+				  if(content === '' && !imageFile){
+					  alert('내용을 입력해주세요');
+					  return;
+				  }
+				
+				  $.ajax({
+				    url: '/board/uploadReply', 
+				    type: 'POST',
+				    data: formData,
+				    processData: false,
+				    contentType: false,
+				    success: function (result) {
+				      if(result > 0){
+					      $('#commentContent').val('');
+					      $('#commentImage').val('');
+					      $('#previewImage').hide();
+					      loadComments(); // 다시 불러오기
+				    	  
+				      }else{
+				    	  alert("댓글이 정상적으로 등록되지 않았습니다");
+				      }
+				      
+				    },
+				    error : function(){
+				    	alert("서버 오류가 발생하였습니다. 잠시 후 다시 시도해주세요");
+				    }
+				  	
+				  });
+			});
+		    
 	        $('#commentList').on('click', '.like-btn', function () {
 	    	  // TODO: Ajax 호출 등으로 좋아요 처리
-   	  		 const $count = $(this).next(); //count적는 span 태그
+	  	  		 const $count = $(this).next(); //count적는 span 태그
 			 const count = parseInt($count.text());	    	  		 
 	    	  $.ajax({
 	    		 url : "/board/likeReply",
@@ -569,7 +647,7 @@
 	    	  });
 	    	  
 	    	});
-
+	
 	    	$('#commentList').on('click', '.report-btn', function () {
 	    	  const confirmReport = confirm('이 댓글을 신고하시겠습니까?');
 	    	  if (confirmReport) {
@@ -577,7 +655,7 @@
 	    	    // TODO: Ajax 호출로 신고 처리
 	    	  }
 	    	});
-
+	
 	    	$('#commentList').on('click', '.delete-btn', function (e) {
 	    		
 	    	  const confirmDelete = confirm('이 댓글을 삭제하시겠습니까?');
@@ -586,7 +664,7 @@
 	    		  
 	    	    // TODO: Ajax 호출로 댓글 삭제 처리
 	    	    $.ajax({
-	        		url : "/board/lounge/deleteReply",
+	        		url : "/board/deleteReply",
 	        		method : "post",
 	    			data : {
 	    				replyNo : $(e.target).next().text()
@@ -604,84 +682,82 @@
 	    				alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요');
 	    			}
 	    			
-   		  		});
+	  		  		});
 	    		  
 	    	    
 	    	  }
 	    	});
-	    	
-	    	
-	    	
-	    	$(function () {
-	    		  // 게시글 좋아요/싫어요 버튼 클릭 이벤트
-	    		  $('#btnLike').click(function () {
-	    		    // TODO: Ajax 호출로 좋아요 증가 처리 후 카운트 갱신
-	    		    $.ajax({
-	    		    	url : "/board/like",
-	    		    	data : {
-	    		    		boardNo : /*[[${board.boardNo}]]*/ 0,
-	    		    		type : 'L'
-	    		    	},
-	    		    	success : function(result){
-			    		    let count = parseInt($('#likeCount').text());
-	    		    		if(result > 0){ //제대로 '좋아요'가 등록이 되었다면
-				    		    $('#likeCount').text(count + 1);
-	    		    		}else if(result === -1){
-	    		    			$('#likeCount').text(count - 1);
-	    		    		}else if(result === -100){
-	    		    			let dislikeCount = parseInt($('#dislikeCount').text());
-	    		    			$('#dislikeCount').text(dislikeCount - 1);	
-	    		    			$('#likeCount').text(count + 1);
-	    		    		}else{
-	    		    			alert("해당 게시물에 '좋아요'가 등록되지 않았습니다");
-	    		    		}
-	    		    	},
-	    		    	error : function(){
-	    		    		alert("서버 오류가 발생했습니다. 잠시후 다시 시도해주세요");
-	    		    	}
-	    		    	
-	    		    });
-	    		  });
+		    	
+		    	
+		    	
+		  // 게시글 좋아요/싫어요 버튼 클릭 이벤트
+		  $('#btnLike').click(function () {
+		    // TODO: Ajax 호출로 좋아요 증가 처리 후 카운트 갱신
+		    $.ajax({
+		    	url : "/board/like",
+		    	data : {
+		    		boardNo : /*[[${board.boardNo}]]*/ 0,
+		    		type : 'L'
+		    	},
+		    	success : function(result){
+	 		    let count = parseInt($('#likeCount').text());
+		    		if(result > 0){ //제대로 '좋아요'가 등록이 되었다면
+	  		    $('#likeCount').text(count + 1);
+		    		}else if(result === -1){
+		    			$('#likeCount').text(count - 1);
+		    		}else if(result === -100){
+		    			let dislikeCount = parseInt($('#dislikeCount').text());
+		    			$('#dislikeCount').text(dislikeCount - 1);	
+		    			$('#likeCount').text(count + 1);
+		    		}else{
+		    			alert("해당 게시물에 '좋아요'가 등록되지 않았습니다");
+		    		}
+		    	},
+		    	error : function(){
+		    		alert("서버 오류가 발생했습니다. 잠시후 다시 시도해주세요");
+		    	}
+		    	
+		    });
+		  });
+	
+		  $('#btnDislike').click(function () {
+		    // TODO: Ajax 호출로 싫어요 증가 처리 후 카운트 갱신
+		    $.ajax({
+		    	url : "/board/like",
+		    	data : {
+		    		boardNo : /*[[${board.boardNo}]]*/ 0,
+		    		type : 'D'
+		    	},
+		    	success : function(result){
+		    		let count = parseInt($('#dislikeCount').text());
+		    		if(result > 0){ //제대로 '좋아요'가 등록이 되었다면
+		    			$('#dislikeCount').text(count + 1);
+		    		}else if(result === -1){
+		    			$('#dislikeCount').text(count - 1);
+		    		}else if(result === -100){
+		    			let likeCount = parseInt($('#likeCount').text());
+		    			$('#likeCount').text(likeCount - 1);
+		    			$('#dislikeCount').text(count + 1);	
+		    		}else{
+		    			alert("해당 게시물에 '싫어요'가 등록되지 않았습니다");
+		    		}
+		    	},
+		    	error : function(){
+		    		alert("서버 오류가 발생했습니다. 잠시후 다시 시도해주세요");
+		    	}
+		    	
+		    });
+		    
+		  });
 
-	    		  $('#btnDislike').click(function () {
-	    		    // TODO: Ajax 호출로 싫어요 증가 처리 후 카운트 갱신
-	    		    $.ajax({
-	    		    	url : "/board/like",
-	    		    	data : {
-	    		    		boardNo : /*[[${board.boardNo}]]*/ 0,
-	    		    		type : 'D'
-	    		    	},
-	    		    	success : function(result){
-	    		    		let count = parseInt($('#dislikeCount').text());
-	    		    		if(result > 0){ //제대로 '좋아요'가 등록이 되었다면
-	    		    			$('#dislikeCount').text(count + 1);
-	    		    		}else if(result === -1){
-	    		    			$('#dislikeCount').text(count - 1);
-	    		    		}else if(result === -100){
-	    		    			let likeCount = parseInt($('#likeCount').text());
-	    		    			$('#likeCount').text(likeCount - 1);
-	    		    			$('#dislikeCount').text(count + 1);	
-	    		    		}else{
-	    		    			alert("해당 게시물에 '싫어요'가 등록되지 않았습니다");
-	    		    		}
-	    		    	},
-	    		    	error : function(){
-	    		    		alert("서버 오류가 발생했습니다. 잠시후 다시 시도해주세요");
-	    		    	}
-	    		    	
-	    		    });
-	    		    
-	    		  });
-
-	    		});
 
 	
 	    
 	  });
 	</script>
-  
-  <!-- 푸터 -->
-  <div th:replace="~{common/footer :: footer}"></div>
+
+	<!-- 푸터 -->
+	<div th:replace="~{common/footer :: footer}"></div>
 
 </body>
 </html>

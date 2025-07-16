@@ -27,6 +27,8 @@
 				            onclick="ready()">Ready</button>
 				    <div id="readyCount">Ready: 0</div>
 				</div>
+				<div id="dayCount">일차 : 0</div>
+				<div id="voteCount">투표 : 0</div>
 				<div id="gamePhaseContainer">
 					<div id="phaseDisplay">현재 단계: -</div>
 					<div id="timerDisplay">남은 시간: - 초</div>
@@ -416,13 +418,12 @@
 				url:'/room/reloadRoom',
 				data:{
 					roomNo:roomNo,
-					dayNo:dayNo
 				},
 				success: function(newRoom){
 					room = newRoom;
 					dayNo = newRoom.dayNo;
-					document.getElementById("readyCount").innerText = "일차 : " + dayNo +"일";
-				}
+					document.getElementById("dayCount").innerText = "일차 : " + dayNo +"일";
+				}   
 			})
 		}
 		
@@ -483,7 +484,7 @@
 		                const total = document.querySelectorAll(".slot").length - 1;
 		                const current = voteList.length;
 
-		                document.getElementById("readyCount").innerText = "투표: " + current + " / " + total;
+		                document.getElementById("voteCount").innerText = "투표: " + current + " / " + total;
 		            } catch (e) {
 		                console.error("투표 리스트 파싱 실패", e);
 		            }
