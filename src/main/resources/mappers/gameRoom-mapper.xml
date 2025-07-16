@@ -118,14 +118,16 @@
 	   )
 	</select>
 	
-	<select id="selectVote" resultType="Vote">
-		SELECT ROOMNO, DAYNO, VOTE
-		FROM VOTE WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
+	<select id="selectKill" resultType="Kill">
+		SELECT ROOMNO, DAYNO, VOTE, HEALUSER, KILLUSER
+		FROM KILL WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
 	</select>
 	
-	<update id="updateVote">
-		UPDATE VOTE 
-		SET VOTE = #{updatedList}
+	<update id="updateKill" parameterType="Kill">
+		UPDATE KILL 
+		SET VOTE = #{vote},
+			KILLUSER = #{killUser},
+			HEALUSER = #{healUser}
 		WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
 	</update>
 	
@@ -135,14 +137,24 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
-	<insert id="insertVote">
-		INSERT INTO VOTE 
+	<insert id="insertKill" parameterType="Kill">
+		INSERT INTO KILL 
 		(ROOMNO,
 		DAYNO,
-		VOTE)
+		VOTE,
+		HEALUSER,
+		KILLUSER)
 		VALUES (
 		#{roomNo},
 		#{dayNo},
-		#{updatedList})
+		#{vote},
+		#{healUser},
+		#{killUser})
 	</insert>
+	
+	<update id="updateJob">
+	 	UPDATE GAME_ROOM
+	    SET JOB = #{job}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
 </mapper>
