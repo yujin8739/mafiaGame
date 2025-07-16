@@ -16,6 +16,7 @@
             </a>
         </div>
 
+
         <!-- 비로그인 상태 -->
         <div th:if="${loginUser == null}">
             <div class="auth-buttons">
@@ -60,16 +61,7 @@
         </div>
     </div>
 
-    <!-- 상단 메뉴 -->
-    <div class="top-bar">
-        <a href="/">게임찾기</a> 
-        <a th:href="@{/room/createRoom}">게임생성</a> 
-        <a href="/">랭크게임</a>
-        <a th:href="@{/artshop}">아트샵</a>
-        <a th:href="@{/board/lounge}">라운지</a>
-        <a th:href="@{/message/inbox}">쪽지함</a>
-        <a th:href="@{/notice/list}">공지사항</a>
-    </div>
+
 
     <!-- ✅ 모달창: 테두리 설정 -->
     <div id="settings-modal" style="display:none; position:fixed; top:0; left:0; 
@@ -135,4 +127,17 @@
         });
     });
     </script>
+
+	<!-- 상단 메뉴 -->
+	<div class="top-bar">
+		<a href="/">게임찾기</a> 
+		<a th:href="@{/room/createRoom}">게임생성</a> 
+		<a href="/">랭크게임</a>
+		<a th:href="@{/artshop}">아트샵</a>
+		<a th:href="@{/board/lounge}">라운지</a>
+		<a th:href="@{/message/inbox}">쪽지함</a>
+		<a th:href="@{/notice/list}">공지사항</a>
+		<a th:href="@{/introduce/list}">게임소개</a>
+	</div>
+
 </div>

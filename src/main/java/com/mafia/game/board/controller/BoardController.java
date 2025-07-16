@@ -27,9 +27,12 @@ import com.mafia.game.board.model.vo.BoardFile;
 import com.mafia.game.board.model.vo.BoardLikeDTO;
 import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
+import com.mafia.game.common.template.BadgeSetUtil;
 import com.mafia.game.common.template.Pagination;
+import com.mafia.game.common.template.VideoUploadUtil;
 import com.mafia.game.member.model.vo.Member;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,11 +59,14 @@ public class BoardController {
 	@Value("${file.deletedLoungeImage.path}")
 	private String deletedLoungeImagePath;
 	
+	@Value("${file.uploadVideo.path}")
+	private String mp4Path;
+	
 	/*=======================================라운지============================================*/
 	
 	@GetMapping("lounge") // 라운지 - 일반 게시판
 	public String loungeBoardList(@RequestParam(defaultValue = "1") int currentPage, String type, String condition,
-			String keyword, Model model, HttpSession session) {
+			String keyword, Model model) {
 		
 
 		HashMap<String, String> filterMap = new HashMap<>(); // 필터링을 위한 상태값,조건값,키워드 맵
@@ -98,48 +104,13 @@ public class BoardController {
 			
 			b.setNew(b.getCreateDate().toLocalDate().isEqual(LocalDate.now()));
 			
-			int rankPoint = b.getRankPoint();
-			setProfileUrl(b, rankPoint);
+			BadgeSetUtil.setBadgeUrl(b);
 			
 		}
 		
 		return boardList;
 	}
 	
-	//랭크포인트별 뱃지 이미지를 연결시키기 위한 메소드
-	public void setProfileUrl(Object obj, int rankPoint) {
-			
-		if(obj instanceof Board) {
-			Board b = (Board)obj;
-			if(0 <= rankPoint && rankPoint < 500) {
-				b.setProfileUrl("/godDaddy_uploadImage/rankImage/iron.png");
-			}else if(500 <= rankPoint && rankPoint < 1200) {
-				b.setProfileUrl("/godDaddy_uploadImage/rankImage/thug.png");
-			}else if(1200 <= rankPoint && rankPoint < 2000) {
-				b.setProfileUrl("/godDaddy_uploadImage/rankImage/agent.png");
-			}else if(2000 <= rankPoint && rankPoint < 3000) {
-				b.setProfileUrl("/godDaddy_uploadImage/rankImage/underBoss.png");
-			}else if(3000 <= rankPoint) {
-				b.setProfileUrl("/godDaddy_uploadImage/rankImage/boss.png");
-			}
-			
-		}else if(obj instanceof Reply) {
-			Reply r = (Reply)obj;
-			if(0 <= rankPoint && rankPoint < 500) {
-				r.setProfileUrl("/godDaddy_uploadImage/rankImage/iron.png");
-			}else if(500 <= rankPoint && rankPoint < 1200) {
-				r.setProfileUrl("/godDaddy_uploadImage/rankImage/thug.png");
-			}else if(1200 <= rankPoint && rankPoint < 2000) {
-				r.setProfileUrl("/godDaddy_uploadImage/rankImage/agent.png");
-			}else if(2000 <= rankPoint && rankPoint < 3000) {
-				r.setProfileUrl("/godDaddy_uploadImage/rankImage/underBoss.png");
-			}else if(3000 <= rankPoint) {
-				r.setProfileUrl("/godDaddy_uploadImage/rankImage/boss.png");
-			}
-			
-		}
-		
-	}
 
 	@GetMapping("/lounge/write") // 라운지 게시글 작성 폼으로 이동
 	public String loungeWriteForm() {
@@ -180,9 +151,9 @@ public class BoardController {
 		if (result > 0) { // 게시글 등록 성공
 			
 			if(file != null) {
-				saveLoungeImage(uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
+				saveImage(loungeImagePath, uploadFile, file.getChangeName()); //서버 C://godDaddy_uploadImage//에 첨부파일 저장
 			}
-			redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
+			redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다.");
 			
 
 		} else { // 게시글 등록 실패
@@ -202,18 +173,7 @@ public class BoardController {
 		
 		if(result > 0) { //조회수 증가 성공!
 			Board board = service.loungeBoardDetail(boardNo); // 1개의 라운지 게시글 정보 얻어오기
-			int rankPoint = board.getRankPoint();
-			if(0 <= rankPoint && rankPoint < 500) {
-				board.setProfileUrl("/godDaddy_uploadImage/rankImage/iron.png");
-			}else if(500 <= rankPoint && rankPoint < 1200) {
-				board.setProfileUrl("/godDaddy_uploadImage/rankImage/thug.png");
-			}else if(1200 <= rankPoint && rankPoint < 2000) {
-				board.setProfileUrl("/godDaddy_uploadImage/rankImage/agent.png");
-			}else if(2000 <= rankPoint && rankPoint < 3000) {
-				board.setProfileUrl("/godDaddy_uploadImage/rankImage/underBoss.png");
-			}else if(3000 <= rankPoint) {
-				board.setProfileUrl("/godDaddy_uploadImage/rankImage/boss.png");
-			}
+			board = BadgeSetUtil.setBadgeUrl(board);
 			
 			model.addAttribute("board", board);
 		}else { //조회수 증가 실패ㅠㅠ
@@ -307,7 +267,7 @@ public class BoardController {
 			}
 			
 			if(file != null) {
-				saveLoungeImage(uploadFile, file.getChangeName()); //변경된 파일 있다변 서버에 저장
+				saveImage(loungeImagePath, uploadFile, file.getChangeName()); //변경된 파일 있다면 서버에 저장
 			}
 			
 			return "redirect:/board/lounge/detail/" + board.getBoardNo();
@@ -322,7 +282,7 @@ public class BoardController {
 		
 	}
 	
-	@PostMapping("/lounge/uploadReply") // 댓글 DB 저장 + 이미지 저장 처리
+	@PostMapping("/uploadReply") // 댓글 DB 저장 + 이미지 저장 처리
 	@ResponseBody                   
 	public int uploadReply(Reply reply
 	                      ,MultipartFile image
@@ -343,22 +303,21 @@ public class BoardController {
 		
 		if(result > 0) {
 			if(image != null) { //업로드한 파일 있을 경우 서버에 등록
-				saveReplyImage(image, file.getChangeName());
+				saveImage(replyImagePath, image, file.getChangeName());
 			}
 		}
 		
 		return result;
 	}
 	
-	@GetMapping("/lounge/getReplyList")
+	@GetMapping("/getReplyList")
 	@ResponseBody
 	public ArrayList<Reply> getReplyList(int boardNo){
 		
 		ArrayList<Reply> replyList = service.getReplyList(boardNo);
 		
 		for(Reply r : replyList) {
-			int rankPoint = r.getRankPoint();
-			setProfileUrl(r, rankPoint);
+			BadgeSetUtil.setBadgeUrl(r);
 			if(r.getReplyContent() == null) {
 				r.setReplyContent("");
 			}
@@ -367,7 +326,7 @@ public class BoardController {
 		return replyList;
 	}
 	
-	@PostMapping("/lounge/deleteReply")
+	@PostMapping("/deleteReply")
 	@ResponseBody
 	public int deleteReply(int replyNo) {
 		
@@ -410,11 +369,138 @@ public class BoardController {
 	
 	
 	/*=======================================하이라이트 영상============================================*/
+	
 	@GetMapping("/video")
-	public String videoBoardList() {
+	public String videoBoardList(@RequestParam(defaultValue = "1") int currentPage,
+								 @RequestParam(defaultValue = "video") String type,
+								 String condition,
+								 String keyword,
+								 Model model) {
+		HashMap<String, String> filterMap = new HashMap<>(); // 필터링을 위한 상태값,조건값,키워드 맵
+		filterMap.put("type", type);
+		filterMap.put("condition", condition);
+		filterMap.put("keyword", keyword);
+
+		int listCount = service.listCount(filterMap); // 가져올 게시글 개수
+
+		int pageLimit = 10;
+		int boardLimit = 12;
+
+		PageInfo pi = Pagination.getPageInfo(listCount, currentPage, pageLimit, boardLimit); // 페이징 처리를 위한 정보
+
+		ArrayList<Board> videoList = service.boardList(filterMap, pi); // 가져올 게시글 목록
+		ArrayList<Board> topVideoList = service.topLikedList(filterMap);//가져올 top5 게시글 목록
+		
+		
+		videoList = enrichBoardInfo(videoList);
+		topVideoList = enrichBoardInfo(topVideoList);
+		
+		
+		model.addAttribute("topVideoList", topVideoList);
+		model.addAttribute("videoList", videoList);
+		model.addAttribute("pi", pi);
+		model.addAttribute("filterMap", filterMap);
+
+		
 		return "board/video";
 	}
 	
+	
+	@GetMapping("/video/upload")
+	public String videoUploadForm() {
+		
+		return "board/videoUploadForm";
+	}
+	
+	@PostMapping("/video/upload")
+	public String uploadVideo(Board board,
+	                          @RequestParam("videoFile") MultipartFile file,
+	                          HttpServletRequest request,
+	                          RedirectAttributes redirectAttributes) {
+		String changeName = "";
+		File dir = null;
+	    try {
+	        dir = new File(mp4Path);
+	        if (!dir.exists()) dir.mkdirs();
+
+	        // 1. mp4 저장
+	        changeName = VideoUploadUtil.saveMp4File(file, mp4Path);
+
+	        // 2. ffmpeg → m3u8, ts, 썸네일 생성
+	        VideoUploadUtil.convertToHLS(mp4Path, changeName);
+
+	        // 3. DB 저장
+	        BoardFile f = new BoardFile();
+	        f.setType("video");
+	        f.setOriginName(file.getOriginalFilename());
+	        f.setChangeName(changeName);
+	        f.setFileLevel(1);
+
+	        int result = service.writeLoungeBoard(board, f);
+
+	        if (result > 0) {
+	            redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
+	        } else {
+	            // DB 저장 실패 시, 관련된 파일들 전부 삭제
+	            String baseName = changeName.substring(0, changeName.lastIndexOf("."));
+	            File[] files = dir.listFiles((d, name) ->
+	                name.startsWith(baseName) &&
+	                (name.endsWith(".ts") || name.endsWith(".m3u8") || name.endsWith(".jpg") || name.endsWith(".mp4"))
+	            );
+
+	            if (files != null) {
+	                for (File f1 : files) f1.delete();
+	            }
+
+	            redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
+	        }
+
+	    } catch (Exception e) {
+	    	// DB 저장 실패 시, 관련된 파일들 전부 삭제
+            String baseName = changeName.substring(0, changeName.lastIndexOf("."));
+            File[] files = dir.listFiles((d, name) ->
+                name.startsWith(baseName) &&
+                (name.endsWith(".ts") || name.endsWith(".m3u8") || name.endsWith(".jpg") || name.endsWith(".mp4"))
+            );
+
+            if (files != null) {
+                for (File f1 : files) f1.delete();
+            }
+	    	
+	        e.printStackTrace();
+	        redirectAttributes.addFlashAttribute("msg", "업로드 중 오류가 발생했습니다.");
+	    }
+
+	    return "redirect:/board/video";
+	}
+	
+	@PostMapping("/video/increaseCount/{boardNo}")
+	@ResponseBody
+	public int increaseCount(@PathVariable int boardNo) {
+		
+		return service.increaseCount(boardNo);
+	}
+	
+	
+	@GetMapping("/video/getViewCount/{boardNo}")
+	@ResponseBody
+	public int getViewCount(@PathVariable int boardNo) {
+		
+		return service.getViewCount(boardNo);
+	}
+	
+	@GetMapping("/video/detail/{boardNo}")
+	public String videoDetail(@PathVariable int boardNo, Model model) {
+		
+		BoardFile video = service.videoDetail(boardNo);
+		
+		video = BadgeSetUtil.setBadgeUrl(video);
+		
+		model.addAttribute("video",video);
+		
+		return "board/videoDetail";
+	}
+
 
 	/*=======================================공통============================================*/
 	
@@ -467,51 +553,31 @@ public class BoardController {
 		// 5. 합치기
 		String changeName = currentTime + ranNum + ext;
 
-		// 6. 서버에 업로드 처리할때 물리적인 경로 추출하기
-		// String savePath =
-		// "C:\\07_Springboot-workspace\\springbootThymeleaf\\src\\main\\resources\\static\\uploadFiles";
-
-		// 7.경로와 변경된 이름을 이용하여 파일 업로드 처리 메소드 수행
-		// MultipartFile 의 transferTo() 메소드 이용
-		
 
 		return changeName; // 서버에 업로드된 파일명 반환
 	}
 	
 	
-	public void saveLoungeImage(MultipartFile uploadFile,String changeName) {
+	public void saveImage(String imagePath, MultipartFile uploadFile,String changeName) {
 		try {
 			// application.properties에 정의했던 파일경로로 파일 저장
-			uploadFile.transferTo(new File(loungeImagePath + changeName));
+			File dir = new File(imagePath);
+			if(!dir.exists()) dir.mkdirs();
+			
+			uploadFile.transferTo(new File(imagePath + changeName));
 		} catch (Exception e) {
 			
 			e.printStackTrace();
 		}
 	}
 	
-	public void saveReplyImage(MultipartFile uploadFile,String changeName) {
-		try {
-			// application.properties에 정의했던 파일경로로 파일 저장
-			uploadFile.transferTo(new File(replyImagePath + changeName));
-		} catch (Exception e) {
-			
-			e.printStackTrace();
-		}
-	}
 	
-	public void saveGalleryImage(MultipartFile uploadFile,String changeName) {
-		try {
-			// application.properties에 정의했던 파일경로로 파일 저장
-			uploadFile.transferTo(new File(galleryImagePath + changeName));
-		} catch (Exception e) {
-			
-			e.printStackTrace();
-		}
-	}
 	
 	//파일 삭제(deletedImage 폴더로 이동시키는 메소드)
 	public boolean deleteFile(String originPath,String deletePath,String changeName) {
 		
+		File deleteDir = new File(deletePath);
+		if(!deleteDir.exists()) deleteDir.mkdirs();
 		
 		File originFile = new File(originPath + changeName);
 		File deletedFile = new File(deletePath + changeName);

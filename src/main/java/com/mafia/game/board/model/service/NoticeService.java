@@ -11,5 +11,15 @@ public interface NoticeService {
 	int noticeCount(HashMap<String, String> noticeMap);
 
 	ArrayList<Notice> noticeList(HashMap<String, String> noticeMap, PageInfo pi);
+
+	Notice selectNotice(int noticeNo);
+
+	void increaseCount(int noticeNo);
+
+	int deleteNotice(int noticeNo);
+
+	int updateNotice(Notice notice);
+
+	int writeNotice(Notice notice);
 	
 }

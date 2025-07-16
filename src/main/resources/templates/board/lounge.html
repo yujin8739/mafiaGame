@@ -12,13 +12,14 @@
   <!-- 공통 CSS -->
   <link rel="stylesheet" th:href="@{/css/common/header.css}" />
   <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
+  <!-- HEAD 부분에 Cinzel 폰트 추가 -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet" />
 
   <style>
+  
     body {
       background-color: #0b0b0b;
       font-family: 'Noto Sans KR', sans-serif;
-      padding: 40px 8%;
       color: #fff;
     }
 
@@ -30,7 +31,7 @@
 	  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 	
 	  max-width: 1000px;   /* ✅ 이 부분 추가 */
-	  margin: 0 auto;      /* ✅ 중앙 정렬 */
+	  margin: 40px auto;      /* ✅ 중앙 정렬 */
 	}
 
     .main-tabs a {
@@ -592,6 +593,7 @@
 	          <span th:if="${post.replyCount > 0}" class="top5-comment-count">
 	            [<span th:text="${post.replyCount}"></span>]
 	          </span>
+	          <span th:if="${post.hasFile == 'Y'}" style="margin-left: 4px;padding-left: 0">📎</span>
 	        </div>
 	        <div class="top5-info">
 	          <img th:if="${post.profileUrl != null}" th:src="${post.profileUrl}" alt="뱃지" class="top5-badge" />
@@ -645,7 +647,6 @@
 	    </tr>
 	  </tbody>
 	</table>
-
     <!-- 페이지네이션 -->
     <ul class="pagination" th:if="${pi.endPage != 0}" th:object="${filterMap}">
       <li th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">

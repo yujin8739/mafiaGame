@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Vote;
 import com.mafia.game.job.model.vo.Job;
 
 public interface GameRoomService {
@@ -33,4 +34,12 @@ public interface GameRoomService {
 	Job getJobDetail(int myJob);
 
 	List<String> getDeathList(int roomNo);
+
+	void updateVote(int roomNo, int dayNo, String updatedList);
+
+	Vote selectVote(int roomNo, int dayNo);
+
+	void updateDayNo(int roomNo, int dayNo);
+
+	void insertVote(int roomNo, int dayNo, String updatedList);
 }

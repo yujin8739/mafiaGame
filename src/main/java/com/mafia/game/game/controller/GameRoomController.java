@@ -30,6 +30,7 @@ import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
+import com.mafia.game.game.model.vo.Vote;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
@@ -170,10 +171,24 @@ public class GameRoomController {
     @ResponseBody
     public List<Message> loadMessage(@RequestParam int roomNo,
     	    						 @RequestParam int page,
-    	    						 @RequestParam int size) {
-    	int offset = (page - 1) * size;
-    	RowBounds rowBounds = new RowBounds(offset, size);
-    	return chatService.getMessages(roomNo, rowBounds);
+    	    						 @RequestParam int size,
+    	    						 @RequestParam String job) {
+    	String type = "chat";
+    	System.out.println("직업========================"+job);
+    	switch(job) {
+    		case "ghost":case "mafiaGhost":case "spiritualists": type = "death"; break;
+    		case "mafia": type = "mafia"; break;
+    	}
+    	
+    	if(type.equals("chat")) {
+    		int offset = (page - 1) * size;
+    		RowBounds rowBounds = new RowBounds(offset, size); 
+    		return chatService.getMessages(roomNo, rowBounds);		
+    	} else {
+    		int offset = (page - 1) * size;
+    		RowBounds rowBounds = new RowBounds(offset, size); 
+    		return chatService.getMessages(roomNo, type, rowBounds);		
+    	}
     }
     
     @GetMapping("/readyCount")
@@ -189,9 +204,15 @@ public class GameRoomController {
     	return users.size();
     }
     
+    @GetMapping("/roomReloadToUserLoad")
+    @ResponseBody
+    public GameRoom roomReloadToUserLoad(@RequestParam int roomNo) {
+    	return gameRoomService.selectRoom(roomNo);
+    }
+    
     @GetMapping("/reloadRoom")
     @ResponseBody
-    public GameRoom reloadRoom(@RequestParam int roomNo) {
+    public GameRoom reloadRoom(@RequestParam int roomNo) { 
     	return gameRoomService.selectRoom(roomNo);
     }
     
@@ -245,21 +266,57 @@ public class GameRoomController {
     	return gameRoomService.getDeathList(roomNo);
     }
     
-    public static String clobToString(Clob clob) {
-        if (clob == null) return null;
-
-        try (Reader reader = clob.getCharacterStream();
-             StringWriter writer = new StringWriter()) {
-            char[] buffer = new char[2048];
-            int length;
-            while ((length = reader.read(buffer)) != -1) {
-                writer.write(buffer, 0, length);
-            }
-            return writer.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+    @GetMapping("/voteUser")
+    @ResponseBody
+    public Vote voteUser (@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {
+        
+    	Vote vote = gameRoomService.selectVote(roomNo,dayNo);
+    	List<String> votes = new ArrayList<>();
+        
+        if (vote == null) { 
+        	vote = new Vote(roomNo,dayNo,"[]");
+        	try {
+        		votes = new ObjectMapper().readValue(vote.getVote(), new TypeReference<List<String>>() {});
+	        	votes.add(targetName);
+	        	
+	        	String updatedList = new ObjectMapper().writeValueAsString(votes);
+	        	
+	        	gameRoomService.insertVote(roomNo, dayNo, updatedList);
+	        	return gameRoomService.selectVote(roomNo,dayNo);
+        	} catch (Exception e) {
+	            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+	        }
+        } else {
+	        try {
+	        	votes = new ObjectMapper().readValue(vote.getVote(), new TypeReference<List<String>>() {});
+	        	votes.add(targetName);
+	        	
+	        	String updatedList = new ObjectMapper().writeValueAsString(votes);
+	        	gameRoomService.updateVote(roomNo, dayNo, updatedList);
+	        	
+	        	return gameRoomService.selectVote(roomNo,dayNo);
+	        } catch (Exception e) {
+	            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
+	        }
         }
+		return null;
+    }
+    
+    public static String clobToString(Clob clob) {
+    	if (clob == null) return null;
+    	
+    	try (Reader reader = clob.getCharacterStream();
+    			StringWriter writer = new StringWriter()) {
+    		char[] buffer = new char[2048];
+    		int length;
+    		while ((length = reader.read(buffer)) != -1) {
+    			writer.write(buffer, 0, length);
+    		}
+    		return writer.toString();
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    		return null;
+    	}
     }
 
 }

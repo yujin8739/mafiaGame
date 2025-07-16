@@ -27,6 +27,8 @@
 				            onclick="ready()">Ready</button>
 				    <div id="readyCount">Ready: 0</div>
 				</div>
+				<div id="dayCount">일차 : 0</div>
+				<div id="voteCount">투표 : 0</div>
 				<div id="gamePhaseContainer">
 					<div id="phaseDisplay">현재 단계: -</div>
 					<div id="timerDisplay">남은 시간: - 초</div>
@@ -73,14 +75,15 @@
 		let remainTime = 0;
 		
 		let room = /*[[${room}]]*/ 'NULL';
+		let dayNo = 0;
 		isGaming = room.isGaming==='Y';
 
 		if (isGaming) {
-			sendBtn.disabled = true;
-			sendBtn.classList.add('disabled-btn');
+			sendBtn.disabled = true; 
+			sendBtn.classList.add('disabled-btn'); 
 
-			chatInput.disabled = true;
-			chatInput.placeholder = "재입장시 다음번 낮까지 채팅이 불가능합니다.";
+			chatInput.disabled = true; 
+			chatInput.placeholder = "재입장시 다음번 낮까지 채팅이 불가능합니다."; 
 		}
 		
 		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
@@ -99,7 +102,6 @@
 			} else {
 				alert("서버 연결이 끊어졌습니다.");
 			}
-			userLoad(room);
 		};
 
 		socket.onerror = function (err) {
@@ -143,7 +145,7 @@
 			});
 		}
 		
-		function chatLoad() {
+		function chatLoad(job) {
 		    if (isLoading || isLastPage) return;
 		    isLoading = true;
 
@@ -153,7 +155,8 @@
 		        data: {
 		            roomNo: roomNo,
 		            page: currentPage,
-		            size: pageSize
+		            size: pageSize,
+		            job:job
 		        },
 		        success: function (messages) {
 		            if (messages.length === 0) {
@@ -223,7 +226,7 @@
 			const wasAtBottom = isScrolledToBottom(chatArea);
 			const msgData = JSON.parse(message.data);
 			const div = document.createElement("div");
-			/* console.log("메시지 수신:", msgData.type); */
+
 			if (msgData.type && msgData.type.includes("death")) {
 				if(job !== "ghost" && job!=="mafiaGhost" && job !=="spiritualists") {
 					return;
@@ -247,27 +250,30 @@
 			} else if (msgData.type && msgData.type === "start") {
 				setStart();
 			} else if (msgData.type && msgData.type === "enter" || msgData.type === "leave") {
-				roomReload();
+				if (isGaming) {
+					setStart();
+				}
+				roomReloadToUserLoad()
+				//접속시 동작은 저장후 불러오기 때문에 리턴
+				return;
 			} else if (msgData.type && msgData.type === "phase") {
-				console.log("메시지 수신:", msgData);
 			    startTimer(msgData.phase, msgData.remaining);
 			    return;
-			}
-			console.log("메시지 phase수신:", msgData.type);
+			} 
 			reciveMsg(msgData, div);
 			
 			scrollIfNeeded(wasAtBottom);
 		};
 
 		//이벤트 발생
-		function sendEvent(eventNo) {
+		function sendEvent(eventNo,targetNick) {
 
 			$.ajax({
 				url: '/chat/selectEvent',
 				type: 'GET',
 				data: {
 					eventNo: eventNo,
-					userName: nickName //원래 여기에 마피아가 선택하거나 능력 사용하여 선택한 닉네임이 들어가야 하지만 임시 처리
+					userName: targetNick //원래 여기에 마피아가 선택하거나 능력 사용하여 선택한 닉네임이 들어가야 하지만 임시 처리
 				},
 				success: function (msg) {
 					if (msg === "") return;
@@ -349,16 +355,12 @@
 		    const controlPanel = document.getElementById("controlPanel");
 		    const startBtn = document.getElementById("startBtn");
 		    const readyBtn = document.getElementById("readyBtn");
-		    console.log(room);
-		    console.log("게임룸"+userName);
 		    if(room.master === userName || room.master === null) {
-		    	console.log("게임룸"+room.master);
 		    	startBtn.style.display = "block";
 		    	readyBtn.style.display = "none";
 		    }
 
 		    toggleBtn.addEventListener("click", () => {
-		    	 console.log(controlPanel);
 		        if(phoneModal.style.display === "none" || phoneModal.style.display === "") {
 		            phoneModal.style.display = "block";
 		            togglePhoneModalBtn.style.display = "none";
@@ -375,10 +377,6 @@
 		        togglePhoneModalBtn.style.display = "block";
 		        controlPanel.style.display = "block";
 		    });
-		    
-			if (isGaming) {
-				setStart();
-			}
 		});
 
 		function setReadyCount() {
@@ -407,10 +405,9 @@
 				url:'/room/getJob',
 				data:{roomNo:roomNo},
 				success:function(myJob){
-					console.log("직업");
-					console.log(myJob);
 					jobObj = myJob;
 					job = myJob.jobName;
+					chatLoad(job);
 				}
 			})
 			
@@ -419,26 +416,36 @@
 		function roomReload(){
 			$.ajax({
 				url:'/room/reloadRoom',
+				data:{
+					roomNo:roomNo,
+				},
+				success: function(newRoom){
+					room = newRoom;
+					dayNo = newRoom.dayNo;
+					document.getElementById("dayCount").innerText = "일차 : " + dayNo +"일";
+				}   
+			})
+		}
+		
+		function roomReloadToUserLoad(){
+			$.ajax({
+				url:'/room/roomReloadToUserLoad',
 				data:{roomNo:roomNo},
 				success: function(newRoom){
-					userLoad(room);
+					userLoad(newRoom);
 				}
-				
 			})
 		}
 
 		function startTimer(phase, seconds) {
 		  remainTime = seconds;
 		  if(timerId) clearInterval(timerId);
-		  
-		  console.log(remainTime)
 
 		  timerId = setInterval(() => {
 		    if(remainTime <= 0) {
 		      clearInterval(timerId);
 		      return;
 		    }
-		    console.log(remainTime);
 		    remainTime--;
 		    updateTimerUI(phase, remainTime);
 		  }, 1000);
@@ -448,13 +455,44 @@
 			$.ajax({
 				url:"/room/userDeathList",
 				data:{roomNo : roomNo},
-				success: function (deathList){		
+				success: function (deathList) {		
 					updateUserStatus(deathList);
 				},
 				error: function () {
 					alert("이벤트를 불러오지 못했습니다.");
 				}
 			});
+		}
+		
+		function voteUser(targetName) {
+		    $.ajax({
+		        url: "/room/voteUser",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (vote) {
+		            if (!vote) return;
+
+		            let voteList = [];
+
+		            try {
+		                voteList = JSON.parse(vote);
+
+		                // 총 인원 수는 .slot 요소 수 - 1
+		                const total = document.querySelectorAll(".slot").length - 1;
+		                const current = voteList.length;
+
+		                document.getElementById("voteCount").innerText = "투표: " + current + " / " + total;
+		            } catch (e) {
+		                console.error("투표 리스트 파싱 실패", e);
+		            }
+		        },
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
 		}
 	</script>
 </body>

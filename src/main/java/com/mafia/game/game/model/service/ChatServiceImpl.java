@@ -42,4 +42,9 @@ public class ChatServiceImpl implements ChatService {
 	public String selectEvent(int eventNo, String userName) {
 		return chatDao.selectEvent(sqlSession, eventNo, userName);
 	}
+
+	@Override
+	public List<Message> getMessages(int roomNo, String type, RowBounds rowBounds) {
+		return chatDao.selectMessagesByRoom(sqlSession, roomNo, type, rowBounds);
+	}
 }

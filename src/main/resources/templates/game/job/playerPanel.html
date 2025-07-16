@@ -11,12 +11,14 @@
 				userNickList = nickList;
 			}
 			
-			function loadUser(job){
+			function loadUser(deathList){
 			
 			    const container = document.getElementById('playerPanelContainer');
 			    container.innerHTML = '';
 			    
-			    setUserName(job, userNickList, container)
+			    setUserName(deathList, userNickList, container);
+/* 			    chatLoad(job);
+			    console.log(job); */
 			    
 			    setReadyCount();
 			}
@@ -34,8 +36,6 @@
 			        const someNails = document.createElement('img');
 			        someNails.className = 'someNails';
 			        someNails.src = (status === 'alive') ? '/images/생존이미지.png' : '/images/사망이미지.png';
-			        
-			        console.log(someNails.src);
 			        
 			        const input = document.createElement('input');
 			        
@@ -68,47 +68,121 @@
 			}
 			
 			function updateTimerUI(phase, time) {
-				const phaseDisplay = document.getElementById("phaseDisplay");
-				const timerDisplay = document.getElementById("timerDisplay");
+			    const phaseDisplay = document.getElementById("phaseDisplay");
+			    const timerDisplay = document.getElementById("timerDisplay");
 
-				let phaseText = "";
+			    let phaseText = "";
 
-				switch(phase) {
-					case "NIGHT":
-						setAlive();//투표로 죽였을때 생존자 다시 가져오기
-						setStart();//스파이가 마피아 찾았을 때 직업 마피아로 변경해주기
-						isNigth = true;
-						phaseText = "밤";
-						break;
-				    case "DAY":
-				    	setAlive();//마피아가 죽였을때 생존자 다시 가져오기
-				    	isNigth = false;
-						phaseText = "낮";
-						break;
-				    case "VOTE":
-						phaseText = "투표";
-						break;
-				    default:
-						phaseText = "알 수 없음";
-				  }
+			    switch (phase) {
+			        case "NIGHT":
+			            setAlive();
+			            setStart();
+			            isNight = true;
+			            phaseText = "밤";
+			            break;
+			        case "DAY":
+			            setAlive();
+			            roomReload();
+			            isNight = false;
+			            phaseText = "낮";
+			            break;
+			        case "VOTE":
+			            phaseText = "투표";
+			            break;
+			        default:
+			            phaseText = "알 수 없음";
+			    }
 
-				phaseDisplay.textContent = `현재 단계: ${phaseText}`;
+			    phaseDisplay.textContent = `현재 단계: ${phaseText}`;
+			    if (timerDisplay) timerDisplay.textContent = `남은 시간: ${time}초`;
 
-				if(timerDisplay) timerDisplay.textContent = `남은 시간: ${time}초`;
-				  
-				if (isNight && job!=='mafia') {
-					sendBtn.disabled = true;
-					sendBtn.classList.add('disabled-btn');
+			    if (phase === "NIGHT") {
+		
+			    	if(job !== 'mafia'){
+				        sendBtn.classList.add('disabled-btn');
+				        chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+				        // 클릭 막기
+				        const slots = document.querySelectorAll('.slot');
+				        slots.forEach((slot) => {
+				            const img = slot.querySelector('img.someNails');
+				            if (!img) return;
+				            img.style.cursor = 'default';
+				            img.onclick = null;
+				        });
+			    	} else {
+				        sendBtn.disabled = false;
+				        sendBtn.classList.remove('disabled-btn');
+				        chatInput.disabled = false;
+				        chatInput.placeholder = "메시지를 입력하세요";
+				        
+				        const slots = document.querySelectorAll('.slot');
+				        slots.forEach((slot, index) => {
+				            const img = slot.querySelector('img.someNails');
+				            if (!img) return;
 
-					chatInput.disabled = true;
-					chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
-				} else if (phase === "DAY" && isNigth === false) {
-					sendBtn.disabled = false;
-					sendBtn.classList.remove('disabled-btn');
+				            img.style.cursor = 'pointer';
+				            img.onclick = () => {
+				                killTo(userNickList[index]);
+				            };
+				        });
+			    	}       
+				} else if (phase === "DAY") {
+			        sendBtn.disabled = false;
+			        sendBtn.classList.remove('disabled-btn');
+			        chatInput.disabled = false;
+			        chatInput.placeholder = "메시지를 입력하세요";
 
-					chatInput.disabled = false;
-					chatInput.placeholder = "메시지를 입력하세요";
-				}
+			        // 클릭 막기
+			        const slots = document.querySelectorAll('.slot');
+			        slots.forEach((slot) => {
+			            const img = slot.querySelector('img.someNails');
+			            if (!img) return;
+			            img.style.cursor = 'default';
+			            img.onclick = null;
+			        });
+			    } else if (phase === "VOTE") {
+			        const slots = document.querySelectorAll('.slot');
+			        slots.forEach((slot, index) => {
+			            const img = slot.querySelector('img.someNails');
+			            if (!img) return;
+
+			            img.style.cursor = 'pointer';
+			            img.onclick = () => {
+			                voteTo(userNickList[index], index);
+			            };
+			        });
+
+			        sendBtn.disabled = true;
+			        sendBtn.classList.add('disabled-btn');
+			        chatInput.disabled = true;
+			        chatInput.placeholder = "투표 중입니다.";
+			    }
+			}
+
+			function voteTo(targetNick, index) {
+			    if (!confirm(`${targetNick}에게 투표하시겠습니까?`)) return;
+			    
+			    let userNameList = []; 
+			    try {
+					userNameList = JSON.parse(room.userList);
+					voteUser(userNameList[index]);
+				} catch (e) {
+					console.error("userNameList 파싱 실패", e);
+					userNameList = [];
+			    } finally {
+					const slots = document.querySelectorAll('.slot');
+					slots.forEach((slot) => {
+						const img = slot.querySelector('img.someNails');
+						if (!img) return;
+						img.style.cursor = 'default';
+						img.onclick = null;
+					});
+			    }
+			}
+			
+			function killTo(targetNick) {
+			    if (!confirm(`${targetNick}를 제거 하시겠습니까??`)) return;
+			    sendEvent(6, targetNick);
 			}
 		/*]]>*/
 	</script>

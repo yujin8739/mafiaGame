@@ -13,8 +13,11 @@ public interface ChatService {
 
 	List<Message> getMessages(int roonNo, RowBounds rowBounds);
 
+	List<Message> getMessages(int roomNo, String type, RowBounds rowBounds);
+
 	void createRoom(GameRoom room);
 	
 	String selectEvent(int eventNo, String userName);
+
 
 }

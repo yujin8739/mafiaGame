@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>공지사항 수정</title>
+
+<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+<link rel="stylesheet" th:href="@{/css/board/noticeWrite.css}" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+<body>
+
+	<div th:replace="common/header :: header"></div>
+
+	<div class="wrapper">
+		<h3 class="mb-4">공지사항 수정</h3>
+
+	    <form th:action="@{/notice/update}" method="post" enctype="multipart/form-data">
+	        <!-- 숨겨진 noticeNo 전달 -->
+	        <input type="hidden" name="noticeNo" th:value="${notice.noticeNo}" />
+	
+	        <!-- 제목 입력 -->
+	        <div class="form-group">
+	            <label for="title">제목</label>
+	            <input type="text" class="form-control" id="title" name="title" 
+	                   th:value="${notice.title}" required />
+	        </div>
+	        
+	        <div class="form-group">
+			    <label for="upfile">첨부파일</label>
+			    
+			    <!-- 새로 업로드할 파일 선택 -->
+			    <input type="file" class="form-control-file border" id="upfile" name="reUploadFile" />
+			    
+			    <!-- 기존 업로드 파일 정보 표시 -->
+			    <div class="mt-2">
+			        <label>현재 업로드된 파일 : </label>
+			        <span th:if="${notice.originName != null}">
+			            <a th:href="@{${notice.changeName}}" 
+			               th:download="${notice.originName}" 
+			               th:text="${notice.originName}"></a>
+			        </span>
+			        <label th:if="${notice.originName == null}">
+			            첨부파일이 없습니다.
+			        </label>
+			    </div>
+			
+			    <!-- 기존 파일 정보를 컨트롤러에 전달 -->
+			    <input type="hidden" name="originName" th:value="${notice.originName}" />
+			    <input type="hidden" name="changeName" th:value="${notice.changeName}" />
+			</div>
+	
+	        <!-- 내용 입력 -->
+	        <div class="form-group">
+	            <label for="content">내용</label>
+	            <textarea class="form-control" id="content" name="content" rows="10" required
+	                      th:text="${notice.content}"></textarea>
+	        </div>
+	
+	        <!-- 버튼 영역 -->
+	        <div class="text-center mt-4">
+	            <button type="submit" class="btn btn-primary">수정하기</button>
+	            <a th:href="@{/notice/detail/{noticeNo}(noticeNo=${notice.noticeNo})}" class="btn btn-secondary ml-2">취소</a>
+	        </div>
+	    </form>
+	</div>
+	
+	<div th:replace="common/footer :: footer"></div>
+
+</body>
+</html>

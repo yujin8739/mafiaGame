@@ -258,6 +258,21 @@ public class BoardServiceImpl implements BoardService{
 		}
 	}
 	
+	@Override
+	public ArrayList<BoardFile> videoList() {
+		return dao.videoList(sqlSession);
+	}
+	
+	@Override
+	public int getViewCount(int boardNo) {
+		return dao.getViewCount(sqlSession, boardNo);
+	}
+	
+	@Override
+	public BoardFile videoDetail(int boardNo) {
+		return dao.videoDetail(sqlSession, boardNo);
+	}
+	
 	
 	
 

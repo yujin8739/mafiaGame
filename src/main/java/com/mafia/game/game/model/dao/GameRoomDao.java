@@ -8,6 +8,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Vote;
 import com.mafia.game.job.model.vo.Job;
 
 @Repository
@@ -82,5 +83,38 @@ public class GameRoomDao {
 
 	public List<String> getDeathList(SqlSessionTemplate sqlSession, int roomNo) {
 		return sqlSession.selectList("gameRoomMapper.getDeathList",roomNo);
+	}
+	
+	public Vote selectVote(SqlSessionTemplate sqlSession, int roomNo, int dayNo) {
+		Map<String, Object> param = new HashMap<>();
+		param.put("roomNo", roomNo);
+		param.put("dayNo", dayNo);
+		
+		return sqlSession.selectOne("gameRoomMapper.selectVote",param);
+	}
+
+	public void updateVote(SqlSessionTemplate sqlSession, int roomNo, int dayNo, String updatedList) {
+		Map<String, Object> param = new HashMap<>();
+		param.put("roomNo", roomNo);
+		param.put("dayNo", dayNo);
+		param.put("updatedList", updatedList);
+		
+		sqlSession.update("gameRoomMapper.updateVote", param);
+	}
+
+	public void updateDayNo(SqlSessionTemplate sqlSession, int roomNo, int dayNo) {
+		Map<String, Object> param = new HashMap<>();
+		param.put("roomNo", roomNo);
+		param.put("dayNo", dayNo);
+		sqlSession.update("gameRoomMapper.updateDayNo", param);
+	}
+
+	public void insertVote(SqlSessionTemplate sqlSession, int roomNo, int dayNo, String updatedList) {
+		Map<String, Object> param = new HashMap<>();
+		param.put("roomNo", roomNo);
+		param.put("dayNo", dayNo);
+		param.put("updatedList", updatedList);
+		
+		sqlSession.insert("gameRoomMapper.insertVote", param);
 	}
 }

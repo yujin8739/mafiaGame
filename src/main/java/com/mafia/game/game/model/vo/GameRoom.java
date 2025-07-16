@@ -19,5 +19,6 @@ public class GameRoom {
     private String readyUser;//게임 시작 준비중인 유저
     private String count; //커스텀모드 인원(마피아,시민,중립)
     private String master;//방장
+    private int dayNo; //일차
 }
  
