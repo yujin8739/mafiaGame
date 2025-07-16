@@ -1,33 +1,132 @@
-<!-- templates/etc/header.html -->
 <div th:fragment="header">
-	<div th:if="${msg}">
-	    <script th:inline="javascript">
-	        alert( /*[[${msg}]]*/ '회원 정보가 수정되었습니다.');
-	    </script>
-	</div>
-	<!-- 헤더 -->
-	<div class="header">
-		<div class="nav-links"></div>
+    <div th:if="${msg}">
+        <script th:inline="javascript">
+            alert(/*[[${msg}]]*/ '회원 정보가 수정되었습니다.');
+        </script>
+    </div>
 
-		<div class="logo">
-			<a href="/"> <img src="/images/godFatherLogo.png" alt="GodFather 로고">
-			</a>
-		</div>
-		
-		<div th:if="${loginUser == null}">
-		   	<div class="auth-buttons">
-				<a href="/login/view">로그인</a> <a href="/login/register">회원가입</a>
-			</div>
-		</div>
-		<div th:if="${loginUser != null}">
-			<div class="auth-buttons">
-		    	<span th:text="${loginUser.nickName} + '님 환영합니다!'"></span>
-		    	<a href="/mypage">마이페이지</a>  
-		    	<a href="/logout">로그아웃</a>
-		    </div>
-		</div>
+    <!-- 헤더 영역 -->
+    <div class="header">
+        <div class="nav-links"></div>
 
-	</div>
+        <!-- 로고 -->
+        <div class="logo">
+            <a href="/"> 
+                <img src="/images/godFatherLogo.png" alt="GodFather 로고">
+            </a>
+        </div>
+
+
+        <!-- 비로그인 상태 -->
+        <div th:if="${loginUser == null}">
+            <div class="auth-buttons">
+                <a href="/login/view">로그인</a>
+                <a href="/login/register">회원가입</a>
+            </div>
+        </div>
+
+        <!-- 로그인 상태 -->
+        <div th:if="${loginUser != null}">
+            <div class="auth-buttons" style="flex-direction: column; align-items: center;">
+
+                <!-- 프로필 이미지 영역 -->
+                <div class="profile-wrapper">
+                    <a href="/mypage/myitems">
+                        <!-- ✅ 테두리 이미지 -->
+                        <img src="/images/profile/iron.png"
+                             class="border-img"
+                             th:style="${session.borderEnabled == 'Y'} ? 'display:block' : 'display:none'"
+                             alt="테두리 이미지">
+
+                        <!-- 프로필 이미지 -->
+                        <img class="profile-img"
+                             th:src="${loginUser.profileImage != null} ? ${loginUser.profileImage} : '/images/profile/Profile.png'"
+                             alt="프로필 이미지" />
+                    </a>
+                </div>
+
+                <!-- 닉네임 및 마이페이지/로그아웃/설정 -->
+                <div class="text-and-buttons">
+                    <span th:text="${loginUser.nickName} + '님 환영합니다!'"></span>
+                    <div class="links" style="display: flex; align-items: center; gap: 5px;">
+                        <a href="/mypage">마이페이지</a>
+                        <a href="/logout">로그아웃</a>
+                        <!-- ⚙ 설정 아이콘 -->
+                        <button id="open-settings" style="background: none; border: none;" title="설정 열기">
+                            <img src="/images/profile/gear.png" style="width: 20px;" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- ✅ 모달창: 테두리 설정 -->
+    <div id="settings-modal" style="display:none; position:fixed; top:0; left:0; 
+        width:100%; height:100%; background-color:rgba(0,0,0,0.5); 
+        justify-content:center; align-items:center; z-index:9999;">
+
+        <div style="background:#fff; padding:20px; border-radius:10px; width:280px; text-align:center;">
+            <h3 style="margin-top:0;">⚙ 설정</h3>
+
+            <label>
+                <input type="checkbox" id="modal-toggle-border"
+                       th:checked="${session.borderEnabled == 'Y'}"> 테두리 보기
+            </label>
+
+            <div style="margin-top: 15px;">
+                <button id="save-settings">저장</button>
+                <button id="close-settings">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ 모달 설정 스크립트 -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const openBtn = document.getElementById("open-settings");
+        const closeBtn = document.getElementById("close-settings");
+        const saveBtn = document.getElementById("save-settings");
+        const modal = document.getElementById("settings-modal");
+        const modalCheckbox = document.getElementById("modal-toggle-border");
+        const borderImg = document.querySelector(".border-img");
+
+        if (!openBtn || !closeBtn || !saveBtn || !modal || !modalCheckbox) return;
+
+        openBtn.addEventListener("click", () => {
+            modal.style.display = "flex";
+        });
+
+        closeBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
+
+        saveBtn.addEventListener("click", () => {
+            const isEnabled = modalCheckbox.checked ? 'Y' : 'N';
+
+            fetch('/profile/setBorder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'borderEnabled=' + encodeURIComponent(isEnabled)
+            }).then(res => {
+                if (!res.ok) {
+                    alert("설정 저장 실패");
+                }
+            });
+
+            // 즉시 적용
+            if (borderImg) {
+                borderImg.style.display = (isEnabled === 'Y') ? 'block' : 'none';
+            }
+
+            modal.style.display = "none";
+        });
+    });
+    </script>
 
 	<!-- 상단 메뉴 -->
 	<div class="top-bar">
@@ -40,4 +139,5 @@
 		<a th:href="@{/notice/list}">공지사항</a>
 		<a th:href="@{/introduce/list}">게임소개</a>
 	</div>
+
 </div>
