@@ -18,7 +18,7 @@
 	<div class="wrapper">
 		<h3 class="mb-4">공지사항 수정</h3>
 
-	    <form th:action="@{/notice/update}" method="post">
+	    <form th:action="@{/notice/update}" method="post" enctype="multipart/form-data">
 	        <!-- 숨겨진 noticeNo 전달 -->
 	        <input type="hidden" name="noticeNo" th:value="${notice.noticeNo}" />
 	
@@ -28,6 +28,30 @@
 	            <input type="text" class="form-control" id="title" name="title" 
 	                   th:value="${notice.title}" required />
 	        </div>
+	        
+	        <div class="form-group">
+			    <label for="upfile">첨부파일</label>
+			    
+			    <!-- 새로 업로드할 파일 선택 -->
+			    <input type="file" class="form-control-file border" id="upfile" name="reUploadFile" />
+			    
+			    <!-- 기존 업로드 파일 정보 표시 -->
+			    <div class="mt-2">
+			        <label>현재 업로드된 파일 : </label>
+			        <span th:if="${notice.originName != null}">
+			            <a th:href="@{${notice.changeName}}" 
+			               th:download="${notice.originName}" 
+			               th:text="${notice.originName}"></a>
+			        </span>
+			        <label th:if="${notice.originName == null}">
+			            첨부파일이 없습니다.
+			        </label>
+			    </div>
+			
+			    <!-- 기존 파일 정보를 컨트롤러에 전달 -->
+			    <input type="hidden" name="originName" th:value="${notice.originName}" />
+			    <input type="hidden" name="changeName" th:value="${notice.changeName}" />
+			</div>
 	
 	        <!-- 내용 입력 -->
 	        <div class="form-group">

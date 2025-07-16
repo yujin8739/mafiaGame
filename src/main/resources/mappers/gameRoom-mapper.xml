@@ -125,7 +125,7 @@
 	
 	<update id="updateVote">
 		UPDATE VOTE 
-		SET VOTE = #{vote}
+		SET VOTE = #{updatedList}
 		WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
 	</update>
 	
@@ -135,4 +135,14 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
+	<insert id="insertVote">
+		INSERT INTO VOTE 
+		(ROOMNO,
+		DAYNO,
+		VOTE)
+		VALUES (
+		#{roomNo},
+		#{dayNo},
+		#{updatedList})
+	</insert>
 </mapper>

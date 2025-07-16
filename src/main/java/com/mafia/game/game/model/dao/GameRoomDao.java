@@ -108,4 +108,13 @@ public class GameRoomDao {
 		param.put("dayNo", dayNo);
 		sqlSession.update("gameRoomMapper.updateDayNo", param);
 	}
+
+	public void insertVote(SqlSessionTemplate sqlSession, int roomNo, int dayNo, String updatedList) {
+		Map<String, Object> param = new HashMap<>();
+		param.put("roomNo", roomNo);
+		param.put("dayNo", dayNo);
+		param.put("updatedList", updatedList);
+		
+		sqlSession.insert("gameRoomMapper.insertVote", param);
+	}
 }

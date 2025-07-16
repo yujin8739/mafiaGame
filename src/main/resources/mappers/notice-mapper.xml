@@ -64,17 +64,18 @@
 		WHERE NOTICENO = #{noticeNo}
 	</select>
 	
-	<update id="deleteNotice">
-		UPDATE NOTICE
-		SET STATUS = 'N'
+	<delete id="deleteNotice">
+		DELETE FROM NOTICE
 		WHERE NOTICENO = #{noticeNo}
-	</update>
+	</delete>
 	
 	<update id="updateNotice">
 		UPDATE NOTICE
 		SET TITLE = #{title}
 		   ,CONTENT = #{content}
 		   ,CREATEDATE = SYSDATE
+		   ,ORIGINNAME = #{originName}
+		   ,CHANGENAME = #{changeName}
 		WHERE NOTICENO = #{noticeNo}
 	</update>
 	
