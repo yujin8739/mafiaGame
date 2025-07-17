@@ -77,6 +77,10 @@ public class GameRoomDao {
 	public Job getJobDetail(SqlSessionTemplate sqlSession, int myJob) {
 		return sqlSession.selectOne("gameRoomMapper.getJobDetail",myJob);
 	}
+	
+	public List<Job> getJobDetails(SqlSessionTemplate sqlSession, List<Integer> jobList){
+		return sqlSession.selectList("gameRoomMapper.getJobDetails", Map.of("jobList", jobList));
+	}
 
 	public List<String> getDeathList(SqlSessionTemplate sqlSession, int roomNo) {
 		return sqlSession.selectList("gameRoomMapper.getDeathList",roomNo);
@@ -111,5 +115,9 @@ public class GameRoomDao {
 		param.put("job", updatedJobJson);
 		
         sqlSession.update("gameRoomMapper.updateJob", param);
+	}
+
+	public void updateStop(SqlSessionTemplate sqlSession, int roomNo) {
+		sqlSession.update("gameRoomMapper.updateStop",roomNo);
 	}
 }

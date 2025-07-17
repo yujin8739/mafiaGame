@@ -67,7 +67,7 @@
 			}
 			
 			//버튼 설정
-			function setTimer(phase, seconds) {
+			function setTimer(phase, seconds) {		
 				if (phase === "NIGHT") {
 					setAlive();
 		            setStart();
@@ -104,8 +104,22 @@
 							img.onclick = () => {
 								HealTo(userNickList[index],index);
 							};
-						});
-										        
+						});			        
+					} else if (job==="police") {
+						sendBtn.disabled = false;
+						sendBtn.classList.remove('disabled-btn');
+						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+											        
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot, index) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+							
+							img.style.cursor = 'pointer';
+							img.onclick = () => {
+								policeTo(userNickList[index],index);
+							};
+						});	
 					} else {
 						sendBtn.disabled = true;
 						chatInput.disabled = true;
@@ -155,6 +169,7 @@
 					chatInput.disabled = true;
 					chatInput.placeholder = "투표 중입니다.";
 				}
+				
 				startTimer(phase, seconds)
 			}
 			
@@ -234,6 +249,23 @@
 			        console.error("userNameList 파싱 실패", e);
 			        userNameList = [];
 			    }
+			}
+			
+			function policeTo(targetNick, index) {
+				if (hasKilld) {
+			        alert("이미 한명을 조사하셨습니다.");
+			        return;
+			    }
+				if (!confirm(`${targetNick}를 조사 하시겠습니까??`)) return;
+			    try {
+			        userNameList = JSON.parse(room.userList);
+			        policeCheck(userNameList[index]);
+			    	hasKilld = true;
+			    } catch (e) {
+			        console.error("userNameList 파싱 실패", e);
+			        userNameList = [];
+			    }
+				
 			}
 		/*]]>*/
 	</script>

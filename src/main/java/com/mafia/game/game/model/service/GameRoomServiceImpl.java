@@ -116,4 +116,14 @@ public class GameRoomServiceImpl implements GameRoomService {
 	public void updateJob(int roomNo, String updatedJobJson) {
 		gameRoomDao.updateJob(sqlSession,roomNo,updatedJobJson);
 	}
+
+	@Override
+	public List<Job> getJobDetails(List<Integer> jobList) {
+		return gameRoomDao.getJobDetails(sqlSession, jobList);
+	}
+
+	@Override
+	public void updateStop(int roomNo) {
+		gameRoomDao.updateStop(sqlSession, roomNo);
+	}
 }

@@ -293,6 +293,32 @@ public class GameRoomController {
         }
     }
     
+    @GetMapping("policeCheck")
+    @ResponseBody
+    public Job policeCheck(@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {
+    	Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+        String userListJson = clobToString((Clob) result.get("USERLIST"));
+        String jobJson = (String) result.get("JOB");
+        int targetJob = 0;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+        	if(userListJson == null || jobJson == null) {
+        		return null;
+        	} 
+        	
+        	System.out.println(">> userListJson: " + userListJson);
+        	System.out.println(">> jobJson: " + jobJson);
+        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+        	List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+        		
+        	int index = userList.indexOf(targetName);
+        	targetJob = jobList.get(index);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+        return gameRoomService.getJobDetail(targetJob);
+    }
+    
     @GetMapping("/mafiaKillResult")
     @ResponseBody
     public Kill killUser (@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName) {

@@ -261,7 +261,11 @@
 			} else if (msgData.type && msgData.type === "phase") {
 			    setTimer(msgData.phase, msgData.remaining);
 			    return;
-			} 
+			} else if (msgData.type && msgData.type ==="MAFIA_WIN"
+	            	|| msgData.type === "CITIZEN_WIN"
+	            	|| msgData.type === "NEUTRALITY_WIN") {
+				setStop();
+			}
 			reciveMsg(msgData, div);
 			
 			scrollIfNeeded(wasAtBottom);
@@ -410,10 +414,25 @@
 					jobObj = myJob;
 					job = myJob.jobName;
 					chatLoad(job);
+					alert("당신의 직업은 "+myJob.jobVisible+"입니다.");
 					console.log()
 				}
 			})
 			
+		}
+		
+		function setStop() {
+			isStart = false;
+			isGaming = false;
+			jobObj = null;
+			job = 'none';
+			roomReload();
+			
+			sendBtn.disabled = false; 
+			sendBtn.classList.remove('disabled-btn'); 
+
+			chatInput.disabled = false; 
+			chatInput.placeholder = "메시지를 입력하세요"; 
 		}
 		
 		function roomReload(){
@@ -523,6 +542,24 @@
 		            targetName: targetName,
 		        },
 		        success: function (kill) {},
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function policeCheck(targetName) {
+		    $.ajax({
+		        url: "/room/policeCheck",
+		        method: "GET",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (result) {
+		        	alert(targetName+"의 직업은 "+result.jobVisible+"입니다.");
+		        },
 		        error: function () {
 		            alert("투표 요청 중 오류가 발생했습니다.");
 		        }

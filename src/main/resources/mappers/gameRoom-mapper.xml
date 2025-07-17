@@ -67,7 +67,16 @@
 	    UPDATE GAME_ROOM
 	    SET READYUSER = '[]',
 	    	ISGAMING = 'Y',
-	    	JOB = #{updatedJob}
+	    	JOB = #{updatedJob}  
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
+	<update id="updateStop">
+	    UPDATE GAME_ROOM
+	    SET READYUSER = '[]',  
+	    	ISGAMING = 'N',
+	    	JOB = '[]',
+	    	DAYNO = 0
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
@@ -99,6 +108,15 @@
 		SELECT JOBNO, JOBNAME, JOBCLASS, OPTIONAL, MATCHCODE, PROBABILITY, JOBVISIBLE
 		FROM JOB
 		WHERE JOBNO = #{myJob}
+	</select>
+	
+	<select id="getJobDetails" resultType="Job">
+	    SELECT JOBNO, JOBNAME, JOBCLASS, OPTIONAL, MATCHCODE, PROBABILITY, JOBVISIBLE
+	    FROM JOB
+	    WHERE JOBNO IN
+	    <foreach collection="jobList" item="job" open="(" separator="," close=")">
+	        #{job}
+	    </foreach>
 	</select>
 	
 	<select id="getDeathList" resultType="string" parameterType="int">

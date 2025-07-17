@@ -44,4 +44,8 @@ public interface GameRoomService {
 	void updateJob(int roomNo, String updatedJobJson);
 
 	void insertKill(Kill kill);
+	
+	List<Job> getJobDetails(List<Integer> jobList);
+
+	void updateStop(int roomNo);
 }
