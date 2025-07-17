@@ -176,7 +176,7 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
-	<select id="selectRandomHintByJob" parameterType="_int" resultType="Hint">
+	<select id="selectRandomHintByJob" parameterType="map" resultType="Hint">
 	    SELECT HINTNO, JOBNO, REPLACE(HINT, '!!!!', #{userNick}) AS HINT, PERCENT
 	    FROM (
 	        SELECT HINTNO, JOBNO, HINT, PERCENT

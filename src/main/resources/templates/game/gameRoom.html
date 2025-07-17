@@ -88,8 +88,9 @@
 			chatInput.placeholder = "재입장시 다음번 낮까지 채팅이 불가능합니다."; 
 		}
 		
-		let socket = new WebSocket("wss://god-daddy.com/chat/gameMainChat?roomNo=" + roomNo);
-
+		//let socket = new WebSocket("wss://god-daddy.com/chat/gameMainChat?roomNo=" + roomNo);
+		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
+		
 		socket.onopen = function () {
 			console.log("WebSocket 연결됨");
 			
@@ -572,7 +573,7 @@
 		
 		function loadHintList(roomNo) {
 		    $.ajax({
-		        url: "/getRoomHint",
+		        url: "/room/getRoomHint",
 		        type: "GET",
 		        data: { roomNo: roomNo },
 		        success: function (data) {
