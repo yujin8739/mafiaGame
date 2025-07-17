@@ -22,8 +22,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
+import com.mafia.game.game.model.service.RoomHintService;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Hint;
 import com.mafia.game.game.model.vo.Message;
+import com.mafia.game.game.model.vo.RoomHint;
 import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
@@ -45,6 +48,9 @@ public class GameRoomManager {
 	
 	@Autowired
 	private MemberService memberService;
+	
+	@Autowired
+	private RoomHintService roomHintService;
 	
 	//현존하는 게임방의 객체 (vo)
     private final Map<Integer, GameRoom> gameRoomMap = new ConcurrentHashMap<>();
@@ -312,9 +318,16 @@ public class GameRoomManager {
 				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
 				
 				int index = userList.indexOf(userName);
+				String userNick = loginUser.getNickName();
 				if(!jobList.isEmpty()) {
 					int myJob = jobList.get(index);
 					session.getAttributes().put("job",gameRoomService.getJobDetail(myJob));
+					
+					Hint hint = roomHintService.selectRandomHintByJob(myJob, userNick);
+					
+					RoomHint roomHint = new RoomHint(roomNo, userName, hint.getHint(), userNick);
+					
+					roomHintService.insertRoomHint(roomHint);
 				}
 								
 			}

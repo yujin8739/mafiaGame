@@ -27,11 +27,11 @@
 				            onclick="ready()">Ready</button>
 				    <div id="readyCount">Ready: 0</div>
 				</div>
-				<div id="dayCount">일차 : 0</div>
-				<div id="killCount">투표 : 0</div>
-				<div id="gamePhaseContainer">
-					<div id="phaseDisplay">현재 단계: -</div>
-					<div id="timerDisplay">남은 시간: - 초</div>
+				<div id="gamePhaseContainer" class="game-phase">
+				 	<div id="dayCount" class="text-lg font-semibold text-gray-700">일차 : 0</div>
+				    <div id="killCount" class="text-lg font-semibold text-gray-700">투표 : 0</div>
+				    <div id="phaseDisplay" class="text-xl font-bold text-indigo-600">현재 단계: -</div>
+				    <div id="timerDisplay" class="text-lg text-gray-500">남은 시간: - 초</div>
 				</div>
 		    </div>
 		    <div th:replace="game/phoneModal :: phoneModal" 
@@ -88,7 +88,7 @@
 			chatInput.placeholder = "재입장시 다음번 낮까지 채팅이 불가능합니다."; 
 		}
 		
-		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
+		let socket = new WebSocket("wss://god-daddy.com/chat/gameMainChat?roomNo=" + roomNo);
 
 		socket.onopen = function () {
 			console.log("WebSocket 연결됨");
@@ -251,9 +251,11 @@
 				setReadyCount();
 			} else if (msgData.type && msgData.type === "start") {
 				setStart();
+				loadHintList(roomNo);
 			} else if (msgData.type && msgData.type === "enter" || msgData.type === "leave") {
 				if (isGaming) {
 					setStart();
+					loadHintList(roomNo);
 				}
 				roomReloadToUserLoad()
 				//접속시 동작은 저장후 불러오기 때문에 리턴
@@ -414,8 +416,10 @@
 					jobObj = myJob;
 					job = myJob.jobName;
 					chatLoad(job);
-					alert("당신의 직업은 "+myJob.jobVisible+"입니다.");
-					console.log()
+					if(isStart){
+						alert("당신의 직업은 "+myJob.jobVisible+"입니다.");
+					}
+					console.log();
 				}
 			})
 			
@@ -562,6 +566,22 @@
 		        },
 		        error: function () {
 		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function loadHintList(roomNo) {
+		    $.ajax({
+		        url: "/getRoomHint",
+		        type: "GET",
+		        data: { roomNo: roomNo },
+		        success: function (data) {
+		            const container = $("#hintListContainer");
+		            container.empty();
+		            setHintList(data, container);
+		        },
+		        error: function () {
+		            console.error("힌트 불러오기 실패");
 		        }
 		    });
 		}

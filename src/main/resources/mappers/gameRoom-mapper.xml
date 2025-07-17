@@ -175,4 +175,53 @@
 	    SET JOB = #{job}
 	    WHERE ROOMNO = #{roomNo}
 	</update>
+	
+	<select id="selectRandomHintByJob" parameterType="_int" resultType="Hint">
+	    SELECT HINTNO, JOBNO, REPLACE(HINT, '!!!!', #{userNick}) AS HINT, PERCENT
+	    FROM (
+	        SELECT HINTNO, JOBNO, HINT, PERCENT
+	        FROM HINT
+	        WHERE JOBNO = #{jobNo}
+	        ORDER BY DBMS_RANDOM.VALUE * PERCENT DESC
+	    )
+	    WHERE ROWNUM = 1
+    </select>
+    
+    <insert id="insertRoomHint">
+        INSERT INTO ROOM_HINT (ROOMNO, USERNAME, HINT, USERNICK)
+        VALUES (#{roomNo}, #{userName}, #{hint}, #{userNick})
+    </insert>
+    
+    
+    <!-- 배열로 저장시 아래의 sql문을 이용혹시 몰라 만들어둠 -->
+    <select id="selectRandomHints" resultType="Hint" parameterType="map">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=" UNION ALL ">
+			SELECT HINTNO, JOBNO, REPLACE(HINT, '!!!!', #{item.userNick}) AS HINT, PERCENT
+			FROM (
+				SELECT HINTNO, JOBNO, HINT, PERCENT
+				FROM HINT
+				WHERE JOBNO = #{item.jobNo}
+				ORDER BY DBMS_RANDOM.VALUE * PERCENT DESC
+			)
+			WHERE ROWNUM = 1
+		</foreach>
+	</select>
+    
+    <insert id="insertRoomHints" parameterType="list">
+	    INSERT ALL
+	    <foreach collection="list" item="item">
+	        INTO ROOM_HINT (ROOMNO, USERNAME, HINT,USERNICK)
+	        VALUES (#{item.roomNo}, #{item.userName}, #{item.hintNo}, #{item.userNick})
+	    </foreach>
+	    SELECT 1 FROM DUAL
+	</insert>
+	
+	<select id="selectRoomHintList" parameterType="int" resultType="RoomHint">
+	    SELECT ROOMNO,
+	           USERNAME,
+	           HINT,
+	           USERNICK
+	    FROM ROOM_HINT
+	    WHERE ROOMNO = #{roomNo}
+	</select>
 </mapper>

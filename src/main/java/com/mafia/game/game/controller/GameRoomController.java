@@ -31,8 +31,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
+import com.mafia.game.game.model.service.RoomHintService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Message;
+import com.mafia.game.game.model.vo.RoomHint;
 import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.service.MemberService;
@@ -53,6 +55,9 @@ public class GameRoomController {
 	
 	@Autowired
 	private MemberService memberService;
+	
+	@Autowired
+	private RoomHintService roomHintService;
     
     private final ObjectMapper objectMapper = new ObjectMapper(); 
 
@@ -395,6 +400,12 @@ public class GameRoomController {
             e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
         }
         return gameRoomService.selectKill(roomNo,dayNo);
+    }
+    
+    @GetMapping("/getRoomHint")
+    @ResponseBody
+    public List<RoomHint> getRoomHint (@RequestParam int roomNo) {
+    	return roomHintService.selectRoomHintList(roomNo);
     }
     
     
