@@ -37,7 +37,7 @@
 	}
 	
 	document.addEventListener('DOMContentLoaded', function() {
-		var url = 'ws://localhost/chat/homeChat';
+		var url = 'wss://god-daddy.com/chat/homeChat';
 		socket = new WebSocket(url);
 		console.log("WebSocket 연결시도");
 		socket.onopen = function() {

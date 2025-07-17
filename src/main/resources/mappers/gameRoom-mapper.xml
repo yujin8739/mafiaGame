@@ -67,7 +67,16 @@
 	    UPDATE GAME_ROOM
 	    SET READYUSER = '[]',
 	    	ISGAMING = 'Y',
-	    	JOB = #{updatedJob}
+	    	JOB = #{updatedJob}  
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
+	<update id="updateStop">
+	    UPDATE GAME_ROOM
+	    SET READYUSER = '[]',  
+	    	ISGAMING = 'N',
+	    	JOB = '[]',
+	    	DAYNO = 0
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
@@ -101,6 +110,15 @@
 		WHERE JOBNO = #{myJob}
 	</select>
 	
+	<select id="getJobDetails" resultType="Job">
+	    SELECT JOBNO, JOBNAME, JOBCLASS, OPTIONAL, MATCHCODE, PROBABILITY, JOBVISIBLE
+	    FROM JOB
+	    WHERE JOBNO IN
+	    <foreach collection="jobList" item="job" open="(" separator="," close=")">
+	        #{job}
+	    </foreach>
+	</select>
+	
 	<select id="getDeathList" resultType="string" parameterType="int">
 	   SELECT 
 	     CASE
@@ -118,14 +136,16 @@
 	   )
 	</select>
 	
-	<select id="selectVote" resultType="Vote">
-		SELECT ROOMNO, DAYNO, VOTE
-		FROM VOTE WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
+	<select id="selectKill" resultType="Kill">
+		SELECT ROOMNO, DAYNO, VOTE, HEALUSER, KILLUSER
+		FROM KILL WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
 	</select>
 	
-	<update id="updateVote">
-		UPDATE VOTE 
-		SET VOTE = #{updatedList}
+	<update id="updateKill" parameterType="Kill">
+		UPDATE KILL 
+		SET VOTE = #{vote},
+			KILLUSER = #{killUser},
+			HEALUSER = #{healUser}
 		WHERE ROOMNO = #{roomNo} AND DAYNO = #{dayNo}
 	</update>
 	
@@ -135,14 +155,73 @@
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
-	<insert id="insertVote">
-		INSERT INTO VOTE 
+	<insert id="insertKill" parameterType="Kill">
+		INSERT INTO KILL 
 		(ROOMNO,
 		DAYNO,
-		VOTE)
+		VOTE,
+		HEALUSER,
+		KILLUSER)
 		VALUES (
 		#{roomNo},
 		#{dayNo},
-		#{updatedList})
+		#{vote},
+		#{healUser},
+		#{killUser})
 	</insert>
+	
+	<update id="updateJob">
+	 	UPDATE GAME_ROOM
+	    SET JOB = #{job}
+	    WHERE ROOMNO = #{roomNo}
+	</update>
+	
+	<select id="selectRandomHintByJob" parameterType="map" resultType="Hint">
+	    SELECT HINTNO, JOBNO, REPLACE(HINT, '!!!!', #{userNick}) AS HINT, PERCENT
+	    FROM (
+	        SELECT HINTNO, JOBNO, HINT, PERCENT
+	        FROM HINT
+	        WHERE JOBNO = #{jobNo}
+	        ORDER BY DBMS_RANDOM.VALUE * PERCENT DESC
+	    )
+	    WHERE ROWNUM = 1
+    </select>
+    
+    <insert id="insertRoomHint">
+        INSERT INTO ROOM_HINT (ROOMNO, USERNAME, HINT, USERNICK)
+        VALUES (#{roomNo}, #{userName}, #{hint}, #{userNick})
+    </insert>
+    
+    
+    <!-- 배열로 저장시 아래의 sql문을 이용혹시 몰라 만들어둠 -->
+    <select id="selectRandomHints" resultType="Hint" parameterType="map">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=" UNION ALL ">
+			SELECT HINTNO, JOBNO, REPLACE(HINT, '!!!!', #{item.userNick}) AS HINT, PERCENT
+			FROM (
+				SELECT HINTNO, JOBNO, HINT, PERCENT
+				FROM HINT
+				WHERE JOBNO = #{item.jobNo}
+				ORDER BY DBMS_RANDOM.VALUE * PERCENT DESC
+			)
+			WHERE ROWNUM = 1
+		</foreach>
+	</select>
+    
+    <insert id="insertRoomHints" parameterType="list">
+	    INSERT ALL
+	    <foreach collection="list" item="item">
+	        INTO ROOM_HINT (ROOMNO, USERNAME, HINT,USERNICK)
+	        VALUES (#{item.roomNo}, #{item.userName}, #{item.hintNo}, #{item.userNick})
+	    </foreach>
+	    SELECT 1 FROM DUAL
+	</insert>
+	
+	<select id="selectRoomHintList" parameterType="int" resultType="RoomHint">
+	    SELECT ROOMNO,
+	           USERNAME,
+	           HINT,
+	           USERNICK
+	    FROM ROOM_HINT
+	    WHERE ROOMNO = #{roomNo}
+	</select>
 </mapper>
