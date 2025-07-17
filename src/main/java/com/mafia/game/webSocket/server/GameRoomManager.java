@@ -438,6 +438,53 @@ public class GameRoomManager {
 		}
 	}
     
+    public String checkWinner(int roomNo) {
+        Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+        String jobJson = (String) result.get("JOB");
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            if (jobJson == null) {
+                return "NO_GAME_DATA";
+            }
+
+            // JSON → List<Integer>
+            List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+
+            // MyBatis 호출
+            List<Job> jobDetails = gameRoomService.getJobDetails(jobList);
+
+            // 카운트
+            int mafiaCount = 0;
+            int citizenCount = 0;
+            int neutralityCount = 0;
+
+            for (Job job : jobDetails) {
+                if (job.getJobClass() == 1) {
+                    mafiaCount++;
+                } else if (job.getJobClass() == 2) {
+                    citizenCount++;
+                } else if (job.getJobClass() == 3) {
+                	neutralityCount++;
+                }
+            }
+
+            // 승리 조건 체크
+            if (mafiaCount > (citizenCount + neutralityCount)) {
+                return "MAFIA_WIN";
+            } else if (mafiaCount == 0 && neutralityCount == 0) {
+                return "CITIZEN_WIN";
+            } else if (mafiaCount == 0 && citizenCount == 0) {
+            	return "NEUTRALITY_WIN";
+            }
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return "CONTINUE";
+    }
+    
     public GameRoom selectRoom(int roomNo) {
 		return gameRoomService.selectRoom(roomNo);
     }
@@ -487,4 +534,9 @@ public class GameRoomManager {
             return null;
         }
     }
+
+	public void updateStop(int roomNo) {
+		gameRoomService.updateStop(roomNo);
+	}
+
 }
