@@ -42,35 +42,6 @@
 	
 	
 	
-	<resultMap type="Board" id="boardDetailResultMap">
-		<result property="boardNo" column="BOARDNO"/>
-		<result property="userName" column="USERNAME"/>
-		<result property="nickName" column="NICKNAME"/>
-		<result property="typeNo" column="TYPENO"/>
-		<result property="title" column="TITLE"/>
-		<result property="detail" column="DETAIL"/>
-		<result property="status" column="STATUS"/>
-		<result property="createDate" column="CREATEDATE"/>
-		<result property="viewCount" column="VIEWCOUNT"/>
-		<result property="displayName" column="DISPLAYNAME"/>
-		<result property="rankPoint" column="RANKPOINT"/>
-		<result property="likeCount" column="LIKECOUNT"/>
-		<result property="dislikeCount" column="DISLIKECOUNT"/>
-		<collection property="fileList" ofType="BoardFile">
-			<result property="fileNo" column="FILENO"/>
-			<result property="boardNo" column="BOARDNO"/>
-			<result property="type" column="TYPE"/>
-			<result property="originName" column="ORIGINNAME"/>
-			<result property="changeName" column="CHANGENAME"/>
-			<result property="uploadDate" column="UPLOADDATE"/>
-			<result property="status" column="FILE_STATUS"/>
-		</collection>
-		<collection property="replyList" ofType="Reply">
-			<result property="replyNo" column="REPLYNO"/>
-			<result property="status" column="REPLY_STATUS"/>
-		</collection>
-	</resultMap>
-	
 	<resultMap type="Board" id="boardListMap">
 		<result property="boardNo" column="BOARDNO"/>
 		<result property="nickName" column="NICKNAME"/>
@@ -234,6 +205,39 @@
 		WHERE BOARDNO = #{BOARDNO}
 	</update>
 	
+	
+	
+	<resultMap type="Board" id="boardDetailResultMap">
+		<result property="boardNo" column="BOARDNO"/>
+		<result property="userName" column="USERNAME"/>
+		<result property="nickName" column="NICKNAME"/>
+		<result property="typeNo" column="TYPENO"/>
+		<result property="title" column="TITLE"/>
+		<result property="detail" column="DETAIL"/>
+		<result property="status" column="STATUS"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="viewCount" column="VIEWCOUNT"/>
+		<result property="displayName" column="DISPLAYNAME"/>
+		<result property="rankPoint" column="RANKPOINT"/>
+		<result property="likeCount" column="LIKECOUNT"/>
+		<result property="dislikeCount" column="DISLIKECOUNT"/>
+		<collection property="fileList" ofType="BoardFile">
+			<result property="fileNo" column="BOARD_FILENO"/>
+			<result property="boardNo" column="BOARDNO"/>
+			<result property="type" column="TYPE"/>
+			<result property="originName" column="ORIGINNAME"/>
+			<result property="changeName" column="CHANGENAME"/>
+			<result property="uploadDate" column="UPLOADDATE"/>
+			<result property="status" column="BOARD_FILE_STATUS"/>
+		</collection>
+		<collection property="replyList" ofType="Reply">
+			<result property="replyNo" column="REPLYNO"/>
+			<result property="fileNo" column="REPLY_FILENO"/>
+			<result property="changeName" column="REPLY_CHANGENAME"/>
+		</collection>
+	</resultMap>
+	
+	
 	<select id="loungeBoardDetail" resultMap="boardDetailResultMap">
 		SELECT B.BOARDNO
 			  ,B.USERNAME
@@ -244,17 +248,26 @@
 		      ,B.VIEWCOUNT
 		      ,B.LIKECOUNT
 		      ,B.DISLIKECOUNT
-		      ,B.STATUS
+		      ,B.STATUS BOARD_STATUS
 		      ,T.DISPLAYNAME
 		      ,U.RANKPOINT
-		      ,F.FILENO
+		      ,F.FILENO AS BOARD_FILENO
 		      ,F.ORIGINNAME
 		      ,F.CHANGENAME
-		      ,F.STATUS AS FILE_STATUS
+		      ,F.STATUS AS BOARD_FILE_STATUS
+		      ,R.REPLYNO
+              ,R.FILENO AS REPLY_FILENO
+              ,FR.CHANGENAME AS REPLY_CHANGENAME
 		FROM BOARD B
-		LEFT JOIN BOARD_FILE F ON(B.BOARDNO = F.BOARDNO)
 		JOIN BOARD_TYPE T USING(TYPENO)
 		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
+		LEFT JOIN (SELECT FILENO,BOARDNO,STATUS,CHANGENAME,ORIGINNAME
+                   FROM BOARD_FILE
+                   WHERE STATUS = 'Y') F ON(B.BOARDNO = F.BOARDNO)
+		LEFT JOIN (SELECT REPLYNO,BOARDNO,FILENO,STATUS
+                   FROM REPLY
+                   WHERE STATUS = 'Y') R ON(R.BOARDNO = B.BOARDNO)
+		LEFT JOIN BOARD_FILE FR ON(R.FILENO = FR.FILENO)
 		WHERE B.BOARDNO = #{boardNo}
 	</select>
 	
@@ -306,9 +319,7 @@
 	<update id="deleteFileOfBoard">
 		UPDATE BOARD_FILE
 		SET STATUS = 'N'
-		WHERE FILENO = (SELECT FILENO
-						FROM BOARD
-						WHERE BOARDNO = #{boardNo})
+		WHERE FILENO = #{fileNo}
 	</update>
 	
 	<update id="updateLoungeBoard">
@@ -383,12 +394,8 @@
 	
 	<update id="deleteFileOfReply">
 		UPDATE BOARD_FILE
-		SET BOARD_FILE.STATUS = 'N'
-		WHERE FILENO = (SELECT R.FILENO
-						FROM REPLY R
-						LEFT JOIN BOARD_FILE F ON (R.FILENO = F.FILENO)
-						WHERE REPLYNO = #{replyNo}
-					   )		
+		SET STATUS = 'N'
+		WHERE FILENO = #{fileNo}	
 	</update>
 	
 	<select id="checkBoardLike" resultType="string">
