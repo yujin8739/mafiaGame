@@ -79,8 +79,8 @@ public class BoardDao {
 		return sqlSession.update("boardMapper.deleteLoungeBoard", board);
 	}
 
-	public int deleteFileOfBoard(SqlSessionTemplate sqlSession, Board board) {
-		return sqlSession.update("boardMapper.deleteFileOfBoard", board);
+	public int deleteFileOfBoard(SqlSessionTemplate sqlSession, int fileNo) {
+		return sqlSession.update("boardMapper.deleteFileOfBoard", fileNo);
 	}
 
 	public int updateLoungeBoard(SqlSessionTemplate sqlSession, Board board) {

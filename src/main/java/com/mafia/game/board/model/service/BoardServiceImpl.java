@@ -82,20 +82,24 @@ public class BoardServiceImpl implements BoardService{
 	
 	@Override
 	@Transactional
-	public int deleteLoungeBoard(Board board) {
+	public int deleteBoard(Board board) {
 		
 		int result = 1;
 		
 		ArrayList<Reply> replyList = board.getReplyList();
-		for(Reply reply : replyList) { //리뷰 및 리뷰에 올린 파일 삭제
+		for(Reply reply : replyList) { //댓글 및 댓글에 올린 파일 삭제
 			if(reply.getFileNo() != 0) {
 				result *= dao.deleteFileOfReply(sqlSession, reply); 
 			}
 			result *= dao.deleteReply(sqlSession, reply);
 		}
 		
-		if(!board.getFileList().isEmpty()) {
-			result *= dao.deleteFileOfBoard(sqlSession,board);
+		String statusOfFile = board.getFileList().get(0).getStatus();
+		
+		if("Y".equals(statusOfFile)) { //게시글 첨부파일이 존재한다면
+			for(BoardFile file : board.getFileList()) {
+				result *= dao.deleteFileOfBoard(sqlSession,file.getFileNo());
+			}
 		}
 		
 		result *= dao.deleteLoungeBoard(sqlSession, board);
@@ -116,12 +120,15 @@ public class BoardServiceImpl implements BoardService{
 		if(file != null) {//변경한 파일 있다면
 			result *= dao.insertFile(sqlSession, file); //변경 파일 추가
 			
-			if(board.getChangeName() != null) { // 기존 파일 삭제
-				result *= dao.deleteFileOfBoard(sqlSession, board); 
+			
+			String statusOfFile = board.getFileList().get(0).getStatus();
+			if("Y".equals(statusOfFile)) { // 기존 파일 삭제
+				result *= dao.deleteFileOfBoard(sqlSession, board.getFileList().get(0).getFileNo());
 			}
 		}else if(deleteFile){//변경한 파일 없고, 기존파일 삭제버튼 눌렀다면
 			
-			result *= dao.deleteFileOfBoard(sqlSession, board);
+			
+			result *= dao.deleteFileOfBoard(sqlSession, board.getFileList().get(0).getFileNo());
 		}
 		
 		
