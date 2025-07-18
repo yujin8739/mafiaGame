@@ -10,10 +10,11 @@
 		<result property="email" column="EMAIL"/>
 		<result property="status" column="STATUS"/>
 		<result property="phone" column="PHONE"/>
+		<result property="profileImage" column="PROFILEIMAGE"/>
 	</resultMap>
 	
 	<select id="loginDo" resultType="Member" resultMap="memberResultMap">
-		SELECT USERNAME, NICKNAME, PASSWORD, EMAIL, STATUS, PHONE
+		SELECT USERNAME, NICKNAME, PASSWORD, EMAIL, STATUS, PHONE, PROFILEIMAGE
 		FROM USER_INFO 
 		WHERE USERNAME = #{userName}
 	</select>

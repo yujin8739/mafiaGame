@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,9 +13,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,12 +22,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
+import com.mafia.game.game.model.service.RoomHintService;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Hint;
 import com.mafia.game.game.model.vo.Message;
+import com.mafia.game.game.model.vo.RoomHint;
+import com.mafia.game.game.model.vo.Kill;
+import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.webSocket.timer.PhaseBroadcaster;
-
-import jakarta.servlet.http.HttpSession;
 
 import com.mafia.game.job.model.vo.Job;
 
@@ -42,6 +45,12 @@ public class GameRoomManager {
 	
 	@Autowired
 	private ChatService chatService;
+	
+	@Autowired
+	private MemberService memberService;
+	
+	@Autowired
+	private RoomHintService roomHintService;
 	
 	//현존하는 게임방의 객체 (vo)
     private final Map<Integer, GameRoom> gameRoomMap = new ConcurrentHashMap<>();
@@ -296,7 +305,7 @@ public class GameRoomManager {
 		}
 		String userName = loginUser.getUserName();
 		System.out.println(">> 로그인 유저: " + userName);
-		Map<String, Object> result = gameRoomService.getRoomJob(roomNo,userName);
+		Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
 		String userListJson = clobToString((Clob) result.get("USERLIST"));
 		String jobJson = (String) result.get("JOB");
 		
@@ -309,9 +318,16 @@ public class GameRoomManager {
 				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
 				
 				int index = userList.indexOf(userName);
+				String userNick = loginUser.getNickName();
 				if(!jobList.isEmpty()) {
 					int myJob = jobList.get(index);
 					session.getAttributes().put("job",gameRoomService.getJobDetail(myJob));
+					
+					Hint hint = roomHintService.selectRandomHintByJob(myJob, userNick);
+					
+					RoomHint roomHint = new RoomHint(roomNo, userName, hint.getHint(), userNick);
+					
+					roomHintService.insertRoomHint(roomHint);
 				}
 								
 			}
@@ -321,6 +337,166 @@ public class GameRoomManager {
 			e.printStackTrace();
 		}
 	}
+    
+	public void mafiaKill(int roomNo) {
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		Kill kill = gameRoomService.selectKill(roomNo, room.getDayNo());
+		String deathUser = null;
+		
+		if (kill == null) return;
+		try{
+			ObjectMapper objectMapper = new ObjectMapper();
+			List<String> kills = objectMapper.readValue(kill.getKillUser(), new TypeReference<List<String>>() {});
+			List<String> heals = objectMapper.readValue(kill.getHealUser(), new TypeReference<List<String>>() {});
+			
+			Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+			String userListJson = clobToString((Clob) result.get("USERLIST"));
+			String jobJson = (String) result.get("JOB");
+			
+			List<String> userList = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {});
+			List<Integer> jobList = objectMapper.readValue(jobJson, new TypeReference<List<Integer>>() {}); 
+
+			//마피아가 여러명이고 각각 죽일수 있으므로 for문으로 확인
+			for(String killedUser : kills) {
+				boolean isHealSuccess = false;
+				String updatedJobJson = null;
+				int index = userList.indexOf(killedUser);
+				if (index != -1 && index < jobList.size()) {
+					jobList.set(index, 0);
+					updatedJobJson = objectMapper.writeValueAsString(jobList);
+					
+					//의사가 힐할 대상이 죽는지 확인
+					//의사도 여러명일 수 있음
+					for(String healUser : heals) {
+						if(healUser.equals(killedUser)) {
+							isHealSuccess = true;
+						}
+					}
+				}
+				
+				//의사 치료 적중 실패시에만 동작
+				if(!isHealSuccess) { 
+					ObjectMapper mapper = new ObjectMapper();
+					Map<String, Object> payload = new HashMap<>();
+					
+					payload.put("userName", "시스템"); // nickName
+					payload.put("msg", chatService.selectEvent(6, memberService.getMemberByUserName(killedUser).getNickName()));     // 메시지 본문
+					payload.put("type", "EVENT");
+					gameRoomService.updateJob(roomNo,updatedJobJson);
+					
+					String json = mapper.writeValueAsString(payload);
+					
+					for (WebSocketSession s : getSessions(roomNo)) {
+						s.sendMessage(new TextMessage(json));
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			updateDayNo(roomNo);
+		}
+		
+	}
+    
+    public void voteKill(int roomNo) {
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		Kill kill = gameRoomService.selectKill(roomNo, room.getDayNo());
+		String mostKilldUser = null;
+			        
+		if (kill == null) return;
+		
+		try{
+			ObjectMapper objectMapper = new ObjectMapper();
+			List<String> kills = objectMapper.readValue(kill.getVote(), new TypeReference<List<String>>() {});
+			
+			Map<String, Integer> countMap = new HashMap<>();
+			for (String name : kills) {
+				countMap.put(name, countMap.getOrDefault(name, 0) + 1);
+			}
+			
+			mostKilldUser = Collections.max(countMap.entrySet(), Map.Entry.comparingByValue()).getKey();
+			
+			
+			Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+			String userListJson = clobToString((Clob) result.get("USERLIST"));
+			String jobJson = (String) result.get("JOB");
+			
+			List<String> userList = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {});
+			List<Integer> jobList = objectMapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+			
+			int index = userList.indexOf(mostKilldUser);
+			if (index != -1 && index < jobList.size()) {
+				jobList.set(index, 0);
+				String updatedJobJson = objectMapper.writeValueAsString(jobList);
+				gameRoomService.updateJob(roomNo,updatedJobJson);
+			}
+			
+			String targetName = memberService.getMemberByUserName(mostKilldUser).getNickName();
+			
+			ObjectMapper mapper = new ObjectMapper();
+			
+	        Map<String, Object> payload = new HashMap<>(); 
+	        payload.put("userName", "시스템"); // nickName
+	        payload.put("msg", chatService.selectEvent(9, targetName));     // 메시지 본문
+	        payload.put("type", "EVENT");
+
+	        String json = mapper.writeValueAsString(payload);
+	        
+	        for (WebSocketSession s : getSessions(roomNo)) {
+	        	s.sendMessage(new TextMessage(json));
+	        }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+    
+    public String checkWinner(int roomNo) {
+        Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+        String jobJson = (String) result.get("JOB");
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            if (jobJson == null) {
+                return "NO_GAME_DATA";
+            }
+
+            // JSON → List<Integer>
+            List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+
+            // MyBatis 호출
+            List<Job> jobDetails = gameRoomService.getJobDetails(jobList);
+
+            // 카운트
+            int mafiaCount = 0;
+            int citizenCount = 0;
+            int neutralityCount = 0;
+
+            for (Job job : jobDetails) {
+                if (job.getJobClass() == 1) {
+                    mafiaCount++;
+                } else if (job.getJobClass() == 2) {
+                    citizenCount++;
+                } else if (job.getJobClass() == 3) {
+                	neutralityCount++;
+                }
+            }
+
+            // 승리 조건 체크
+            if (mafiaCount > (citizenCount + neutralityCount)) {
+                return "MAFIA_WIN";
+            } else if (mafiaCount == 0 && neutralityCount == 0) {
+                return "CITIZEN_WIN";
+            } else if (mafiaCount == 0 && citizenCount == 0) {
+            	return "NEUTRALITY_WIN";
+            }
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return "CONTINUE";
+    }
     
     public GameRoom selectRoom(int roomNo) {
 		return gameRoomService.selectRoom(roomNo);
@@ -371,4 +547,9 @@ public class GameRoomManager {
             return null;
         }
     }
+
+	public void updateStop(int roomNo) {
+		gameRoomService.updateStop(roomNo);
+	}
+
 }

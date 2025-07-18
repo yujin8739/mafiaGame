@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.mafia.game.game.model.vo.GameRoom;
-import com.mafia.game.game.model.vo.Vote;
+import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
 
 public interface GameRoomService {
@@ -29,17 +29,23 @@ public interface GameRoomService {
 	
 	List<Job> selectRandomJobs(int mafiaCount, int citizenCount, int neutralCount);
 
-	Map<String, Object> getRoomJob(int roomNo, String userName);
+	Map<String, Object> getRoomJob(int roomNo);
 
 	Job getJobDetail(int myJob);
 
 	List<String> getDeathList(int roomNo);
 
-	void updateVote(int roomNo, int dayNo, String updatedList);
+	void updateKill(Kill kill);
 
-	Vote selectVote(int roomNo, int dayNo);
+	Kill selectKill(int roomNo, int dayNo);
 
 	void updateDayNo(int roomNo, int dayNo);
 
-	void insertVote(int roomNo, int dayNo, String updatedList);
+	void updateJob(int roomNo, String updatedJobJson);
+
+	void insertKill(Kill kill);
+	
+	List<Job> getJobDetails(List<Integer> jobList);
+
+	void updateStop(int roomNo);
 }

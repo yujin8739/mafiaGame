@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -268,6 +269,17 @@ public class ShopController {
         }
 
         return "redirect:/mypage/myitems";
+    }
+ // ✅ 테두리 표시 설정을 세션에 저장하는 메서드
+    @PostMapping("/profile/setBorder")
+    @ResponseBody
+    public String setProfileBorder(@RequestParam("borderEnabled") String borderEnabled,
+                                   HttpSession session) {
+
+        // "Y" 또는 "N"을 세션에 저장
+        session.setAttribute("borderEnabled", borderEnabled);
+
+        return "ok";
     }
     
 }
