@@ -13,9 +13,9 @@
 </head>
 <body>
     <!-- 메시지 표시 -->
-    <div th:if="${msg}">
+    <div th:if="${successMsg}">
         <script th:inline="javascript">
-            alert(/*[[${msg}]]*/ '메시지');
+            alert(/*[[${successMsg}]]*/ '메시지');
         </script>
     </div>
 
@@ -40,7 +40,7 @@
         </div>
 
         <!-- 쪽지 목록 -->
-        <div class="profile-section">
+        <div class="profile-section" id="message-list">
             <!-- 쪽지가 있을 때 -->
 			 <div th:if="${messages != null and !#lists.isEmpty(messages)}">
 			    <table class="message-table">
@@ -83,7 +83,7 @@
 			                        <!-- 제목 텍스트 -->
 			                        <span th:text="${message.title}">쪽지 제목</span>
 			                        
-			                        <!-- ✅ 새 메시지 배지 개선 -->
+			                        <!-- 새 메시지 배지 개건 -->
 			                        <span th:if="${message.readYn == 'N' and messageType == 'received'}" 
 			                              class="new-message-badge">NEW</span>
 			                    </span>
