@@ -29,7 +29,7 @@ public interface BoardService {
 
 	Reply selectReply(int replyNo);
 
-	int deleteLoungeBoard(Board board);
+	int deleteBoard(Board board);
 
 	int updateLoungeBoard(Board board, BoardFile file, boolean deleteFile);
 

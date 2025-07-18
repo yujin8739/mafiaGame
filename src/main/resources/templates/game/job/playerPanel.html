@@ -1,11 +1,12 @@
 <div class="playerPanelArea" th:fragment="playerPanelFragment">
 	<div class="playerPanel">
-	    <div id="playerPanelContainer" class="container">
-	        <div id="jobData" th:attr="data-job=${job}" style="display:none;"></div>
-	    </div>
+		<div id="playerPanelContainer" class="container">
+			<div id="jobData" th:attr="data-job=${job}" style="display: none;"></div>
+		</div>
 	</div>
 	<script th:inline="javascript">
 		let userNickList;
+		
 		/*<![CDATA[*/
 			function setUserNick(nickList){
 				userNickList = nickList;
@@ -17,8 +18,6 @@
 			    container.innerHTML = '';
 			    
 			    setUserName(deathList, userNickList, container);
-/* 			    chatLoad(job);
-			    console.log(job); */
 			    
 			    setReadyCount();
 			}
@@ -67,6 +66,113 @@
 			    });
 			}
 			
+			//버튼 설정
+			function setTimer(phase, seconds) {		
+				if (phase === "NIGHT") {
+					setAlive();
+		            setStart();
+		            roomReload();
+					if(job === "mafia"){
+						sendBtn.disabled = false;
+						sendBtn.classList.remove('disabled-btn');
+						chatInput.disabled = false;
+						chatInput.placeholder = "메시지를 입력하세요";
+											        
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot, index) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+											
+							if(img.src !== '/images/사망이미지.png'){
+								img.style.cursor = 'pointer';
+								img.onclick = () => {
+									killTo(userNickList[index],index);
+								};
+							}
+						});
+					} else if (job === "doctor") {
+						sendBtn.disabled = false;
+						sendBtn.classList.remove('disabled-btn');
+						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+											        
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot, index) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+							
+							img.style.cursor = 'pointer';
+							img.onclick = () => {
+								HealTo(userNickList[index],index);
+							};
+						});			        
+					} else if (job==="police") {
+						sendBtn.disabled = false;
+						sendBtn.classList.remove('disabled-btn');
+						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+											        
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot, index) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+							
+							img.style.cursor = 'pointer';
+							img.onclick = () => {
+								policeTo(userNickList[index],index);
+							};
+						});	
+					} else {
+						sendBtn.disabled = true;
+						chatInput.disabled = true;
+						sendBtn.classList.add('disabled-btn');
+						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+						console.log("test1");
+						// 클릭 막기
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+							img.style.cursor = 'default';
+							img.onclick = null;
+						});
+					}       
+				} else if (phase === "DAY") {
+		            setAlive();
+					sendBtn.disabled = false;
+					sendBtn.classList.remove('disabled-btn');
+					chatInput.disabled = false;
+					chatInput.placeholder = "메시지를 입력하세요";
+					
+					// 클릭 막기
+					const slots = document.querySelectorAll('.slot');
+					slots.forEach((slot) => {
+						const img = slot.querySelector('img.someNails');
+						if (!img) return;
+						img.style.cursor = 'default';
+						img.onclick = null;
+					});
+				} else if (phase === "VOTE") {
+					const slots = document.querySelectorAll('.slot');
+					slots.forEach((slot, index) => {
+						const img = slot.querySelector('img.someNails');
+						if (!img) return; 
+						
+						if(img.src !== '/images/사망이미지.png'){
+							img.style.cursor = 'pointer';
+							img.onclick = () => {
+								voteTo(userNickList[index], index);
+							};
+						}
+					});
+					
+					sendBtn.disabled = true;
+					sendBtn.classList.add('disabled-btn');
+					chatInput.disabled = true;
+					chatInput.placeholder = "투표 중입니다.";
+				}
+				
+				startTimer(phase, seconds)
+			}
+			
 			function updateTimerUI(phase, time) {
 			    const phaseDisplay = document.getElementById("phaseDisplay");
 			    const timerDisplay = document.getElementById("timerDisplay");
@@ -75,14 +181,10 @@
 
 			    switch (phase) {
 			        case "NIGHT":
-			            setAlive();
-			            setStart();
 			            isNight = true;
 			            phaseText = "밤";
 			            break;
 			        case "DAY":
-			            setAlive();
-			            roomReload();
 			            isNight = false;
 			            phaseText = "낮";
 			            break;
@@ -95,94 +197,75 @@
 
 			    phaseDisplay.textContent = `현재 단계: ${phaseText}`;
 			    if (timerDisplay) timerDisplay.textContent = `남은 시간: ${time}초`;
-
-			    if (phase === "NIGHT") {
-		
-			    	if(job !== 'mafia'){
-				        sendBtn.classList.add('disabled-btn');
-				        chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
-				        // 클릭 막기
-				        const slots = document.querySelectorAll('.slot');
-				        slots.forEach((slot) => {
-				            const img = slot.querySelector('img.someNails');
-				            if (!img) return;
-				            img.style.cursor = 'default';
-				            img.onclick = null;
-				        });
-			    	} else {
-				        sendBtn.disabled = false;
-				        sendBtn.classList.remove('disabled-btn');
-				        chatInput.disabled = false;
-				        chatInput.placeholder = "메시지를 입력하세요";
-				        
-				        const slots = document.querySelectorAll('.slot');
-				        slots.forEach((slot, index) => {
-				            const img = slot.querySelector('img.someNails');
-				            if (!img) return;
-
-				            img.style.cursor = 'pointer';
-				            img.onclick = () => {
-				                killTo(userNickList[index]);
-				            };
-				        });
-			    	}       
-				} else if (phase === "DAY") {
-			        sendBtn.disabled = false;
-			        sendBtn.classList.remove('disabled-btn');
-			        chatInput.disabled = false;
-			        chatInput.placeholder = "메시지를 입력하세요";
-
-			        // 클릭 막기
-			        const slots = document.querySelectorAll('.slot');
-			        slots.forEach((slot) => {
-			            const img = slot.querySelector('img.someNails');
-			            if (!img) return;
-			            img.style.cursor = 'default';
-			            img.onclick = null;
-			        });
-			    } else if (phase === "VOTE") {
-			        const slots = document.querySelectorAll('.slot');
-			        slots.forEach((slot, index) => {
-			            const img = slot.querySelector('img.someNails');
-			            if (!img) return;
-
-			            img.style.cursor = 'pointer';
-			            img.onclick = () => {
-			                voteTo(userNickList[index], index);
-			            };
-			        });
-
-			        sendBtn.disabled = true;
-			        sendBtn.classList.add('disabled-btn');
-			        chatInput.disabled = true;
-			        chatInput.placeholder = "투표 중입니다.";
-			    }
 			}
 
 			function voteTo(targetNick, index) {
+			    if (hasKilld) {
+			        alert("이미 투표하셨습니다.");
+			        return;
+			    }
+
 			    if (!confirm(`${targetNick}에게 투표하시겠습니까?`)) return;
-			    
-			    let userNameList = []; 
+
+			    let userNameList = [];
 			    try {
-					userNameList = JSON.parse(room.userList);
-					voteUser(userNameList[index]);
-				} catch (e) {
-					console.error("userNameList 파싱 실패", e);
-					userNameList = [];
-			    } finally {
-					const slots = document.querySelectorAll('.slot');
-					slots.forEach((slot) => {
-						const img = slot.querySelector('img.someNails');
-						if (!img) return;
-						img.style.cursor = 'default';
-						img.onclick = null;
-					});
+			        userNameList = JSON.parse(room.userList);
+			        voteKill(userNameList[index]);
+			        hasKilld = true; // 여기서 투표 완료 상태로 변경
+			    } catch (e) {
+			        console.error("userNameList 파싱 실패", e);
+			        userNameList = [];
 			    }
 			}
 			
-			function killTo(targetNick) {
+			function killTo(targetNick, index) {
+				if (hasKilld) {
+			        alert("이미 한명을 제거하셨습니다.");
+			        return;
+			    }
 			    if (!confirm(`${targetNick}를 제거 하시겠습니까??`)) return;
-			    sendEvent(6, targetNick);
+			    try {
+			        userNameList = JSON.parse(room.userList);
+			        console.log(room.userList);
+				    mafiaKill(userNameList[index]);
+				    hasKilld = true;
+			    } catch (e) {
+			        console.error("userNameList 파싱 실패", e);
+			        userNameList = [];
+			    }
+			}
+			
+			function HealTo(targetNick, index) {
+				if (hasKilld) {
+			        alert("이미 한명을 치료하셨습니다.");
+			        return;
+			    }
+			    if (!confirm(`${targetNick}를 치료 하시겠습니까??`)) return;
+			    try {
+			        userNameList = JSON.parse(room.userList);
+			    	doctorHeal(userNameList[index]);
+			    	hasKilld = true;
+			    } catch (e) {
+			        console.error("userNameList 파싱 실패", e);
+			        userNameList = [];
+			    }
+			}
+			
+			function policeTo(targetNick, index) {
+				if (hasKilld) {
+			        alert("이미 한명을 조사하셨습니다.");
+			        return;
+			    }
+				if (!confirm(`${targetNick}를 조사 하시겠습니까??`)) return;
+			    try {
+			        userNameList = JSON.parse(room.userList);
+			        policeCheck(userNameList[index]);
+			    	hasKilld = true;
+			    } catch (e) {
+			        console.error("userNameList 파싱 실패", e);
+			        userNameList = [];
+			    }
+				
 			}
 		/*]]>*/
 	</script>

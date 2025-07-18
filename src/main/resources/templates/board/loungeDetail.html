@@ -623,7 +623,7 @@ hr {
 				  });
 			});
 		    
-	        $('#commentList').on('click', '.like-btn', function () {
+	        $('.comments-section').on('click', '.like-btn', function () {
 	    	  // TODO: Ajax 호출 등으로 좋아요 처리
 	  	  		 const $count = $(this).next(); //count적는 span 태그
 			 const count = parseInt($count.text());	    	  		 
@@ -640,6 +640,7 @@ hr {
 	    	  		 }else{
 	    	  			 alert("해당 댓글에 '좋아요'가 등록되지 않았습니다");
 	    	  		 }
+	    	  		loadComments();
 	    	  	 },
 	    	  	 error : function(){
 	    	  		alert("서버 오류가 발생했습니다. 잠시후 다시 시도해주세요");
@@ -648,7 +649,7 @@ hr {
 	    	  
 	    	});
 	
-	    	$('#commentList').on('click', '.report-btn', function () {
+	    	$('.comments-section').on('click', '.report-btn', function () {
 	    	  const confirmReport = confirm('이 댓글을 신고하시겠습니까?');
 	    	  if (confirmReport) {
 	    	    alert('신고 처리됨');
@@ -656,7 +657,7 @@ hr {
 	    	  }
 	    	});
 	
-	    	$('#commentList').on('click', '.delete-btn', function (e) {
+	    	$('.comments-section').on('click', '.delete-btn', function (e) {
 	    		
 	    	  const confirmDelete = confirm('이 댓글을 삭제하시겠습니까?');
 	    	  

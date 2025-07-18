@@ -1,6 +1,7 @@
 package com.mafia.game.board.controller;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -61,6 +62,9 @@ public class BoardController {
 	
 	@Value("${file.uploadVideo.path}")
 	private String mp4Path;
+	
+	@Value("${file.deletedVideo.path}")
+	private String deletedVideoPath;
 	
 	/*=======================================라운지============================================*/
 	
@@ -190,11 +194,12 @@ public class BoardController {
 		
 		Board board = service.loungeBoardDetail(boardNo);
 		
-		int result = service.deleteLoungeBoard(board);//삭제할 게시글 정보 보내기
+		int result = service.deleteBoard(board);//삭제할 게시글 정보 보내기
 		
 		if(result > 0) { //BOARD 테이블에서 삭제 완료
+			String statusOfFile = board.getFileList().get(0).getStatus();
 			
-			if(!board.getFileList().isEmpty()) { //게시글에 첨부파일 있었을 경우
+			if("Y".equals(statusOfFile)) { // 게시글 첨부파일이 존재한다면
 				String changeName = board.getFileList().get(0).getChangeName();
 				if(deleteFile(loungeImagePath, deletedLoungeImagePath, changeName)) {
 					log.debug("게시글 파일 삭제 완료");
@@ -202,11 +207,11 @@ public class BoardController {
 					log.debug("게시글 파일 삭제 실패");
 				}
 			}
+		
 			
 			ArrayList<Reply> replyList = board.getReplyList();
 			for(Reply reply : replyList) {
-				reply = service.selectReply(reply.getReplyNo());
-				if(reply.getChangeName() != null) {
+				if(reply.getFileNo() != 0) {
 					if(deleteFile(replyImagePath,deletedReplyImagePath,reply.getChangeName())) {
 						log.debug("댓글 파일 삭제 완료");
 					}else {
@@ -442,30 +447,14 @@ public class BoardController {
 	            redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
 	        } else {
 	            // DB 저장 실패 시, 관련된 파일들 전부 삭제
-	            String baseName = changeName.substring(0, changeName.lastIndexOf("."));
-	            File[] files = dir.listFiles((d, name) ->
-	                name.startsWith(baseName) &&
-	                (name.endsWith(".ts") || name.endsWith(".m3u8") || name.endsWith(".jpg") || name.endsWith(".mp4"))
-	            );
-
-	            if (files != null) {
-	                for (File f1 : files) f1.delete();
-	            }
+	        	deleteHLSFiles(changeName, new File(mp4Path));
 
 	            redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
 	        }
 
 	    } catch (Exception e) {
 	    	// DB 저장 실패 시, 관련된 파일들 전부 삭제
-            String baseName = changeName.substring(0, changeName.lastIndexOf("."));
-            File[] files = dir.listFiles((d, name) ->
-                name.startsWith(baseName) &&
-                (name.endsWith(".ts") || name.endsWith(".m3u8") || name.endsWith(".jpg") || name.endsWith(".mp4"))
-            );
-
-            if (files != null) {
-                for (File f1 : files) f1.delete();
-            }
+            deleteHLSFiles(changeName, new File(mp4Path));
 	    	
 	        e.printStackTrace();
 	        redirectAttributes.addFlashAttribute("msg", "업로드 중 오류가 발생했습니다.");
@@ -474,13 +463,46 @@ public class BoardController {
 	    return "redirect:/board/video";
 	}
 	
-	@PostMapping("/video/increaseCount/{boardNo}")
-	@ResponseBody
-	public int increaseCount(@PathVariable int boardNo) {
+	//영상 업로드 실패시 서버에 업로드된 파일들 완전히 제거
+	private void deleteHLSFiles(String changeName, File dir) {
+		String baseName = changeName.substring(0,changeName.lastIndexOf("."));
+		File[] files = dir.listFiles(new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(baseName) &&
+					   (name.endsWith(".ts") || name.endsWith(".m3u8") ||
+					   name.endsWith(".jpg") || name.endsWith(".mp4"));
+			}
+		});
 		
-		return service.increaseCount(boardNo);
+		if(files != null) {
+			for(File f : files) {
+				f.delete();
+			}
+		}
 	}
 	
+	private void transferDeletedHLSFiles(String changeName, File dir) {
+		String baseName = changeName.substring(0,changeName.lastIndexOf("."));
+		File[] files = dir.listFiles(new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(baseName) &&
+					   (name.endsWith(".ts") || name.endsWith(".m3u8") ||
+					   name.endsWith(".jpg") || name.endsWith(".mp4"));
+			}
+		});
+		
+		if(files != null) {
+			File deletedDir = new File(deletedVideoPath);
+			if(!deletedDir.exists()) deletedDir.mkdirs(); 
+			for(File f : files) {
+				f.renameTo(new File(deletedVideoPath + f.getName()));
+			}
+		}
+	}
 	
 	@GetMapping("/video/getViewCount/{boardNo}")
 	@ResponseBody
@@ -490,15 +512,24 @@ public class BoardController {
 	}
 	
 	@GetMapping("/video/detail/{boardNo}")
-	public String videoDetail(@PathVariable int boardNo, Model model) {
+	public String videoDetail(@PathVariable int boardNo, Model model, RedirectAttributes redirectAttribute) {
 		
-		BoardFile video = service.videoDetail(boardNo);
+		int result = service.increaseCount(boardNo);
 		
-		video = BadgeSetUtil.setBadgeUrl(video);
+		if(result > 0) {
+			BoardFile video = service.videoDetail(boardNo);
+			
+			video = BadgeSetUtil.setBadgeUrl(video);
+			
+			model.addAttribute("video",video);
+			
+			return "board/videoDetail";
+		}else {
+			
+			redirectAttribute.addFlashAttribute("msg", "게시글이 정상적으로 조회되지 않았습니다");
+			return  "board/video";
+		}
 		
-		model.addAttribute("video",video);
-		
-		return "board/videoDetail";
 	}
 
 
