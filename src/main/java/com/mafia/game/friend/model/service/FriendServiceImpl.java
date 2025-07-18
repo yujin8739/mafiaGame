@@ -15,58 +15,63 @@ import com.mafia.game.member.model.vo.Member;
 
 @Service
 @Transactional
-public class FriendServiceImpl implements FriendService  {
-	@Autowired
-	private SqlSessionTemplate sqlSession;
-	
-	@Autowired
-	private FriendDao friendDao;
-	
-	// 친구 목록 조회
+public class FriendServiceImpl implements FriendService {
+    
+    @Autowired
+    private SqlSessionTemplate sqlSession;
+    
+    @Autowired
+    private FriendDao friendDao;
+    
+    /**
+     * 친구 목록 조회
+     */
     @Override
     public ArrayList<FriendList> getFriendList(String userName) {
         return friendDao.getFriendList(sqlSession, userName);
     }
     
-    // 친구 요청 목록 조회 
+    /**
+     * 받은 친구 요청 목록 조회
+     */
     @Override
     public ArrayList<FriendRelation> getPendingRequests(String userName) {
         return friendDao.getPendingRequests(sqlSession, userName);
     }
     
-    // 사용자 검색(ID, 넥네임)
+    /**
+     * 받은 게임 초대 목록 조회
+     */
+    @Override
+    public ArrayList<GameInvite> getPendingGameInvites(String userName) {
+        return friendDao.getPendingGameInvites(sqlSession, userName);
+    }
+    
+    /**
+     * 사용자 검색 (아이디 또는 닉네임으로)
+     */
     @Override
     public Member searchUser(String searchKeyword) {
         return friendDao.searchUser(sqlSession, searchKeyword);
     }
     
-    // 이미 친구인지 확인
-    @Override
-    public boolean isAlreadyFriend(String userName, String friendUserName) {
-        int count = friendDao.isAlreadyFriend(sqlSession, userName, friendUserName);
-        return count > 0;
-    }
-    
-    // 친구 요청이 있는지 확인
-    @Override
-    public boolean hasRequestBetween(String userName, String friendUserName) {
-        int count = friendDao.hasRequestBetween(sqlSession, userName, friendUserName);
-        return count > 0;
-    }
-    
-    // 친구 요청 보내기
+    /**
+     * 친구 요청 보내기
+     */
     @Override
     public int sendFriendRequest(FriendRelation friendRequest) {
         return friendDao.sendFriendRequest(sqlSession, friendRequest);
     }
     
-    // 친구 요청 수락
+    /**
+     * 친구 요청 수락
+     */
     @Override
     public int acceptFriendRequest(int relationNo, String userName) {
         // 1. 친구 요청 수락 처리
-        int result1 = friendDao.acceptFriendRequest(sqlSession, relationNo, userName);
+        int result = friendDao.acceptFriendRequest(sqlSession, relationNo, userName);
         
-        if (result1 > 0) {
+        if (result > 0) {
             // 2. 친구 관계 정보 조회
             FriendRelation request = friendDao.getFriendRequestById(sqlSession, relationNo);
             
@@ -87,14 +92,20 @@ public class FriendServiceImpl implements FriendService  {
             }
         }
         
-        return result1;
+        return result;
     }
     
+    /**
+     * 친구 요청 거절
+     */
     @Override
     public int rejectFriendRequest(int relationNo, String userName) {
         return friendDao.rejectFriendRequest(sqlSession, relationNo, userName);
     }
     
+    /**
+     * 친구 삭제
+     */
     @Override
     public int deleteFriend(String userName, String friendUserName) {
         // 양방향 친구 관계 삭제
@@ -104,16 +115,17 @@ public class FriendServiceImpl implements FriendService  {
         return result1 + result2;
     }
     
+    /**
+     * 게임 초대 보내기
+     */
     @Override
     public int sendGameInvite(GameInvite gameInvite) {
         return friendDao.sendGameInvite(sqlSession, gameInvite);
     }
     
-    @Override
-    public ArrayList<GameInvite> getPendingGameInvites(String userName) {
-        return friendDao.getPendingGameInvites(sqlSession, userName);
-    }
-    
+    /**
+     * 게임 초대 응답 (수락/거절)
+     */
     @Override
     public int respondGameInvite(int inviteNo, String status, String userName) {
         return friendDao.respondGameInvite(sqlSession, inviteNo, status, userName);
