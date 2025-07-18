@@ -107,7 +107,7 @@ public class FriendController {
     }
     
     /**
-     * 친구 요청 보내기 (AJAX)
+     * 친구 요청 보내기 (AJAX) - 수정됨
      */
     @PostMapping("/request")
     @ResponseBody
@@ -130,8 +130,13 @@ public class FriendController {
                 response.put("success", false);
                 response.put("message", "이미 친구 요청을 보냈거나 받은 상대입니다.");
             } else {
-                // 친구 요청 생성
-                int result = friendService.sendFriendRequest(loginUser.getUserName(), friendUserName);
+                // 친구 요청 생성 - 수정된 부분
+                FriendRelation friendRequest = new FriendRelation();
+                friendRequest.setRequesterName(loginUser.getUserName());
+                friendRequest.setReceiverName(friendUserName);
+                friendRequest.setReceiverStatus("PENDING");
+                
+                int result = friendService.sendFriendRequest(friendRequest);
                 
                 if (result > 0) {
                     response.put("success", true);
@@ -260,12 +265,12 @@ public class FriendController {
     }
     
     /**
-     * 게임방 초대 (AJAX)
+     * 게임방 초대 (AJAX) - 수정됨
      */
     @PostMapping("/invite")
     @ResponseBody
     public Map<String, Object> inviteToGame(@RequestParam String friendUserName,
-                                          @RequestParam String roomNo,
+                                          @RequestParam int roomNo, // String에서 int로 변경
                                           @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
         
         Map<String, Object> response = new HashMap<>();
@@ -281,7 +286,7 @@ public class FriendController {
             GameInvite gameInvite = new GameInvite();
             gameInvite.setSenderName(loginUser.getUserName());
             gameInvite.setReceiverName(friendUserName);
-            gameInvite.setRoomNo(Integer.parseInt(roomNo)); // String을 int로 변환
+            gameInvite.setRoomNo(roomNo); // 이미 int 타입이므로 바로 설정
             gameInvite.setInviteStatus("PENDING");
             
             int result = friendService.sendGameInvite(gameInvite);
@@ -294,6 +299,9 @@ public class FriendController {
                 response.put("message", "게임 초대 전송에 실패했습니다.");
             }
             
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "잘못된 방 번호입니다.");
         } catch (Exception e) {
             e.printStackTrace();
             response.put("success", false);
@@ -304,7 +312,45 @@ public class FriendController {
     }
     
     /**
-     * 친구 요청 알림 확인 (AJAX)
+     * 게임 초대 응답 (AJAX) - 새로 추가
+     */
+    @PostMapping("/invite/respond")
+    @ResponseBody
+    public Map<String, Object> respondGameInvite(@RequestParam int inviteNo,
+                                               @RequestParam String status,
+                                               @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        
+        try {
+            int result = friendService.respondGameInvite(inviteNo, status, loginUser.getUserName());
+            
+            if (result > 0) {
+                String message = "ACCEPTED".equals(status) ? "게임 초대를 수락했습니다." : "게임 초대를 거절했습니다.";
+                response.put("success", true);
+                response.put("message", message);
+            } else {
+                response.put("success", false);
+                response.put("message", "게임 초대 응답에 실패했습니다.");
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "게임 초대 응답 중 오류가 발생했습니다.");
+        }
+        
+        return response;
+    }
+    
+    /**
+     * 알림 조회 (AJAX)
      */
     @GetMapping("/notifications")
     @ResponseBody
