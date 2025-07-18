@@ -11,7 +11,7 @@ import com.mafia.game.friend.model.vo.FriendRelation;
 import com.mafia.game.friend.model.vo.GameInvite;
 import com.mafia.game.member.model.vo.Member;
 
-import jakarta.data.repository.Repository;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class FriendDao {
