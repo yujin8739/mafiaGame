@@ -204,7 +204,8 @@ public class BoardController {
 				if(deleteFile(loungeImagePath, deletedLoungeImagePath, changeName)) {
 					log.debug("게시글 파일 삭제 완료");
 				}else {
-					log.debug("게시글 파일 삭제 실패");
+					redirectAttributes.addFlashAttribute("msg","게시글 첨부파일 삭제 중 오류가 발생하였습니다.");
+					return "redirect:/board/lounge/detail/" + boardNo;
 				}
 			}
 		
@@ -215,7 +216,8 @@ public class BoardController {
 					if(deleteFile(replyImagePath,deletedReplyImagePath,reply.getChangeName())) {
 						log.debug("댓글 파일 삭제 완료");
 					}else {
-						log.debug("댓글 파일 삭제 실패");
+						redirectAttributes.addFlashAttribute("msg","댓글 첨부파일 삭제 중 오류가 발생하였습니다.");
+						return "redirect:/board/lounge/detail/" + boardNo;
 					}
 				}
 			}
@@ -241,7 +243,7 @@ public class BoardController {
 	}
 	
 	@PostMapping("/lounge/update")
-	public String updateLoungeBoard(Board board, MultipartFile uploadFile, boolean deleteFile) {
+	public String updateLoungeBoard(Board board, MultipartFile uploadFile, boolean deleteFile, RedirectAttributes redirectAttributes) {
 		
 		BoardFile file = null;
 		
@@ -263,25 +265,31 @@ public class BoardController {
 			
 			if(!board.getChangeName().equals("")) { //기존 파일 있었을 경우
 				if(file != null || deleteFile == true) { //파일 변경했을 경우 또는 파일 삭제 버튼 눌렀을 경우
-					if(deleteFile(loungeImagePath, deletedLoungeImagePath, board.getChangeName())) {
-						log.debug("기존 파일 삭제 완료");
-					}else {
-						log.debug("기존 파일 삭제 실패");
+					if(!deleteFile(loungeImagePath, deletedLoungeImagePath, board.getChangeName())) {
+						redirectAttributes.addFlashAttribute("msg","첨부파일 수정 중 오류가 발생하였습니다");
+						return "redirect:/board/lounge";
 					}
+						
+					
 				}
 			}
 			
 			if(file != null) {
 				saveImage(loungeImagePath, uploadFile, file.getChangeName()); //변경된 파일 있다면 서버에 저장
+				
+				if(!new File(loungeImagePath + file.getChangeName()).exists()) {
+					redirectAttributes.addFlashAttribute("msg","첨부파일 등록 중 오류가 발생하였습니다");
+					return "redirect:/board/lounge";
+				}
 			}
-			
-			return "redirect:/board/lounge/detail/" + board.getBoardNo();
+			redirectAttributes.addFlashAttribute("msg","게시글이 정상적으로 수정되었습니다");
 			
 		}else {//게시글 및 파일 변경 실패
 			
-			return "redirect:/board/lounge/update/" + board.getBoardNo();
+			redirectAttributes.addFlashAttribute("msg","게시글 수정 중 오류가 발생하였습니다");
 			
 		}
+		return "redirect:/board/lounge";
 		
 		
 		
@@ -365,9 +373,9 @@ public class BoardController {
 		return "board/gallery";
 	}
 	
-	@GetMapping("/gallery/write")
-	public String glleryWriteForm() {
-		return "board/galleryWriteForm";
+	@GetMapping("/gallery/upload")
+	public String glleryUploadForm() {
+		return "board/galleryUploadForm";
 	}
 	
 	
@@ -483,7 +491,7 @@ public class BoardController {
 		}
 	}
 	
-	private void transferDeletedHLSFiles(String changeName, File dir) {
+	private boolean transferDeletedHLSFiles(String changeName, File dir) {
 		String baseName = changeName.substring(0,changeName.lastIndexOf("."));
 		File[] files = dir.listFiles(new FilenameFilter() {
 			
@@ -495,13 +503,17 @@ public class BoardController {
 			}
 		});
 		
+		boolean flag = true;
+		
 		if(files != null) {
 			File deletedDir = new File(deletedVideoPath);
 			if(!deletedDir.exists()) deletedDir.mkdirs(); 
 			for(File f : files) {
-				f.renameTo(new File(deletedVideoPath + f.getName()));
+				flag = f.renameTo(new File(deletedVideoPath + f.getName()));
 			}
 		}
+		
+		return flag;
 	}
 	
 	@GetMapping("/video/getViewCount/{boardNo}")
@@ -531,6 +543,107 @@ public class BoardController {
 		}
 		
 	}
+	
+	@PostMapping("/video/delete/{boardNo}")
+	public String deleteVideoBoard(@PathVariable int boardNo,RedirectAttributes redirectAttributes) {
+		
+
+		Board board = service.loungeBoardDetail(boardNo);
+		
+		int result = service.deleteBoard(board);//삭제할 게시글 정보 보내기
+		
+		if(result > 0) {
+			
+			String changeName = board.getFileList().get(0).getChangeName(); //ex) 123123123.mp4
+			
+			if(transferDeletedHLSFiles(changeName, new File(mp4Path))) {
+				System.out.println("게시글 파일 삭제 완료");
+			}else {
+				redirectAttributes.addFlashAttribute("msg","영상 삭제 중 오류가 발생하였습니다");
+				return "redirect:/board/video/detail/" + boardNo;
+			}
+		
+			
+			ArrayList<Reply> replyList = board.getReplyList();
+			for(Reply reply : replyList) {
+				if(reply.getFileNo() != 0) {
+					if(deleteFile(replyImagePath,deletedReplyImagePath,reply.getChangeName())) {
+						log.debug("댓글 파일 삭제 완료");
+					}else {
+						redirectAttributes.addFlashAttribute("msg","댓글 첨부파일 삭제 중 오류가 발생하였습니다");
+						return "redirect:/board/video/detail/" + boardNo;
+					}
+				}
+			}
+			
+			redirectAttributes.addFlashAttribute("msg","게시글이 정상적으로 삭제되었습니다.");
+			
+			return "redirect:/board/video";
+		}else {
+			redirectAttributes.addFlashAttribute("msg","게시글 삭제에 실패하였습니다.");
+			return "redirect:/board/video/detail/" + boardNo;
+		}
+		
+	}
+	
+	@GetMapping("/video/update/{boardNo}")
+	public String videoUpdateForm(@PathVariable int boardNo, Model model) {
+		
+		Board board = service.loungeBoardDetail(boardNo);
+		
+		model.addAttribute("board", board);
+		
+		return "board/videoUpdateForm";
+	}
+	
+	@PostMapping("/video/update")
+	public String updateVideo(Board board, MultipartFile videoFile, RedirectAttributes redirectAttributes) {
+		
+		String changeName = "";
+		File dir = new File(mp4Path);
+	    try {
+	       
+	        if (!dir.exists()) dir.mkdirs();
+
+	        // 1. mp4 저장
+	        changeName = VideoUploadUtil.saveMp4File(videoFile, mp4Path);
+
+	        // 2. ffmpeg → m3u8, ts, 썸네일 생성
+	        VideoUploadUtil.convertToHLS(mp4Path, changeName);
+
+	        // 3. DB 저장
+	        BoardFile f = new BoardFile();
+	        f.setBoardNo(board.getBoardNo());
+	        f.setType("video");
+	        f.setOriginName(videoFile.getOriginalFilename());
+	        f.setChangeName(changeName);
+	        f.setFileLevel(1);
+
+	        int result = service.updateLoungeBoard(board, f, false);
+	        
+	        if (result > 0) {
+	        	transferDeletedHLSFiles(board.getChangeName(), dir);
+	            redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 수정되었습니다");
+	        } else {
+	            // DB 저장 실패 시, 관련된 파일들 전부 삭제
+	        	deleteHLSFiles(changeName, dir);
+
+	            redirectAttributes.addFlashAttribute("msg", "게시글 수정에 실패하였습니다.");
+	        }
+
+	    } catch (Exception e) {
+	    	// DB 저장 실패 시, 관련된 파일들 전부 삭제
+            deleteHLSFiles(changeName, dir);
+	    	
+	        e.printStackTrace();
+	        redirectAttributes.addFlashAttribute("msg", "수정 중 오류가 발생했습니다.");
+	    }
+
+	    return "redirect:/board/video";
+								   
+		
+	}
+	
 
 
 	/*=======================================공통============================================*/
@@ -604,7 +717,7 @@ public class BoardController {
 	
 	
 	
-	//파일 삭제(deletedImage 폴더로 이동시키는 메소드)
+	//파일 삭제(deleted 폴더로 이동시키는 메소드)
 	public boolean deleteFile(String originPath,String deletePath,String changeName) {
 		
 		File deleteDir = new File(deletePath);

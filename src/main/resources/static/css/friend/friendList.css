@@ -1,0 +1,583 @@
+      /* 기본 스타일 */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0b0b0b;
+    color: #f5f5f5;
+    overflow-x: hidden;
+}
+
+/* 사이드바 오버레이 */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 친구 사이드바 */
+.friend-sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background-color: #1a1a1a;
+    border-left: 1px solid #333;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.friend-sidebar.active {
+    right: 0;
+}
+
+/* 사이드바 헤더 */
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #222;
+}
+
+.sidebar-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff3b3b;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #ff3b3b;
+    background-color: #333;
+}
+
+/* 친구 검색 섹션 */
+.friend-search-section {
+    padding: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background-color: #111;
+    color: #eee;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #ff3b3b;
+    box-shadow: 0 0 5px rgba(255, 59, 59, 0.3);
+}
+
+.search-btn {
+    padding: 10px 15px;
+    background-color: #ff3b3b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+}
+
+.search-btn:hover {
+    background-color: #cc2e2e;
+}
+
+/* 검색 결과 */
+.search-result {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #222;
+    border-radius: 6px;
+    border: 1px solid #444;
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.search-result.show {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-user {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.user-nickname {
+    font-size: 12px;
+    color: #888;
+}
+
+/* 탭 메뉴 */
+.sidebar-tabs {
+    display: flex;
+    background-color: #222;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px;
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tab-btn.active {
+    color: #ff3b3b;
+    border-bottom-color: #ff3b3b;
+    background-color: #1a1a1a;
+}
+
+.tab-btn:hover {
+    color: #ff3b3b;
+    background-color: #333;
+}
+
+/* 컨텐츠 영역 */
+.sidebar-content {
+    padding: 0;
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+    min-height: 300px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* 친구 목록 */
+.friend-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.friend-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #333;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+
+.friend-item:hover {
+    background-color: #222;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-left: -10px;
+    margin-right: -10px;
+}
+
+.friend-item:last-child {
+    border-bottom: none;
+}
+
+.friend-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #444;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #ff3b3b;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.online-status {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+.online {
+    background-color: #4CAF50;
+}
+
+.offline {
+    background-color: #888;
+}
+
+.friend-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.friend-name {
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friend-status {
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.action-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.message-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.message-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+.invite-btn {
+    background-color: #2196F3;
+    color: white;
+}
+
+.invite-btn:hover {
+    background-color: #1976D2;
+    transform: translateY(-1px);
+}
+
+.remove-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.remove-btn:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+.accept-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.accept-btn:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.reject-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.reject-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+.friend-request-btn {
+    background-color: #ff3b3b;
+    color: white;
+}
+
+.friend-request-btn:hover {
+    background-color: #cc2e2e;
+    transform: translateY(-1px);
+}
+
+/* 빈 상태 */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.empty-state div:not(.empty-icon) {
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+/* 알림 배지 */
+.notification-badge {
+    background-color: #ff3b3b;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+    margin-left: 8px;
+    font-weight: bold;
+    min-width: 16px;
+    text-align: center;
+    display: inline-block;
+}
+
+/* 스크롤바 스타일 */
+.friend-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.friend-sidebar::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+.friend-sidebar::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.friend-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .friend-sidebar {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .friend-actions {
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .action-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .sidebar-tabs {
+        flex-direction: column;
+    }
+    
+    .tab-btn {
+        border-bottom: 1px solid #333;
+        border-right: none;
+    }
+    
+    .tab-btn.active {
+        border-bottom-color: #333;
+        border-left: 2px solid #ff3b3b;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-container {
+        flex-direction: column;
+    }
+    
+    .search-btn {
+        width: 100%;
+    }
+    
+    .friend-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .friend-info {
+        width: 100%;
+    }
+    
+    .friend-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* 애니메이션 */
+.friend-item {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 로딩 상태 */
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #888;
+    border-radius: 50%;
+    border-top-color: #ff3b3b;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 메시지 스타일 */
+.success-message {
+    background-color: rgba(76, 175, 80, 0.1);
+    border-left: 4px solid #4CAF50;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    color: #4CAF50;
+    font-size: 14px;
+}
+
+.error-message {
+    background-color: rgba(244, 67, 54, 0.1);
+    border-left: 4px solid #f44336;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    color: #f44336;
+    font-size: 14px;
+}
+
+/* 버튼 비활성화 상태 */
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.action-btn:disabled:hover {
+    transform: none !important;
+    background-color: initial !important;
+}
+
+/* 포커스 상태 */
+.search-input:focus,
+.action-btn:focus {
+    outline: 2px solid #ff3b3b;
+    outline-offset: 2px;
+}
+
+/* 접근성 개선 */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

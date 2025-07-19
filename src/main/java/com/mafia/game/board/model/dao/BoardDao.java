@@ -50,6 +50,10 @@ public class BoardDao {
 	public int getFileNo(SqlSessionTemplate sqlSession) {
 		return sqlSession.selectOne("boardMapper.getFileNo");
 	}
+	
+	public int getFileNo(SqlSessionTemplate sqlSession, int boardNo) {
+		return sqlSession.selectOne("boardMapper.getFileNoWithBoardNo", boardNo);
+	}
 
 	public int uploadFileOfReply(SqlSessionTemplate sqlSession, BoardFile file) {
 		return sqlSession.insert("boardMapper.uploadFileOfReply",file);

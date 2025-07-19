@@ -5,14 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.stereotype.Repository;
 
 import com.mafia.game.friend.model.vo.FriendList;
 import com.mafia.game.friend.model.vo.FriendRelation;
 import com.mafia.game.friend.model.vo.GameInvite;
 import com.mafia.game.member.model.vo.Member;
 
-
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class FriendDao {
@@ -133,4 +132,15 @@ public class FriendDao {
         params.put("userName", userName);
         return sqlSession.update("friendMapper.respondGameInvite", params);
     }
+
+    public boolean checkExistingRelation(SqlSessionTemplate sqlSession, String userName1, String userName2) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("userName1", userName1);
+        params.put("userName2", userName2);
+        
+        Integer count = sqlSession.selectOne("friendMapper.checkExistingRelation", params);
+        return count != null && count > 0;
+    }
+    
+   
 }

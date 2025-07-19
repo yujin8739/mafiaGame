@@ -23,365 +23,325 @@ import com.mafia.game.member.model.vo.Member;
 @Controller
 @RequestMapping("/friend")
 public class FriendController {
-    
-    @Autowired
-    private FriendService friendService;
-    
-    /**
-     * 친구 목록 페이지
-     */
-    @GetMapping("/list")
-    public String friendList(@SessionAttribute(name = "loginUser", required = false) Member loginUser, 
-                           Model model) {
-        
-        if (loginUser == null) {
-            return "redirect:/login/view";
-        }
-        
-        try {
-            // 친구 목록 조회
-            ArrayList<FriendList> friendList = friendService.getFriendList(loginUser.getUserName());
-            
-            // 친구 요청 목록 조회 (받은 요청)
-            ArrayList<FriendRelation> pendingRequests = friendService.getPendingRequests(loginUser.getUserName());
-            
-            model.addAttribute("friendList", friendList);
-            model.addAttribute("pendingRequests", pendingRequests);
-            model.addAttribute("currentUser", loginUser);
-            
-            return "friend/friendList";
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            model.addAttribute("msg", "친구 목록을 불러오는데 실패했습니다.");
-            return "common/error";
-        }
-    }
-    
-    /**
-     * 친구 검색 (AJAX)
-     */
-    @PostMapping("/search")
-    @ResponseBody
-    public Map<String, Object> searchFriend(@RequestParam String searchKeyword,
-                                          @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
-            return response;
-        }
-        
-        try {
-            // 사용자 검색 (아이디 또는 닉네임)
-            Member searchResult = friendService.searchUser(searchKeyword);
-            
-            if (searchResult == null) {
-                response.put("success", false);
-                response.put("message", "존재하지 않는 사용자입니다.");
-            } else if (searchResult.getUserName().equals(loginUser.getUserName())) {
-                response.put("success", false);
-                response.put("message", "자기 자신은 친구로 추가할 수 없습니다.");
-            } else {
-                // 이미 친구인지 확인
-                boolean isAlreadyFriend = friendService.isAlreadyFriend(loginUser.getUserName(), searchResult.getUserName());
-                
-                if (isAlreadyFriend) {
-                    response.put("success", false);
-                    response.put("message", "이미 친구입니다.");
-                } else {
-                    response.put("success", true);
-                    response.put("user", searchResult);
-                }
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "검색 중 오류가 발생했습니다.");
-        }
-        
-        return response;
-    }
-    
-    /**
-     * 친구 요청 보내기 (AJAX) - 수정됨
-     */
-    @PostMapping("/request")
-    @ResponseBody
-    public Map<String, Object> sendFriendRequest(@RequestParam String friendUserName,
-                                               @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
-            return response;
-        }
-        
-        try {
-            // 중복 요청 확인
-            boolean hasRequest = friendService.hasRequestBetween(loginUser.getUserName(), friendUserName);
-            
-            if (hasRequest) {
-                response.put("success", false);
-                response.put("message", "이미 친구 요청을 보냈거나 받은 상대입니다.");
-            } else {
-                // 친구 요청 생성 - 수정된 부분
-                FriendRelation friendRequest = new FriendRelation();
-                friendRequest.setRequesterName(loginUser.getUserName());
-                friendRequest.setReceiverName(friendUserName);
-                friendRequest.setReceiverStatus("PENDING");
-                
-                int result = friendService.sendFriendRequest(friendRequest);
-                
-                if (result > 0) {
-                    response.put("success", true);
-                    response.put("message", "친구 요청을 보냈습니다.");
-                } else {
-                    response.put("success", false);
-                    response.put("message", "친구 요청 전송에 실패했습니다.");
-                }
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "친구 요청 중 오류가 발생했습니다.");
-        }
-        
-        return response;
-    }
-    
-    /**
-     * 친구 요청 수락 (AJAX)
-     */
-    @PostMapping("/accept")
-    @ResponseBody
-    public Map<String, Object> acceptFriendRequest(@RequestParam int relationNo,
-                                                 @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
-            return response;
-        }
-        
-        try {
-            int result = friendService.acceptFriendRequest(relationNo, loginUser.getUserName());
-            
-            if (result > 0) {
-                response.put("success", true);
-                response.put("message", "친구 요청을 수락했습니다.");
-            } else {
-                response.put("success", false);
-                response.put("message", "친구 요청 수락에 실패했습니다.");
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "친구 요청 처리 중 오류가 발생했습니다.");
-        }
-        
-        return response;
-    }
-    
-    /**
-     * 친구 요청 거절 (AJAX)
-     */
-    @PostMapping("/reject")
-    @ResponseBody
-    public Map<String, Object> rejectFriendRequest(@RequestParam int relationNo,
-                                                 @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
-            return response;
-        }
-        
-        try {
-            int result = friendService.rejectFriendRequest(relationNo, loginUser.getUserName());
-            
-            if (result > 0) {
-                response.put("success", true);
-                response.put("message", "친구 요청을 거절했습니다.");
-            } else {
-                response.put("success", false);
-                response.put("message", "친구 요청 거절에 실패했습니다.");
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "친구 요청 처리 중 오류가 발생했습니다.");
-        }
-        
-        return response;
-    }
-    
-    /**
-     * 친구 삭제 (AJAX)
-     */
-    @PostMapping("/delete")
-    @ResponseBody
-    public Map<String, Object> deleteFriend(@RequestParam String friendUserName,
-                                          @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
-            return response;
-        }
-        
-        try {
-            int result = friendService.deleteFriend(loginUser.getUserName(), friendUserName);
-            
-            if (result > 0) {
-                response.put("success", true);
-                response.put("message", "친구를 삭제했습니다.");
-            } else {
-                response.put("success", false);
-                response.put("message", "친구 삭제에 실패했습니다.");
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "친구 삭제 중 오류가 발생했습니다.");
-        }
-        
-        return response;
-    }
-    
-    /**
-     * 게임방 초대 (AJAX) - 수정됨
-     */
-    @PostMapping("/invite")
-    @ResponseBody
-    public Map<String, Object> inviteToGame(@RequestParam String friendUserName,
-                                          @RequestParam int roomNo, // String에서 int로 변경
-                                          @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
-            return response;
-        }
-        
-        try {
-            // 게임 초대 생성
-            GameInvite gameInvite = new GameInvite();
-            gameInvite.setSenderName(loginUser.getUserName());
-            gameInvite.setReceiverName(friendUserName);
-            gameInvite.setRoomNo(roomNo); // 이미 int 타입이므로 바로 설정
-            gameInvite.setInviteStatus("PENDING");
-            
-            int result = friendService.sendGameInvite(gameInvite);
-            
-            if (result > 0) {
-                response.put("success", true);
-                response.put("message", "게임 초대를 보냈습니다.");
-            } else {
-                response.put("success", false);
-                response.put("message", "게임 초대 전송에 실패했습니다.");
-            }
-            
-        } catch (NumberFormatException e) {
-            response.put("success", false);
-            response.put("message", "잘못된 방 번호입니다.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "게임 초대 중 오류가 발생했습니다.");
-        }
-        
-        return response;
-    }
-    
-    /**
-     * 게임 초대 응답 (AJAX) - 새로 추가
-     */
-    @PostMapping("/invite/respond")
-    @ResponseBody
-    public Map<String, Object> respondGameInvite(@RequestParam int inviteNo,
-                                               @RequestParam String status,
-                                               @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
-            return response;
-        }
-        
-        try {
-            int result = friendService.respondGameInvite(inviteNo, status, loginUser.getUserName());
-            
-            if (result > 0) {
-                String message = "ACCEPTED".equals(status) ? "게임 초대를 수락했습니다." : "게임 초대를 거절했습니다.";
-                response.put("success", true);
-                response.put("message", message);
-            } else {
-                response.put("success", false);
-                response.put("message", "게임 초대 응답에 실패했습니다.");
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "게임 초대 응답 중 오류가 발생했습니다.");
-        }
-        
-        return response;
-    }
-    
-    /**
-     * 알림 조회 (AJAX)
-     */
-    @GetMapping("/notifications")
-    @ResponseBody
-    public Map<String, Object> getNotifications(@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if (loginUser == null) {
-            response.put("success", false);
-            response.put("notifications", new ArrayList<>());
-            return response;
-        }
-        
-        try {
-            // 친구 요청 알림
-            ArrayList<FriendRelation> friendRequests = friendService.getPendingRequests(loginUser.getUserName());
-            
-            // 게임 초대 알림
-            ArrayList<GameInvite> gameInvites = friendService.getPendingGameInvites(loginUser.getUserName());
-            
-            response.put("success", true);
-            response.put("friendRequests", friendRequests);
-            response.put("gameInvites", gameInvites);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("friendRequests", new ArrayList<>());
-            response.put("gameInvites", new ArrayList<>());
-        }
-        
-        return response;
-    }
+
+	@Autowired
+	private FriendService friendService;
+
+	/**
+	 * 친구 목록 페이지
+	 */
+	@GetMapping("/list")
+	public String friendList(@SessionAttribute(name = "loginUser", required = false) Member loginUser, Model model) {
+
+		// 로그인 체크
+		if (loginUser == null) {
+			return "redirect:/login/view";
+		}
+
+		// 친구 목록 가져오기
+		ArrayList<FriendList> friendList = friendService.getFriendList(loginUser.getUserName());
+
+		// 받은 친구 요청 가져오기
+		ArrayList<FriendRelation> friendRequests = friendService.getPendingRequests(loginUser.getUserName());
+
+		// 받은 게임 초대 가져오기
+		ArrayList<GameInvite> gameInvites = friendService.getPendingGameInvites(loginUser.getUserName());
+
+		model.addAttribute("friendList", friendList);
+		model.addAttribute("friendRequests", friendRequests);
+		model.addAttribute("gameInvites", gameInvites);
+		model.addAttribute("currentUser", loginUser);
+
+		return "friend/friendList";
+	}
+
+	/**
+	 * 친구 검색하기 (모달용)
+	 */
+	@PostMapping("/search")
+	@ResponseBody
+	public Map<String, Object> searchFriend(@RequestParam String searchKeyword,
+			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+
+		Map<String, Object> result = new HashMap<>();
+
+		// 로그인 체크
+		if (loginUser == null) {
+			result.put("success", false);
+			result.put("message", "로그인이 필요합니다.");
+			return result;
+		}
+
+		// 사용자 검색
+		Member foundUser = friendService.searchUser(searchKeyword);
+
+		if (foundUser == null) {
+			result.put("success", false);
+			result.put("message", "사용자를 찾을 수 없습니다.");
+		} else {
+			result.put("success", true);
+			result.put("user", foundUser);
+		}
+
+		return result;
+	}
+
+	/**
+	 * 친구 요청 보내기
+	 */
+	@PostMapping("/request")
+	@ResponseBody
+	public Map<String, Object> sendFriendRequest(@RequestParam String targetUserName,
+	                                           @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+	    
+	    Map<String, Object> result = new HashMap<>();
+	    
+	    if (loginUser == null) {
+	        result.put("success", false);
+	        result.put("message", "로그인이 필요합니다.");
+	        return result;
+	    }
+	    
+	    if (loginUser.getUserName().equals(targetUserName)) {
+	        result.put("success", false);
+	        result.put("message", "자기 자신에게는 친구 요청을 보낼 수 없습니다.");
+	        return result;
+	    }
+	    
+	    try {
+	        // 기존 친구 관계/요청 여부 체크
+	        boolean alreadyExists = friendService.checkExistingRelation(loginUser.getUserName(), targetUserName);
+	        if (alreadyExists) {
+	            result.put("success", false);
+	            result.put("message", "이미 친구 요청을 보냈거나 친구 관계입니다.");
+	            return result;
+	        }
+	        
+	        FriendRelation friendRequest = new FriendRelation();
+	        friendRequest.setRequesterName(loginUser.getUserName());
+	        friendRequest.setReceiverName(targetUserName);
+	        friendRequest.setReceiverStatus("PENDING");
+	        
+	        int success = friendService.sendFriendRequest(friendRequest);
+	        
+	        if (success > 0) {
+	            result.put("success", true);
+	            result.put("message", "친구 요청을 보냈습니다.");
+	        } else {
+	            result.put("success", false);
+	            result.put("message", "친구 요청에 실패했습니다.");
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        result.put("success", false);
+	        result.put("message", "이미 친구 요청을 보냈거나 친구 관계입니다.");
+	    }
+	    
+	    return result;
+	}
+
+	/**
+	 * 친구 요청 수락
+	 */
+	@PostMapping("/accept")
+	@ResponseBody
+	public Map<String, Object> acceptFriendRequest(@RequestParam int relationNo,
+			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+
+		Map<String, Object> result = new HashMap<>();
+
+		// 로그인 체크
+		if (loginUser == null) {
+			result.put("success", false);
+			result.put("message", "로그인이 필요합니다.");
+			return result;
+		}
+
+		try {
+			// 친구 요청 수락
+			int success = friendService.acceptFriendRequest(relationNo, loginUser.getUserName());
+
+			if (success > 0) {
+				result.put("success", true);
+				result.put("message", "친구 요청을 수락했습니다.");
+			} else {
+				result.put("success", false);
+				result.put("message", "친구 요청 수락에 실패했습니다. (권한이 없거나 이미 처리된 요청입니다)");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			result.put("success", false);
+			result.put("message", "오류가 발생했습니다: " + e.getMessage());
+		}
+
+		return result;
+	}
+
+	/**
+	 * 친구 요청 거절
+	 */
+	@PostMapping("/reject")
+	@ResponseBody
+	public Map<String, Object> rejectFriendRequest(@RequestParam int relationNo,
+			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+
+		Map<String, Object> result = new HashMap<>();
+
+		// 로그인 체크
+		if (loginUser == null) {
+			result.put("success", false);
+			result.put("message", "로그인이 필요합니다.");
+			return result;
+		}
+
+		// 친구 요청 거절
+		int success = friendService.rejectFriendRequest(relationNo, loginUser.getUserName());
+
+		if (success > 0) {
+			result.put("success", true);
+			result.put("message", "친구 요청을 거절했습니다.");
+		} else {
+			result.put("success", false);
+			result.put("message", "친구 요청 거절에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	/**
+	 * 친구 삭제
+	 */
+	@PostMapping("/delete")
+	@ResponseBody
+	public Map<String, Object> deleteFriend(@RequestParam String friendUserName,
+			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+
+		Map<String, Object> result = new HashMap<>();
+
+		// 로그인 체크
+		if (loginUser == null) {
+			result.put("success", false);
+			result.put("message", "로그인이 필요합니다.");
+			return result;
+		}
+
+		// 친구 삭제
+		int success = friendService.deleteFriend(loginUser.getUserName(), friendUserName);
+
+		if (success > 0) {
+			result.put("success", true);
+			result.put("message", "친구를 삭제했습니다.");
+		} else {
+			result.put("success", false);
+			result.put("message", "친구 삭제에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	/**
+	 * 게임방 초대 보내기
+	 */
+	@PostMapping("/invite")
+	@ResponseBody
+	public Map<String, Object> inviteToGame(@RequestParam String inviteUserName, @RequestParam int roomNo,
+			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+
+		Map<String, Object> result = new HashMap<>();
+
+		// 로그인 체크
+		if (loginUser == null) {
+			result.put("success", false);
+			result.put("message", "로그인이 필요합니다.");
+			return result;
+		}
+
+		// 게임 초대 생성
+		GameInvite gameInvite = new GameInvite();
+		gameInvite.setSenderName(loginUser.getUserName());
+		gameInvite.setReceiverName(inviteUserName); // inviteUserName -> receiverName
+		gameInvite.setRoomNo(roomNo);
+		gameInvite.setInviteStatus("PENDING");
+
+		// 게임 초대 보내기
+		int success = friendService.sendGameInvite(gameInvite);
+
+		if (success > 0) {
+			result.put("success", true);
+			result.put("message", "게임 초대를 보냈습니다.");
+		} else {
+			result.put("success", false);
+			result.put("message", "게임 초대에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	/**
+	 * 게임 초대 응답 (수락/거절)
+	 */
+	@PostMapping("/invite/respond")
+	@ResponseBody
+	public Map<String, Object> respondGameInvite(@RequestParam int inviteNo, @RequestParam String status,
+			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+
+		Map<String, Object> result = new HashMap<>();
+
+		// 로그인 체크
+		if (loginUser == null) {
+			result.put("success", false);
+			result.put("message", "로그인이 필요합니다.");
+			return result;
+		}
+
+		// 게임 초대 응답
+		int success = friendService.respondGameInvite(inviteNo, status, loginUser.getUserName());
+
+		if (success > 0) {
+			String message = "ACCEPTED".equals(status) ? "게임 초대를 수락했습니다." : "게임 초대를 거절했습니다.";
+			result.put("success", true);
+			result.put("message", message);
+		} else {
+			result.put("success", false);
+			result.put("message", "게임 초대 응답에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	/**
+	 * 알림 조회 (친구 요청 + 게임 초대 + 친구 목록 포함)
+	 */
+	@GetMapping("/notifications")
+	@ResponseBody
+	public Map<String, Object> getNotifications(
+			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+
+		Map<String, Object> result = new HashMap<>();
+
+		// 로그인 체크
+		if (loginUser == null) {
+			result.put("success", false);
+			result.put("friendList", new ArrayList<>());
+			result.put("friendRequests", new ArrayList<>());
+			result.put("gameInvites", new ArrayList<>());
+			return result;
+		}
+
+		// 친구 목록
+		ArrayList<FriendList> friendList = friendService.getFriendList(loginUser.getUserName());
+
+		// 친구 요청 알림
+		ArrayList<FriendRelation> friendRequests = friendService.getPendingRequests(loginUser.getUserName());
+
+		// 게임 초대 알림
+		ArrayList<GameInvite> gameInvites = friendService.getPendingGameInvites(loginUser.getUserName());
+
+		result.put("success", true);
+		result.put("friendList", friendList);
+		result.put("friendRequests", friendRequests);
+		result.put("gameInvites", gameInvites);
+
+		return result;
+	}
 }

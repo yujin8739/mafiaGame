@@ -128,11 +128,30 @@ body {
     color: #f1c40f;
 }
 
+.intro-title-highlight {
+    font-family: 'GmarketSansBold', 'Pretendard', 'Noto Sans KR', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ff004c; /* 강렬한 레드 */
+    margin-bottom: 10px;
+    margin-top: 10px;
+    text-shadow: 1px 1px 2px black;
+}
+
+.game-intro-text {
+    font-family: 'Nanum Gothic', 'Pretendard', 'Noto Sans KR', sans-serif; /* 예시: 고딕류 깔끔한 폰트 */
+    font-size: 1rem;
+    color: white;
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
 .role-detail-container {
     max-width: 800px;
     margin: 0 auto; /* 중앙 정렬 */
     display: flex;
     gap: 30px;
+    height: 400px;
 }
 
 .role-detail-img {

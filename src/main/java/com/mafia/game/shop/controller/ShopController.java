@@ -1,5 +1,7 @@
 package com.mafia.game.shop.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -281,5 +283,36 @@ public class ShopController {
 
         return "ok";
     }
+    @PostMapping("/mypage/reset-profile")
+    @ResponseBody
+    public ResponseEntity<?> resetProfileImage(HttpSession session) {
+        // 세션에서 로그인된 사용자 정보 추출
+        Member loginUser = (Member) session.getAttribute("loginUser");
+
+        // 로그인 상태 확인
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        String userName = loginUser.getUserName(); // 또는 getId() 등, DB 컬럼에 맞춰 사용
+        System.out.println(">>> userName: " + userName); // 로그 확인용
+
+        try {
+            int result = shopService.resetProfileImage(userName); // DB 업데이트 시도
+            System.out.println(">>> DB update result: " + result); // 디버깅용 로그
+
+            if (result > 0) {
+                return ResponseEntity.ok().build(); // 성공 응답
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("업데이트 대상 없음");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace(); // 콘솔에 예외 출력
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류 발생");
+        }
+    }
+
+    
     
 }
