@@ -22,13 +22,12 @@
 
     .board-wrapper {
       background-color: #fff;
-	  color: #333;
-	  border-radius: 12px;
-	  padding: 30px;
-	  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
-	
-	  max-width: 1000px;   /* ✅ 이 부분 추가 */
-	  margin: 40px auto;      /* ✅ 중앙 정렬 */
+      color: #333;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+      max-width: 1000px;
+      margin: 40px auto;
     }
 
     .main-tabs a {
@@ -46,11 +45,74 @@
       border-color: #c82e38;
     }
 
+    /* Top5 갤러리 */
+    .top5-gallery {
+      margin-bottom: 30px;
+    }
+
+    .top5-gallery .card {
+      background-color: #1e1e1e;
+      color: #eee;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(255,255,255,0.1);
+      min-width: 220px;
+      margin-right: 18px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      flex: none;
+    }
+
+    .top5-gallery .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #c82e38;
+    }
+
+    .top5-gallery .card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .top5-gallery .card-body {
+      padding: 10px 12px;
+    }
+
+    .top5-gallery .card-title {
+      font-weight: bold;
+      font-size: 16px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 8px;
+    }
+
+    .top5-gallery .card-meta {
+      font-size: 13px;
+      color: #bbb;
+      display: flex;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    /* 가로 스크롤 래퍼 */
+    .top5-gallery-scroll {
+      display: flex;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; /* Firefox */
+    }
+    .top5-gallery-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* 전체 갤러리 목록 */
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 24px;
-      margin-top: 30px;
     }
 
     .gallery-card {
@@ -59,16 +121,20 @@
       overflow: hidden;
       transition: transform 0.2s ease;
       box-shadow: 0 0 10px rgba(255,255,255,0.1);
+      cursor: pointer;
+      color: #eee;
     }
 
     .gallery-card:hover {
       transform: scale(1.03);
+      box-shadow: 0 0 16px #c82e38;
     }
 
     .gallery-card img {
       width: 100%;
-      height: 200px;
+      height: 180px;
       object-fit: cover;
+      display: block;
     }
 
     .gallery-info {
@@ -77,19 +143,22 @@
 
     .gallery-title {
       font-weight: bold;
-      color: #f5f5f5;
       font-size: 16px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: #fff;
+      margin-bottom: 6px;
     }
 
     .gallery-meta {
       font-size: 13px;
-      color: #aaa;
-      margin-top: 5px;
+      color: #bbb;
+      display: flex;
+      justify-content: space-between;
     }
 
+    /* 업로드 버튼 */
     .upload-btn {
       float: right;
       background-color: #444;
@@ -98,12 +167,15 @@
       padding: 7px 18px;
       border-radius: 25px;
       transition: all 0.2s;
+      margin-bottom: 24px;
     }
 
     .upload-btn:hover {
       background-color: #c82e38;
+      cursor: pointer;
     }
 
+    /* 게시물이 없을 때 */
     .no-posts {
       text-align: center;
       font-size: 18px;
@@ -117,40 +189,54 @@
   <div th:replace="common/header :: header"></div>
 
   <div class="board-wrapper">
-    <!-- 메인탭 유지 -->
+
+    <!-- 메인탭 -->
     <div class="main-tabs mb-4">
       <a th:href="@{/board/lounge}" >라운지</a>
       <a th:href="@{/board/gallery}" class="active">갤러리</a>
       <a th:href="@{/board/video}">하이라이트 영상</a>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex justify-content-between align-items-center">
       <h4 class="mb-0 font-weight-bold">갤러리</h4>
       <button class="upload-btn" th:onclick="'location.href=\'' + @{/board/gallery/upload} + '\';'">업로드</button>
     </div>
 
-    <!-- 갤러리 카드 뷰 -->
-    <div class="gallery-grid" th:if="${not #lists.isEmpty(boardList)}">
-      <div class="gallery-card" th:each="g : ${boardList}">
-        <img th:src="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=${g.fileList[0].changeName})}"
-             th:alt="${g.title}" />
+    <!-- Top5 갤러리 (좋아요 높은 순) -->
+    <div class="top5-gallery mt-4" th:if="${top5Gallery != null and #lists.isNotEmpty(top5Gallery)}">
+      <div class="top5-gallery-scroll">
+        <div class="card" th:each="g : ${top5Gallery}" th:onclick="'location.href=\'/board/gallery/view/' + ${g.id} + '\';'">
+          <img th:src="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=${g.fileList[0].changeName})}" th:alt="${g.title}" />
+          <div class="card-body">
+            <div class="card-title" th:text="${g.title}">갤러리 제목</div>
+            <div class="card-meta">
+              <span>❤️ <span th:text="${g.likeCount}">0</span></span>
+              <span>💬 <span th:text="${g.replyCount}">0</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전체 갤러리 목록 -->
+    <div class="gallery-grid mt-3" th:if="${galleryList != null and #lists.isNotEmpty(galleryList)}">
+      <div class="gallery-card" th:each="g : ${galleryList}" th:onclick="'location.href=\'/board/gallery/view/' + ${g.id} + '\';'">
+        <img th:src="@{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=${g.fileList[0].changeName})}" th:alt="${g.title}" />
         <div class="gallery-info">
-          <div class="gallery-title" th:text="${g.title}"></div>
+          <div class="gallery-title" th:text="${g.title}">갤러리 제목</div>
           <div class="gallery-meta">
-            by <span th:text="${g.nickName}"></span> · 
-            <span th:text="${g.createDate}"></span> · 
-            조회수 <span th:text="${g.viewCount}"></span>
+            <span>❤️ <span th:text="${g.likeCount}">0</span></span>
+            <span>💬 <span th:text="${g.replyCount}">0</span></span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 게시물이 없을 때 -->
-    <div class="no-posts" th:if="${#lists.isEmpty(boardList)}">
+    <div class="no-posts" th:if="${galleryList == null or #lists.isEmpty(galleryList)}">
       등록된 갤러리 작품이 없습니다.
     </div>
-    <!-- 썸네일이 없을 때 -->
-<!--     <img th:src="${g.fileList[0].status == 'Y'} ? @{/godDaddy_uploadImage/loungeImage/{fileName}(fileName=${g.fileList[0].changeName})} : @{/img/default.jpg}" /> -->
+
   </div>
 
   <div th:replace="common/footer :: footer"></div>

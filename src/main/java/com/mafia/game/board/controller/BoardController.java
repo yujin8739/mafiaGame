@@ -373,9 +373,9 @@ public class BoardController {
 		return "board/gallery";
 	}
 	
-	@GetMapping("/gallery/write")
-	public String glleryWriteForm() {
-		return "board/galleryWriteForm";
+	@GetMapping("/gallery/upload")
+	public String glleryUploadForm() {
+		return "board/galleryUploadForm";
 	}
 	
 	
