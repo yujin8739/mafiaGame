@@ -66,7 +66,7 @@ body {
 }
 
 .top-bar {
-	margin-left:40px;
+	margin-left: 40px;
 	background-color: #0b0b0b;
 	padding: 8px 20px;
 	display: flex;
@@ -86,98 +86,190 @@ body {
 
 /* 1. 전체 로그인 박스를 오른쪽 끝으로 붙이기 */
 .auth-buttons-wrapper {
-  display: flex;
-  justify-content: flex-end;  /* 👉 오른쪽 정렬 */
-  padding: 10px 20px;
+	display: flex;
+	justify-content: flex-end;
+	padding: 10px 20px;
 }
 
 /* 2. 내부 auth-buttons 박스는 가로 정렬 */
 .auth-buttons {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start; /* 위쪽 정렬 */
-  gap: 15px;
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: flex-start;
+	gap: 15px;
 }
 
 /* 3. 프로필 이미지 스타일 */
 .profile-img {
-  width: 100px;
-  height: 100px;
-  border-radius: 12px;
-  object-fit: cover;
-  margin-bottom: 6px;
-  border: 2px solid #777;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+	width: 100px;
+	height: 100px;
+	border-radius: 12px;
+	object-fit: cover;
+	margin-bottom: 6px;
+	border: 2px solid #777;
+	box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
 }
 
 /* 4. 오른쪽 닉네임 + 버튼 묶음 전체 */
 .auth-buttons .text-area {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  color: white;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 6px;
+	color: white;
 }
 
 /* 5. 환영 문구 스타일 */
 .auth-buttons .text-area span,
 .auth-buttons .text-area .nickname {
-  font-weight: bold;
-  font-size: 16px;
-  margin-right: 10px;
-  padding: 0;
-  color: white;
+	font-weight: bold;
+	font-size: 16px;
+	margin-right: 10px;
+	padding: 0;
+	color: white;
 }
 
 /* 6. 마이페이지 / 로그아웃 버튼 가로 정렬 */
 .auth-buttons .links {
-  display: flex;
-  flex-direction: row;
+	display: flex;
+	flex-direction: row;
 }
 
 /* 7. 링크 공통 스타일 */
 .auth-buttons a {
-  font-weight: bold;
-  font-size: 15px;
-  text-decoration: none;
-  margin-right: 8px;
+	font-weight: bold;
+	font-size: 15px;
+	text-decoration: none;
+	margin-right: 8px;
 }
 
 .auth-buttons a:hover {
-  text-decoration: underline;
+	text-decoration: underline;
 }
-/* 프로필 스타일 */
-.profile-img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;  /* 동그랗게 */
-  object-fit: cover;
-  border: none;        /* 테두리 제거 */
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);  /* 어두운 그림자로 배경과 부드럽게 연결 */
-}
+
+/* 프로필 스타일 (중복 정의 정리) */
 .profile-wrapper {
-  position: relative;
-  width: 120px;
-  height: 120px;
+	position: relative;
+	width: 120px;
+	height: 120px;
 }
 
 .border-img {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  width: 140px;
-  height: 170px;
-  pointer-events: none;
-  z-index: 2;
+	position: absolute;
+	top: -40px;
+	left: 0;
+	width: 140px;
+	height: 170px;
+	pointer-events: none;
+	z-index: 2;
 }
 
 .profile-img {
+	position: absolute;
+	top: 0;
+	left: 15px;
+	width: 110px;
+	height: 110px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: none;
+	box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+	z-index: 1;
+}
+
+/* ============================= */
+/* ✅ [추가] 상단 메뉴 드롭다운 스타일 */
+/* ============================= */
+/* 최상위 네비게이션 바 스타일 */
+.top-nav {
+  background-color: #0b0b0b;
+  padding: 20px 50px;
+  position: relative; /* 드롭다운 위치 기준 */
+}
+
+/* 메뉴 전체 - 가로 정렬 및 간격 */
+.menu {
+  display: flex;
+  justify-content: center;  /* 메뉴 가운데 정렬 */
+  align-items: center;
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  gap: 53px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* 각 메뉴 아이템 - 드롭다운 위치 기준 */
+.menu-item {
+  position: relative;
+}
+
+/* 메뉴 텍스트 (링크, span) */
+.menu a,
+.menu span {
+  color: #fff;
+  text-decoration: none;
+  padding: 15px 103px;
+  display: block;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+
+.menu a:hover {
+  color: #fff;
+}
+
+/* 전체 하위 메뉴 묶음 박스 - 기본은 숨김 */
+.all-submenus {
+  display: none; /* 기본 숨김 */
   position: absolute;
-  top: 0;
-  left: 15px;
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  object-fit: cover;
-  z-index: 1;
+  top: 100%;
+  left: 0;
+  width: 100vw;
+  background-color: #111;
+  padding: 0;
+  z-index: 1000;
+  border-top: 1px solid #333;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  justify-content: space-around;
+  flex-wrap: nowrap;
+}
+
+/* 최상위 메뉴에 마우스 올리면 all-submenus 보임 */
+.top-nav:hover .all-submenus,
+.all-submenus:hover {
+  display: flex;
+}
+
+/* 각 메뉴별 하위 메뉴 그룹 - 세로 정렬 */
+.menu-group {
+  display: flex;
+  justify-content: space-between; /* 두 열을 양옆에 배치 */
+  gap: 145px;
+  max-width: 1000px;
+  margin: 0;
+  padding: 0px 10px;
+}
+
+/* 각각의 열 */
+.menu-column {
+  display: flex;
+  flex-direction: column;  /* 메뉴 항목들을 세로로 나열 */
+  gap: 12px; /* 메뉴 항목 간 간격 */
+}
+
+.all-submenus a {
+  color: #ddd;
+  padding: 8px 12px;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-align: center;
+  min-width: 140px;
+}
+
+.all-submenus a:hover {
+  color: #fff;
+  background-color: #222;
 }
