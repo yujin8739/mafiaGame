@@ -27,11 +27,11 @@
 				            onclick="ready()">Ready</button>
 				    <div id="readyCount">Ready: 0</div>
 				</div>
-				<div id="dayCount">일차 : 0</div>
-				<div id="voteCount">투표 : 0</div>
-				<div id="gamePhaseContainer">
-					<div id="phaseDisplay">현재 단계: -</div>
-					<div id="timerDisplay">남은 시간: - 초</div>
+				<div id="gamePhaseContainer" class="game-phase">
+				 	<div id="dayCount" class="text-lg font-semibold text-gray-700">일차 : 0</div>
+				    <div id="killCount" class="text-lg font-semibold text-gray-700">투표 : 0</div>
+				    <div id="phaseDisplay" class="text-xl font-bold text-indigo-600">현재 단계: -</div>
+				    <div id="timerDisplay" class="text-lg text-gray-500">남은 시간: - 초</div>
 				</div>
 		    </div>
 		    <div th:replace="game/phoneModal :: phoneModal" 
@@ -77,6 +77,8 @@
 		let room = /*[[${room}]]*/ 'NULL';
 		let dayNo = 0;
 		isGaming = room.isGaming==='Y';
+		
+		let hasKilld = false;
 
 		if (isGaming) {
 			sendBtn.disabled = true; 
@@ -86,8 +88,9 @@
 			chatInput.placeholder = "재입장시 다음번 낮까지 채팅이 불가능합니다."; 
 		}
 		
+		//let socket = new WebSocket("wss://god-daddy.com/chat/gameMainChat?roomNo=" + roomNo);
 		let socket = new WebSocket("ws://localhost/chat/gameMainChat?roomNo=" + roomNo);
-
+		
 		socket.onopen = function () {
 			console.log("WebSocket 연결됨");
 			
@@ -249,17 +252,23 @@
 				setReadyCount();
 			} else if (msgData.type && msgData.type === "start") {
 				setStart();
+				loadHintList(roomNo);
 			} else if (msgData.type && msgData.type === "enter" || msgData.type === "leave") {
 				if (isGaming) {
 					setStart();
+					loadHintList(roomNo);
 				}
 				roomReloadToUserLoad()
 				//접속시 동작은 저장후 불러오기 때문에 리턴
 				return;
 			} else if (msgData.type && msgData.type === "phase") {
-			    startTimer(msgData.phase, msgData.remaining);
+			    setTimer(msgData.phase, msgData.remaining);
 			    return;
-			} 
+			} else if (msgData.type && msgData.type ==="MAFIA_WIN"
+	            	|| msgData.type === "CITIZEN_WIN"
+	            	|| msgData.type === "NEUTRALITY_WIN") {
+				setStop();
+			}
 			reciveMsg(msgData, div);
 			
 			scrollIfNeeded(wasAtBottom);
@@ -408,9 +417,27 @@
 					jobObj = myJob;
 					job = myJob.jobName;
 					chatLoad(job);
+					if(isStart){
+						alert("당신의 직업은 "+myJob.jobVisible+"입니다.");
+					}
+					console.log();
 				}
 			})
 			
+		}
+		
+		function setStop() {
+			isStart = false;
+			isGaming = false;
+			jobObj = null;
+			job = 'none';
+			roomReload();
+			
+			sendBtn.disabled = false; 
+			sendBtn.classList.remove('disabled-btn'); 
+
+			chatInput.disabled = false; 
+			chatInput.placeholder = "메시지를 입력하세요"; 
 		}
 		
 		function roomReload(){
@@ -438,17 +465,19 @@
 		}
 
 		function startTimer(phase, seconds) {
-		  remainTime = seconds;
-		  if(timerId) clearInterval(timerId);
-
-		  timerId = setInterval(() => {
-		    if(remainTime <= 0) {
-		      clearInterval(timerId);
-		      return;
-		    }
-		    remainTime--;
-		    updateTimerUI(phase, remainTime);
-		  }, 1000);
+			remainTime = seconds;
+			if(timerId) clearInterval(timerId);
+			
+			hasKilld = false;
+					  
+			timerId = setInterval(() => {
+				if(remainTime <= 0) {
+					clearInterval(timerId);
+					return;
+				}
+				remainTime--;
+				updateTimerUI(phase, remainTime);
+			}, 1000);
 		}
 		
 		function setAlive() {
@@ -464,33 +493,96 @@
 			});
 		}
 		
-		function voteUser(targetName) {
+		function voteKill(targetName) {
 		    $.ajax({
-		        url: "/room/voteUser",
+		        url: "/room/voteResult",
+		        method: "GET",
 		        data: {
 		            roomNo: roomNo,
 		            dayNo: dayNo,
 		            targetName: targetName,
 		        },
-		        success: function (vote) {
-		            if (!vote) return;
-
-		            let voteList = [];
-
+		        success: function (kill) {
+		            if (!kill) return;
+		            
+		            let killList = [];
 		            try {
-		                voteList = JSON.parse(vote);
-
-		                // 총 인원 수는 .slot 요소 수 - 1
-		                const total = document.querySelectorAll(".slot").length - 1;
-		                const current = voteList.length;
-
-		                document.getElementById("voteCount").innerText = "투표: " + current + " / " + total;
+		                killList = JSON.parse(kill);
+		                const total = document.querySelectorAll(".slot").length;
+		                const current = killList.length;
+		                document.getElementById("killCount").innerText = "투표: " + current + " / " + total;
 		            } catch (e) {
 		                console.error("투표 리스트 파싱 실패", e);
 		            }
 		        },
 		        error: function () {
 		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function mafiaKill(targetName) {
+		    $.ajax({
+		        url: "/room/mafiaKillResult",
+		        method: "GET",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (kill) {},
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function doctorHeal(targetName) {
+		    $.ajax({
+		        url: "/room/healResult",
+		        method: "GET",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (kill) {},
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function policeCheck(targetName) {
+		    $.ajax({
+		        url: "/room/policeCheck",
+		        method: "GET",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (result) {
+		        	alert(targetName+"의 직업은 "+result.jobVisible+"입니다.");
+		        },
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
+		
+		function loadHintList(roomNo) {
+		    $.ajax({
+		        url: "/room/getRoomHint",
+		        type: "GET",
+		        data: { roomNo: roomNo },
+		        success: function (data) {
+		            const container = $("#hintListContainer");
+		            container.empty();
+		            setHintList(data, container);
+		        },
+		        error: function () {
+		            console.error("힌트 불러오기 실패");
 		        }
 		    });
 		}

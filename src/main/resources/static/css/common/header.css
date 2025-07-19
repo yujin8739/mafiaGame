@@ -224,6 +224,7 @@ body {
 .all-submenus {
   display: none; /* 기본 숨김 */
   position: absolute;
+<<<<<<< HEAD
   top: 100%;
   left: 0;
   width: 100vw;
@@ -272,4 +273,39 @@ body {
 .all-submenus a:hover {
   color: #fff;
   background-color: #222;
+}
+/*   top: 0;
+  left: 15px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  z-index: 1;
+} */
+
+/* bgm 스타일 */
+.bgm-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+    z-index: 9999;
+    font-size: 0.9rem;
+}
+
+.bgm-controls button {
+    margin: 0 4px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.bgm-controls input[type=range] {
+    width: 100px;
+    vertical-align: middle;
 }

@@ -128,9 +128,60 @@
     });
     </script>
 
-<!-- 상단 메뉴 -->
 <div class="top-nav">
   <ul class="menu">
+	
+	<!-- 🎵 BGM -->
+	<div class="bgm-controls">
+	    <span id="songTitle">BGM: 기본 music</span>
+	    <button onclick="sendToPlayer('PLAY')">▶️</button>
+	    <button onclick="sendToPlayer('PAUSE')">⏸️</button>
+	    <button onclick="sendToPlayer('MUTE')">🔇</button>
+	    <button onclick="sendToPlayer('UNMUTE')">🔊</button>
+	    <input type="range" id="volumeRange" min="0" max="1" step="0.01">
+	</div>
+	<iframe id="bgmFrame" src="/common/bgm-player" style="display:none; width:0; height:0; border:0;"></iframe>
+	
+	<script>
+	    // iframe에 메시지를 보내는 함수
+	    function sendToPlayer(action, value = null) {
+	        const iframe = document.getElementById("bgmFrame");
+	        if (iframe && iframe.contentWindow) {
+	            iframe.contentWindow.postMessage({ type: action, value: value }, "*");
+	        }
+	    }
+	
+	    // 볼륨을 iframe과 localStorage에 설정하는 함수
+	    function updateVolume(vol) {
+	        const volume = parseFloat(vol);
+	        sendToPlayer("SET_VOLUME", volume);           // iframe에 메시지 전송
+	        localStorage.setItem("bgmVolume", volume);    // 로컬 저장소에 저장
+	    }
+	
+	    document.addEventListener("DOMContentLoaded", () => {
+	        const volumeRange = document.getElementById("volumeRange");
+	
+	        // 저장된 볼륨 값 가져오기, 없으면 기본값 0.4
+	        const savedVolume = parseFloat(localStorage.getItem("bgmVolume")) || 0.4;
+	
+	        // 슬라이더 초기화
+	        if (volumeRange) {
+	            volumeRange.value = savedVolume;
+	            volumeRange.addEventListener("input", (e) => {
+	                updateVolume(e.target.value);
+	            });
+	        }
+	
+	        // iframe 로딩 후 볼륨 적용
+	        const iframe = document.getElementById("bgmFrame");
+	        if (iframe) {
+	            iframe.addEventListener("load", () => {
+	                sendToPlayer("SET_VOLUME", savedVolume);
+	            });
+	        }
+	    });
+	</script>
+
 
     <!-- 게임 -->
     <li class="menu-item">

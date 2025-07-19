@@ -24,80 +24,180 @@
 
 <style>
 body {
-	background-color: #0b0b0b;
-	color: #fff;
-	font-family: 'Noto Sans KR', sans-serif;
+  background-color: #0a0a0a; /* 어두운 배경 */
+  color: #eee; /* 기본 텍스트 색상 */
+  font-family: 'Noto Sans KR', sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 .video-wrapper {
-	color: #333;
+  color: #333;
 	border-radius: 12px;
-	padding: 0;
+	padding: 0; /* ❌ 패딩 제거 */
 	box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 	max-width: 1000px;
 	margin: 40px auto;
 }
 
 .video-card {
-	background-color: #232323;
+  background-color: #232323;
+	border: none;
 	border-radius: 12px;
-	padding: 30px;
-	color: #f0f0f0;
+	padding: 30px; /* ✅ 패딩은 여기로 */
+	box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+	width: 100%; /* ✅ 가로 꽉 채우기 */
 }
 
 .video-title {
-	font-size: 28px;
-	font-weight: 700;
-	color: #e74c3c; /* 차분한 레드 */
-	margin-bottom: 10px;
-	text-shadow: 0 0 4px rgba(255, 76, 76, 0.4);
-	border-bottom: 1px solid #444;
-	padding-bottom: 10px;
+  background-color: transparent;
+	border-bottom: 1px solid #333;
+	font-size: 24px;
+	font-weight: bold;
+	color: #fff;
+	 margin-bottom: 20px;  /* ✅ 제목 아래 여백 추가 */
 }
 
+.video-body{
+	font-size: 16px;
+	line-height: 1.7;
+	color: #f0f0f0;
+}
+
+
 .video-meta {
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	font-size: 14px;
-	color: #bbb;
-	margin-bottom: 20px;
-	border-bottom: 1px solid #444;
-	padding-bottom: 10px;
+  display: flex;
+  gap: 16px;  /* ✅ 요소 사이 여백 조금 넓힘 */
+  font-size: 14px;
+  color: #bbb;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+  align-items: center;
 }
 
 .video-meta img {
-	width: 36px;
-	height: 36px;
-	border-radius: 8px;
-	object-fit: cover;
-	border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #666;
 }
 
 .video-player {
-	position: relative;
-	width: 100%;
-	aspect-ratio: 16/9;
-	border-radius: 12px;
-	overflow: hidden;
-	box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
-	margin-bottom: 20px;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+  margin-bottom: 20px;
 }
 
 video {
-	width: 100%;
-	height: 100%;
-	background-color: #000;
-	border-radius: 12px;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  border-radius: 12px;
 }
 
 .video-description {
-	font-size: 15px;
-	line-height: 1.6;
-	color: #f0f0f0;
-	margin-bottom: 30px;
-	border-bottom: 1px solid #444;
-	padding-bottom: 15px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #ddd;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 15px;
+}
+
+.post-like-dislike {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.post-like-dislike button {
+  font-weight: 700;
+  border-radius: 25px;
+  padding: 8px 18px;
+  font-size: 15px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  cursor: pointer;
+  border: 1.8px solid transparent;
+}
+
+.post-like-dislike button i {
+  font-size: 18px;
+}
+
+.post-like-dislike button.btn-outline-danger {
+  border-color: #c82e38;
+  color: #c82e38;
+  background-color: transparent;
+}
+
+.post-like-dislike button.btn-outline-danger:hover {
+  background-color: #c82e38;
+  color: #fff;
+}
+
+.post-like-dislike button.btn-outline-primary {
+  border-color: #2980b9;
+  color: #2980b9;
+  background-color: transparent;
+}
+
+.post-like-dislike button.btn-outline-primary:hover {
+  background-color: #2980b9;
+  color: #fff;
+}
+
+.btn-group-custom {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 40px;
+}
+
+.btn-custom {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.btn-list {
+  background-color: #555;
+}
+
+.btn-update {
+  background-color: #3498db;
+}
+
+.btn-delete {
+  background-color: #c82e38;
+}
+
+.btn-list:hover {
+  background-color: #777;
+}
+
+.btn-update:hover {
+  background-color: #2980b9;
+}
+
+.btn-delete:hover {
+  background-color: #a8232d;
 }
 
 .comments-section {
@@ -117,24 +217,43 @@ video {
 	border-radius: 6px;
 	padding: 12px 15px;
 	box-shadow: 0 0 5px rgba(255, 255, 255, 0.05);
-	position: relative;
 }
 
-.comment-author {
+.comment-item .comment-author {
 	font-weight: bold;
 	color: #f1c40f;
 	margin-bottom: 1px;
+	padding: 1px;
 }
 
-.comment-date {
+.comment-item .comment-date {
 	font-size: 12px;
 	color: #bbb;
 }
 
-.comment-text {
+.comment-item .comment-text {
 	font-size: 14px;
 	margin-top: 4px;
 	color: #f0f0f0;
+}
+
+.comment-form textarea {
+	background-color: #1c1c1c;
+	border: 1px solid #333;
+	color: #f5f5f5;
+}
+
+.comment-form textarea::placeholder {
+	color: #888;
+}
+
+.comment-form button {
+	background-color: #3498db;
+	border: none;
+}
+
+.comment-form button:hover {
+	background-color: #2980b9;
 }
 
 .comment-actions {
@@ -154,7 +273,10 @@ video {
 }
 
 .comment-actions .like-btn {
+	font-size: 14px;
 	color: #f39c12;
+	opacity: 0.85;
+	transition: color 0.2s ease;
 }
 
 .comment-actions .report-btn {
@@ -170,17 +292,28 @@ video {
 	transform: scale(1.1);
 }
 
-.badge-image {
-	width: 36px;
-	height: 36px;
-	border-radius: 8px;
-	object-fit: cover;
-}
-
-.like-wrapper {
+.comment-actions .like-wrapper {
 	display: flex;
 	align-items: center;
 	gap: 4px;
+	padding: 5px 0px;
+}
+
+.comment-like-badge:hover {
+	background-color: rgba(255, 255, 255, 0.08);
+	transform: scale(1.05);
+}
+
+.like-wrapper .like-btn {
+	font-size: 14px;
+	color: #f39c12;
+	opacity: 0.85;
+	transition: color 0.2s ease;
+}
+
+.like-wrapper .like-btn:hover {
+	color: #f1c40f;
+	transform: scale(1.1);
 }
 
 .comment-like-badge {
@@ -190,6 +323,22 @@ video {
 	border-radius: 12px;
 	font-size: 13px;
 	font-weight: 500;
+	margin-left: 4px;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+	display: inline-block;
+}
+
+.badge-image {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	object-fit: cover;
+	border: none; /* 테두리 제거 */
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.badge-image:hover {
+	transform: scale(1.05);
 }
 
 .post-like-dislike button {
@@ -215,48 +364,38 @@ video {
 	border-color: #2980b9;
 }
 
-.btn-group-custom {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-	margin-top: 30px;
+.profileImg {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	object-fit: cover;
+	border: none; /* 테두리 완전 제거 */
 }
 
-.btn-custom {
-	padding: 6px 16px;
-	border: none;
-	border-radius: 4px;
-	font-weight: bold;
-	color: #fff;
-	transition: background-color 0.2s ease;
+.profile-img:hover {
+	transform: scale(1.15);
 }
 
-.btn-list {
-	background-color: #555;
+.best-comment {
+  background-color: #3a2e18;
+  border-left: 4px solid gold;
+  padding: 14px 18px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
 }
 
-.btn-update {
-	background-color: #3498db;
+.best-badge {
+  background-color: gold;
+  color: #000;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-right: 8px;
+  font-size: 13px;
 }
-
-.btn-delete {
-	background-color: #c82e38;
-}
-
-.btn-list:hover {
-	background-color: #777;
-}
-
-.btn-update:hover {
-	background-color: #2980b9;
-}
-
-.btn-delete:hover {
-	background-color: #a8232d;
-}
-
-
 </style>
+
 </head>
 <body>
 
@@ -265,11 +404,13 @@ video {
 
 	<div class="video-wrapper">
 		<div class="video-card">
-			<div class="video-title" th:text="${video.title}">영상 제목</div>
-
-			<div class="video-meta">
+		
+			<div class="video-title" th:utext="|<h2>${video.title}</h2>|">영상 제목</div>
+			
+			<div class="video-body">
+			<div class="video-meta" >
 				<img th:if="${video.profileUrl}" th:src="${video.profileUrl}"
-					alt="프로필" /> <span th:text="${video.nickName}">닉네임</span> <span
+					alt="프로필"/> <span th:text="${video.nickName}">닉네임</span> <span
 					th:text="${video.createDate}">2025.07.15</span> <span>조회수 <span
 					th:text="${video.viewCount}">123</span></span> <span>❤ <span
 					th:text="${video.likeCount}">12</span></span>
@@ -279,7 +420,7 @@ video {
 				<video id="video" controls></video>
 			</div>
 
-			<div class="video-description" th:text="${video.detail}">영상에 대한
+			<div class="video-description" th:utext="${video.detail}">영상에 대한
 				설명입니다. 재미있었던 하이라이트 장면을 소개합니다.</div>
 				
 			<!-- ✅ 게시글 좋아요/싫어요 버튼: 본문 바로 아래에 위치 -->
@@ -308,12 +449,12 @@ video {
 					<a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
 					<th:block th:if="${loginUser.userName == video.userName}">
 						<a
-							th:href="@{/board/lounge/update/{boardNo}(boardNo=${video.boardNo})}"
+							th:href="@{/board/video/update/{boardNo}(boardNo=${video.boardNo})}"
 							class="btn btn-custom btn-update">수정</a>
 					</th:block>
 					<th:block th:if="${loginUser.userName == video.userName}">
 						<form
-							th:action="@{/board/lounge/delete/{boardNo}(boardNo=${video.boardNo})}"
+							th:action="@{/board/video/delete/{boardNo}(boardNo=${video.boardNo})}"
 							method="POST">
 							<button class="btn btn-custom btn-delete"
 								onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</button>
@@ -324,28 +465,42 @@ video {
 			<!-- 댓글 시작 전 -->
 
 			<!-- 댓글 영역 -->
-			<div class="comments-section">
-				<hr />
-				<h6>💬 댓글</h6>
-
-				<div id="commentList" class="comment-list"></div>
-
-				<!-- 댓글 작성 폼 -->
-				<div class="comment-form mt-3">
-					<textarea class="form-control" id="commentContent" rows="3"
-						placeholder="댓글을 입력하세요..."></textarea>
-					<div class="mt-2">
-						<input type="file" id="commentImage" accept="image/*"
-							class="form-control-file text-light">
+				<div class="comments-section">
+					<hr />
+					<!-- ✅ BEST 댓글 영역 -->
+					<div class="best-comments-section" style="margin-top: 40px;">
+					  <h6>🔥 베스트 댓글</h6>
+					  <div id="bestCommentList" class="comment-list"></div>
+					  <hr />
 					</div>
-					<img id="previewImage"
-						style="max-width: 100px; margin-top: 10px; display: none;" />
+					
+					
+					<h6>💬 댓글</h6>
 
-					<div class="text-right mt-2">
-						<button class="btn btn-primary btn-sm" id="submitComment">등록</button>
+					<!-- 댓글 목록 -->
+					<div id="commentList" class="comment-list">
+						<!-- 비동기로 불러온 댓글이 여기에 삽입될 예정 -->
+					</div>
+
+					<!-- 댓글 작성 폼 -->
+					<div class="comment-form mt-3">
+						<textarea class="form-control" id="commentContent" rows="3"
+							placeholder="댓글을 입력하세요..."></textarea>
+						<!-- 이미지 파일 업로드 추가 -->
+						<div class="mt-2">
+							<input type="file" id="commentImage" accept="image/*"
+								class="form-control-file text-light">
+						</div>
+						<img id="previewImage"
+							style="max-width: 100px; margin-top: 10px; display: none;" />
+
+						<div class="text-right mt-2">
+							<button class="btn btn-primary btn-sm" id="submitComment">등록</button>
+						</div>
+
 					</div>
 				</div>
-			</div>
+				</div>
 
 		</div>
 	</div>
@@ -355,6 +510,99 @@ video {
 
 	<!-- HLS.js video 재생 -->
 	<script th:inline="javascript">
+	
+	function loadComments() {
+		  var loginUserName = /*[[${loginUser.userName}]]*/ '';
+
+		  $.ajax({
+		    url: '/board/getReplyList',
+		    data: {
+		      boardNo: /*[[${video.boardNo}]]*/ 0
+		    },
+		    success: function (replyList) {
+		      $('#bestCommentList').empty();
+		      $('#commentList').empty();
+
+		      // 좋아요 3개 이상 댓글들 중 BEST 선정
+		      const bestReplies = [];
+		      const normalReplies = [];
+
+		      for (var i = 0; i < replyList.length; i++) {
+		        if (replyList[i].likeCount >= 3) {
+		          bestReplies.push(replyList[i]);
+		        } else {
+		          normalReplies.push(replyList[i]);
+		        }
+		      }
+
+		      // BEST 댓글 정렬 (좋아요 높은 순)
+		      for (var i = 0; i < bestReplies.length - 1; i++) {
+		        for (var j = i + 1; j < bestReplies.length; j++) {
+		          if (bestReplies[i].likeCount < bestReplies[j].likeCount) {
+		            var temp = bestReplies[i];
+		            bestReplies[i] = bestReplies[j];
+		            bestReplies[j] = temp;
+		          }
+		        }
+		      }
+
+		      // 최대 2개만 BEST 댓글로
+		      var bestToShow = bestReplies.slice(0, 2);
+		      var restBest = bestReplies.slice(2);
+		      normalReplies.push(...restBest);
+
+		      // BEST 댓글 출력
+		      bestToShow.forEach(function (reply) {
+		        const html = generateReplyHtml(reply, true);
+		        $('#bestCommentList').append(html);
+		      });
+
+		      // 일반 댓글 출력
+		      normalReplies.forEach(function (reply) {
+		        const html = generateReplyHtml(reply, false);
+		        $('#commentList').append(html);
+		      });
+
+		      // 삭제 버튼 제어
+		      var replyDivs = $('.comment-item.position-relative');
+		      replyDivs.each(function () {
+		        if ($(this).children("#replyWriter").text() !== loginUserName) {
+		          $(this).find(".delete-btn").remove();
+		        }
+		      });
+		    }
+		  });
+		}
+
+		function generateReplyHtml(reply, isBest) {
+		  return `
+		    <div class="comment-item position-relative ${isBest ? 'best-comment' : ''}">
+		      <div class="comment-actions">
+		        <span class="like-wrapper">
+		          <i class="fas fa-heart like-btn" title="좋아요"></i>
+		          <span class="comment-like-badge">${reply.likeCount}</span>
+		        </span>
+		        <i class="fas fa-flag report-btn" title="신고"></i>
+		        <i class="fas fa-trash delete-btn" title="삭제"></i>
+		        <div style="display: none;" id="replyNo">${reply.replyNo}</div>
+		      </div>
+
+		      <div style="display: flex; align-items: center;">
+		        <img src="${reply.profileUrl}" alt="Badge" class="badge-image" />
+		        ${isBest ? `<span class="best-badge">BEST</span>` : ''}
+		        <span class="comment-author">${reply.nickName}</span>
+		      </div>
+
+		      <div class="comment-date">${reply.createDate}</div>
+		      <div class="comment-text">${reply.replyContent}</div>
+
+		      ${reply.changeName ? `<img src="/godDaddy_uploadImage/replyImage/${reply.changeName}" style="max-width: 100px; margin-top: 10px;" />` : ''}
+
+		      <div style="display: none;" id="replyWriter">${reply.userName}</div>
+		    </div>
+		  `;
+		}
+	
 	  $(function () {
 	    const video = document.getElementById('video');
 	    const videoSrc = '/godDaddy_uploadVideo/hls/' + /*[[${#strings.replace(video.changeName, '.mp4', '.m3u8')}]]*/ '';
@@ -367,7 +615,132 @@ video {
 	      video.src = videoSrc;
 	    }
 		
-	    // 게시글 좋아요/싫어요 버튼 클릭 이벤트
+	    loadComments();
+	    
+		  $('#commentImage').on('change', function (e) {
+			  const file = e.target.files[0];
+			  if (file) {
+			    const reader = new FileReader();
+			    reader.onload = function (event) {
+			      $('#previewImage').attr('src', event.target.result).show();
+			    };
+			    reader.readAsDataURL(file);
+			  } else {
+			    $('#previewImage').hide();
+			  }
+			});
+		    
+		
+		    // 댓글 등록 버튼 클릭
+		    $('#submitComment').click(function () {
+				  const content = $('#commentContent').val();
+				  const imageFile = $('#commentImage')[0].files[0];
+				
+				  const formData = new FormData();
+				  formData.append('replyContent', content);
+				  formData.append('boardNo',/*[[${video.boardNo}]]*/ 0);
+				  formData.append('userName',/*[[${loginUser.userName}]]*/ '');
+				  if (imageFile) formData.append('image', imageFile);
+				  if(content === '' && !imageFile){
+					  alert('내용을 입력해주세요');
+					  return;
+				  }
+				
+				  $.ajax({
+				    url: '/board/uploadReply', 
+				    type: 'POST',
+				    data: formData,
+				    processData: false,
+				    contentType: false,
+				    success: function (result) {
+				      if(result > 0){
+					      $('#commentContent').val('');
+					      $('#commentImage').val('');
+					      $('#previewImage').hide();
+					      loadComments(); // 다시 불러오기
+				    	  
+				      }else{
+				    	  alert("댓글이 정상적으로 등록되지 않았습니다");
+				      }
+				      
+				    },
+				    error : function(){
+				    	alert("서버 오류가 발생하였습니다. 잠시 후 다시 시도해주세요");
+				    }
+				  	
+				  });
+			});
+		    
+	        $('.comments-section').on('click', '.like-btn', function () {
+	    	  // TODO: Ajax 호출 등으로 좋아요 처리
+	  	  		 const $count = $(this).next(); //count적는 span 태그
+			 const count = parseInt($count.text());	    	  		 
+	    	  $.ajax({
+	    		 url : "/board/likeReply",
+	    		 data : {
+	    			 replyNo : $(this).parent().siblings("#replyNo").text()
+	    		 },
+	    	  	 success : function(result){
+	    	  		 if(result > 0) { //댓글에 좋아요가 잘 등록된 경우
+	    	  			 $count.text(count + 1);
+	    	  		 	 loadComments();
+	    	  		 }else if(result === -1){
+	    	  			 $count.text(count - 1);
+	    	  		 }else{
+	    	  			 alert("해당 댓글에 '좋아요'가 등록되지 않았습니다");
+	    	  		 }
+	    	  		loadComments();
+	    	  	 },
+	    	  	 error : function(){
+	    	  		alert("서버 오류가 발생했습니다. 잠시후 다시 시도해주세요");
+	    	  	 }
+	    	  });
+	    	  
+	    	});
+	
+	    	$('.comments-section').on('click', '.report-btn', function () {
+	    	  const confirmReport = confirm('이 댓글을 신고하시겠습니까?');
+	    	  if (confirmReport) {
+	    	    alert('신고 처리됨');
+	    	    // TODO: Ajax 호출로 신고 처리
+	    	  }
+	    	});
+	
+	    	$('.comments-section').on('click', '.delete-btn', function (e) {
+	    		
+	    	  const confirmDelete = confirm('이 댓글을 삭제하시겠습니까?');
+	    	  
+	    	  if (confirmDelete) {
+	    		  
+	    	    // TODO: Ajax 호출로 댓글 삭제 처리
+	    	    $.ajax({
+	        		url : "/board/deleteReply",
+	        		method : "post",
+	    			data : {
+	    				replyNo : $(e.target).next().text()
+	    			},
+	    			success : function(result){
+	    				if(result > 0){
+				    	    alert('댓글이 삭제 처리되었습니다');
+				    	    loadComments();
+				    		
+	    				}else{
+	    					alert('댓글이 정상적으로 삭제되지 않았습니다')
+	    				}
+	    			},
+	    			error : function(){
+	    				alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요');
+	    			}
+	    			
+	  		  		});
+	    		  
+	    	    
+	    	  }
+	    	});
+		    	
+		    	
+		    	
+		  // 게시글 좋아요/싫어요 버튼 클릭 이벤트
 		  $('#btnLike').click(function () {
 		    // TODO: Ajax 호출로 좋아요 증가 처리 후 카운트 갱신
 		    $.ajax({
@@ -426,144 +799,9 @@ video {
 		    });
 		    
 		  });
-	    
-	    // 댓글 기능
-	    const loginUserName = /*[[${loginUser.userName}]]*/ '';
+
+
 	
-	    function loadComments() {
-	      $.ajax({
-	        url: '/board/getReplyList',
-	        data: { boardNo : /*[[${video.boardNo}]]*/ 0 },
-	        success: function (replyList) {
-	          $('#commentList').empty();
-	          replyList.forEach(function (reply) {
-	            const replyHtml = `
-	              <div class="comment-item">
-	                <div class="comment-actions">
-	                  <span class="like-wrapper">
-	                    <i class="fas fa-heart like-btn" title="좋아요"></i>
-	                    <span class="comment-like-badge">${reply.likeCount}</span>
-	                  </span>
-	                  <i class="fas fa-flag report-btn" title="신고"></i>
-	                  <i class="fas fa-trash delete-btn" title="삭제"></i>
-	                  <div style="display: none;" id="replyNo">${reply.replyNo}</div>
-	                </div>
-	                <div style="display: flex; align-items: center;">
-	                  <img src="${reply.profileUrl}" alt="Badge" class="badge-image" />
-	                  <span class="comment-author">${reply.nickName}</span>
-	                </div>
-	                <div class="comment-date">${reply.createDate}</div>
-	                <div class="comment-text">${reply.replyContent}</div>
-	                ${reply.changeName ? `<img src="/godDaddy_uploadImage/replyImage/${reply.changeName}" style="max-width: 100px; margin-top: 10px;" />` : ''}
-	                <div style="display: none;" id="replyWriter">${reply.userName}</div>
-	              </div>
-	            `;
-	            $('#commentList').append(replyHtml);
-	          });
-	
-	          $('.comment-item').each(function () {
-	            if ($(this).find('#replyWriter').text() !== loginUserName) {
-	              $(this).find('.delete-btn').remove();
-	            }
-	          });
-	        }
-	      });
-	    }
-	
-	    loadComments();
-	
-	    $('#commentImage').on('change', function (e) {
-	      const file = e.target.files[0];
-	      if (file) {
-	        const reader = new FileReader();
-	        reader.onload = function (event) {
-	          $('#previewImage').attr('src', event.target.result).show();
-	        };
-	        reader.readAsDataURL(file);
-	      } else {
-	        $('#previewImage').hide();
-	      }
-	    });
-	
-	    $('#submitComment').click(function () {
-	      const content = $('#commentContent').val();
-	      const imageFile = $('#commentImage')[0].files[0];
-	
-	      if (content === '' && !imageFile) {
-	        alert('내용을 입력해주세요');
-	        return;
-	      }
-	
-	      const formData = new FormData();
-	      formData.append('replyContent', content);
-	      formData.append('boardNo', /*[[${video.boardNo}]]*/ 0);
-	      formData.append('userName', /*[[${loginUser.userName}]]*/ '');
-	      if (imageFile) formData.append('image', imageFile);
-	
-	      $.ajax({
-	        url: '/board/uploadReply',
-	        type: 'POST',
-	        data: formData,
-	        processData: false,
-	        contentType: false,
-	        success: function (result) {
-	          if (result > 0) {
-	            $('#commentContent').val('');
-	            $('#commentImage').val('');
-	            $('#previewImage').hide();
-	            loadComments();
-	          } else {
-	            alert('댓글이 등록되지 않았습니다');
-	          }
-	        },
-	        error: function () {
-	          alert('서버 오류가 발생했습니다');
-	        }
-	      });
-	    });
-	
-	    $('#commentList').on('click', '.like-btn', function () {
-	      const $count = $(this).next();
-	      const replyNo = $(this).closest('.comment-actions').find('#replyNo').text();
-	      $.ajax({
-	        url: '/board/likeReply',
-	        data: { replyNo },
-	        success: function (result) {
-	          let count = parseInt($count.text());
-	          if (result > 0) $count.text(count + 1);
-	          else if (result === -1) $count.text(count - 1);
-	        }
-	      });
-	    });
-	
-	    $('#commentList').on('click', '.delete-btn', function () {
-	      const replyNo = $(this).closest('.comment-actions').find('#replyNo').text();
-	      if (confirm('이 댓글을 삭제하시겠습니까?')) {
-	        $.ajax({
-	          url: '/board/deleteReply',
-	          method: 'POST',
-	          data: { replyNo },
-	          success: function (result) {
-	            if (result > 0) {
-	              alert('삭제되었습니다');
-	              loadComments();
-	            } else {
-	              alert('삭제 실패');
-	            }
-	          },
-	          error: function () {
-	            alert('서버 오류가 발생했습니다');
-	          }
-	        });
-	      }
-	    });
-	
-	    $('#commentList').on('click', '.report-btn', function () {
-	      if (confirm('이 댓글을 신고하시겠습니까?')) {
-	        alert('신고 처리됨 (추후 구현 예정)');
-	      }
-	    });
-	    
 	    
 	  });
 </script>

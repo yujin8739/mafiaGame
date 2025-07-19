@@ -17,7 +17,7 @@
 /* 직업 이미지 */
 .role-img {
     width: 100%;
-    height: auto;
+    height: 100px;
     border-radius: 10px;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
 }

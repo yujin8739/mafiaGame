@@ -50,6 +50,10 @@ public class BoardDao {
 	public int getFileNo(SqlSessionTemplate sqlSession) {
 		return sqlSession.selectOne("boardMapper.getFileNo");
 	}
+	
+	public int getFileNo(SqlSessionTemplate sqlSession, int boardNo) {
+		return sqlSession.selectOne("boardMapper.getFileNoWithBoardNo", boardNo);
+	}
 
 	public int uploadFileOfReply(SqlSessionTemplate sqlSession, BoardFile file) {
 		return sqlSession.insert("boardMapper.uploadFileOfReply",file);
@@ -79,8 +83,8 @@ public class BoardDao {
 		return sqlSession.update("boardMapper.deleteLoungeBoard", board);
 	}
 
-	public int deleteFileOfBoard(SqlSessionTemplate sqlSession, Board board) {
-		return sqlSession.update("boardMapper.deleteFileOfBoard", board);
+	public int deleteFileOfBoard(SqlSessionTemplate sqlSession, int fileNo) {
+		return sqlSession.update("boardMapper.deleteFileOfBoard", fileNo);
 	}
 
 	public int updateLoungeBoard(SqlSessionTemplate sqlSession, Board board) {
