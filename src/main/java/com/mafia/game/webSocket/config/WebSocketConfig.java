@@ -41,6 +41,8 @@ public class WebSocketConfig implements WebSocketConfigurer{
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 		registry.addHandler(gameMainServer(), "/chat/gameMainChat")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
+		registry.addHandler(gameMainServer(), "/chat/gameMainVoice")
+				.addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
 	
 	//보낼수 있는 최대 크기 조정
@@ -59,8 +61,6 @@ public class WebSocketConfig implements WebSocketConfigurer{
                 }, null);
             }
         };
-    }
-	
-	
+    }	
 
 }
