@@ -1,14 +1,17 @@
 body {
-	background-color: #0b0b0b; /* 거의 검정 */
-	color: #f5f5f5;
-	margin: 0;
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-image: url('/images/background.png');  /* 정적 경로 */
+  background-size: cover;        /* ✅ 화면에 꽉 차게 확대/축소 */
+  background-repeat: no-repeat;  /* ✅ 반복 없이 한 번만 */
+  background-position: center;   /* ✅ 가운데 정렬 */
+  height: 100vh;                 /* ✅ 높이 100% (전체 화면) */
+  margin: 0;                     /* ✅ 브라우저 기본 여백 제거 */
+  background-attachment: fixed;
 }
 
 .header {
 	margin-top: 90px;
 	margin-bottom: 50px;
-	background-color: #0b0b0b;
+	 background-color: rgba(0, 90, 200, 0.001);
 	padding: 10px 10px;
 	display: flex;
 	justify-content: space-between;
@@ -52,7 +55,7 @@ body {
 .auth-buttons a, span {
 	padding: 5px 10px;
 	background-color: transparent;
-	color: white;
+	color: #000;
 	text-decoration: none;
 	border: none;
 	border-radius: 6px;
@@ -75,7 +78,7 @@ body {
 
 .top-bar a {
 	padding: 10px 5px;
-	color: white;
+	color: #000000;
 	text-decoration: none;
 	font-size: 14px;
 }
@@ -116,7 +119,7 @@ body {
 	flex-direction: column;
 	justify-content: center;
 	gap: 6px;
-	color: white;
+	color: #000000;
 }
 
 /* 5. 환영 문구 스타일 */
@@ -126,7 +129,7 @@ body {
 	font-size: 16px;
 	margin-right: 10px;
 	padding: 0;
-	color: white;
+	color: #000;
 }
 
 /* 6. 마이페이지 / 로그아웃 버튼 가로 정렬 */
@@ -182,7 +185,7 @@ body {
 /* ============================= */
 /* 최상위 네비게이션 바 스타일 */
 .top-nav {
-  background-color: #0b0b0b;
+  background-color: rgba(0, 90, 200, 0.001);
   padding: 20px 50px;
   position: relative; /* 드롭다운 위치 기준 */
 }
@@ -205,10 +208,10 @@ body {
   position: relative;
 }
 
-/* 메뉴 텍스트 (링크, span) */
+
 .menu a,
 .menu span {
-  color: #fff;
+  color: #000;
   text-decoration: none;
   padding: 15px 103px;
   display: block;
@@ -224,11 +227,10 @@ body {
 .all-submenus {
   display: none; /* 기본 숨김 */
   position: absolute;
-<<<<<<< HEAD
   top: 100%;
   left: 0;
-  width: 100vw;
-  background-color: #111;
+  width: 100%;
+  background-color: #fff;
   padding: 0;
   z-index: 1000;
   border-top: 1px solid #333;
@@ -261,7 +263,7 @@ body {
 }
 
 .all-submenus a {
-  color: #ddd;
+  color: #000;
   padding: 8px 12px;
   font-size: 14px;
   text-decoration: none;
@@ -271,8 +273,7 @@ body {
 }
 
 .all-submenus a:hover {
-  color: #fff;
-  background-color: #222;
+ text-decoration: underline;
 }
 /*   top: 0;
   left: 15px;
@@ -309,3 +310,4 @@ body {
     width: 100px;
     vertical-align: middle;
 }
+
