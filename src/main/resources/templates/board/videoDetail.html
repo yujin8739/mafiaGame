@@ -24,80 +24,180 @@
 
 <style>
 body {
-	background-color: #0b0b0b;
-	color: #fff;
-	font-family: 'Noto Sans KR', sans-serif;
+  background-color: #0a0a0a; /* 어두운 배경 */
+  color: #eee; /* 기본 텍스트 색상 */
+  font-family: 'Noto Sans KR', sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 .video-wrapper {
-	color: #333;
+  color: #333;
 	border-radius: 12px;
-	padding: 0;
+	padding: 0; /* ❌ 패딩 제거 */
 	box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 	max-width: 1000px;
 	margin: 40px auto;
 }
 
 .video-card {
-	background-color: #232323;
+  background-color: #232323;
+	border: none;
 	border-radius: 12px;
-	padding: 30px;
-	color: #f0f0f0;
+	padding: 30px; /* ✅ 패딩은 여기로 */
+	box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+	width: 100%; /* ✅ 가로 꽉 채우기 */
 }
 
 .video-title {
-	font-size: 28px;
-	font-weight: 700;
-	color: #e74c3c; /* 차분한 레드 */
-	margin-bottom: 10px;
-	text-shadow: 0 0 4px rgba(255, 76, 76, 0.4);
-	border-bottom: 1px solid #444;
-	padding-bottom: 10px;
+  background-color: transparent;
+	border-bottom: 1px solid #333;
+	font-size: 24px;
+	font-weight: bold;
+	color: #fff;
+	 margin-bottom: 20px;  /* ✅ 제목 아래 여백 추가 */
 }
 
+.video-body{
+	font-size: 16px;
+	line-height: 1.7;
+	color: #f0f0f0;
+}
+
+
 .video-meta {
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	font-size: 14px;
-	color: #bbb;
-	margin-bottom: 20px;
-	border-bottom: 1px solid #444;
-	padding-bottom: 10px;
+  display: flex;
+  gap: 16px;  /* ✅ 요소 사이 여백 조금 넓힘 */
+  font-size: 14px;
+  color: #bbb;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+  align-items: center;
 }
 
 .video-meta img {
-	width: 36px;
-	height: 36px;
-	border-radius: 8px;
-	object-fit: cover;
-	border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #666;
 }
 
 .video-player {
-	position: relative;
-	width: 100%;
-	aspect-ratio: 16/9;
-	border-radius: 12px;
-	overflow: hidden;
-	box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
-	margin-bottom: 20px;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+  margin-bottom: 20px;
 }
 
 video {
-	width: 100%;
-	height: 100%;
-	background-color: #000;
-	border-radius: 12px;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  border-radius: 12px;
 }
 
 .video-description {
-	font-size: 15px;
-	line-height: 1.6;
-	color: #f0f0f0;
-	margin-bottom: 30px;
-	border-bottom: 1px solid #444;
-	padding-bottom: 15px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #ddd;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 15px;
+}
+
+.post-like-dislike {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.post-like-dislike button {
+  font-weight: 700;
+  border-radius: 25px;
+  padding: 8px 18px;
+  font-size: 15px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  cursor: pointer;
+  border: 1.8px solid transparent;
+}
+
+.post-like-dislike button i {
+  font-size: 18px;
+}
+
+.post-like-dislike button.btn-outline-danger {
+  border-color: #c82e38;
+  color: #c82e38;
+  background-color: transparent;
+}
+
+.post-like-dislike button.btn-outline-danger:hover {
+  background-color: #c82e38;
+  color: #fff;
+}
+
+.post-like-dislike button.btn-outline-primary {
+  border-color: #2980b9;
+  color: #2980b9;
+  background-color: transparent;
+}
+
+.post-like-dislike button.btn-outline-primary:hover {
+  background-color: #2980b9;
+  color: #fff;
+}
+
+.btn-group-custom {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 40px;
+}
+
+.btn-custom {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.btn-list {
+  background-color: #555;
+}
+
+.btn-update {
+  background-color: #3498db;
+}
+
+.btn-delete {
+  background-color: #c82e38;
+}
+
+.btn-list:hover {
+  background-color: #777;
+}
+
+.btn-update:hover {
+  background-color: #2980b9;
+}
+
+.btn-delete:hover {
+  background-color: #a8232d;
 }
 
 .comments-section {
@@ -117,24 +217,43 @@ video {
 	border-radius: 6px;
 	padding: 12px 15px;
 	box-shadow: 0 0 5px rgba(255, 255, 255, 0.05);
-	position: relative;
 }
 
-.comment-author {
+.comment-item .comment-author {
 	font-weight: bold;
 	color: #f1c40f;
 	margin-bottom: 1px;
+	padding: 1px;
 }
 
-.comment-date {
+.comment-item .comment-date {
 	font-size: 12px;
 	color: #bbb;
 }
 
-.comment-text {
+.comment-item .comment-text {
 	font-size: 14px;
 	margin-top: 4px;
 	color: #f0f0f0;
+}
+
+.comment-form textarea {
+	background-color: #1c1c1c;
+	border: 1px solid #333;
+	color: #f5f5f5;
+}
+
+.comment-form textarea::placeholder {
+	color: #888;
+}
+
+.comment-form button {
+	background-color: #3498db;
+	border: none;
+}
+
+.comment-form button:hover {
+	background-color: #2980b9;
 }
 
 .comment-actions {
@@ -154,7 +273,10 @@ video {
 }
 
 .comment-actions .like-btn {
+	font-size: 14px;
 	color: #f39c12;
+	opacity: 0.85;
+	transition: color 0.2s ease;
 }
 
 .comment-actions .report-btn {
@@ -170,17 +292,28 @@ video {
 	transform: scale(1.1);
 }
 
-.badge-image {
-	width: 36px;
-	height: 36px;
-	border-radius: 8px;
-	object-fit: cover;
-}
-
-.like-wrapper {
+.comment-actions .like-wrapper {
 	display: flex;
 	align-items: center;
 	gap: 4px;
+	padding: 5px 0px;
+}
+
+.comment-like-badge:hover {
+	background-color: rgba(255, 255, 255, 0.08);
+	transform: scale(1.05);
+}
+
+.like-wrapper .like-btn {
+	font-size: 14px;
+	color: #f39c12;
+	opacity: 0.85;
+	transition: color 0.2s ease;
+}
+
+.like-wrapper .like-btn:hover {
+	color: #f1c40f;
+	transform: scale(1.1);
 }
 
 .comment-like-badge {
@@ -190,6 +323,22 @@ video {
 	border-radius: 12px;
 	font-size: 13px;
 	font-weight: 500;
+	margin-left: 4px;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+	display: inline-block;
+}
+
+.badge-image {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	object-fit: cover;
+	border: none; /* 테두리 제거 */
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.badge-image:hover {
+	transform: scale(1.05);
 }
 
 .post-like-dislike button {
@@ -215,44 +364,17 @@ video {
 	border-color: #2980b9;
 }
 
-.btn-group-custom {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-	margin-top: 30px;
+.profileImg {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	object-fit: cover;
+	border: none; /* 테두리 완전 제거 */
 }
 
-.btn-custom {
-	padding: 6px 16px;
-	border: none;
-	border-radius: 4px;
-	font-weight: bold;
-	color: #fff;
-	transition: background-color 0.2s ease;
-}
-
-.btn-list {
-	background-color: #555;
-}
-
-.btn-update {
-	background-color: #3498db;
-}
-
-.btn-delete {
-	background-color: #c82e38;
-}
-
-.btn-list:hover {
-	background-color: #777;
-}
-
-.btn-update:hover {
-	background-color: #2980b9;
-}
-
-.btn-delete:hover {
-	background-color: #a8232d;
+.profile-img:hover {
+	transform: scale(1.15);
 }
 
 .best-comment {
@@ -272,8 +394,8 @@ video {
   margin-right: 8px;
   font-size: 13px;
 }
-
 </style>
+
 </head>
 <body>
 
@@ -282,11 +404,13 @@ video {
 
 	<div class="video-wrapper">
 		<div class="video-card">
-			<div class="video-title" th:text="${video.title}">영상 제목</div>
-
-			<div class="video-meta">
+		
+			<div class="video-title" th:utext="|<h2>${video.title}</h2>|">영상 제목</div>
+			
+			<div class="video-body">
+			<div class="video-meta" >
 				<img th:if="${video.profileUrl}" th:src="${video.profileUrl}"
-					alt="프로필" /> <span th:text="${video.nickName}">닉네임</span> <span
+					alt="프로필"/> <span th:text="${video.nickName}">닉네임</span> <span
 					th:text="${video.createDate}">2025.07.15</span> <span>조회수 <span
 					th:text="${video.viewCount}">123</span></span> <span>❤ <span
 					th:text="${video.likeCount}">12</span></span>
@@ -296,7 +420,7 @@ video {
 				<video id="video" controls></video>
 			</div>
 
-			<div class="video-description" th:text="${video.detail}">영상에 대한
+			<div class="video-description" th:utext="${video.detail}">영상에 대한
 				설명입니다. 재미있었던 하이라이트 장면을 소개합니다.</div>
 				
 			<!-- ✅ 게시글 좋아요/싫어요 버튼: 본문 바로 아래에 위치 -->
@@ -325,12 +449,12 @@ video {
 					<a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
 					<th:block th:if="${loginUser.userName == video.userName}">
 						<a
-							th:href="@{/board/lounge/update/{boardNo}(boardNo=${video.boardNo})}"
+							th:href="@{/board/video/update/{boardNo}(boardNo=${video.boardNo})}"
 							class="btn btn-custom btn-update">수정</a>
 					</th:block>
 					<th:block th:if="${loginUser.userName == video.userName}">
 						<form
-							th:action="@{/board/lounge/delete/{boardNo}(boardNo=${video.boardNo})}"
+							th:action="@{/board/video/delete/{boardNo}(boardNo=${video.boardNo})}"
 							method="POST">
 							<button class="btn btn-custom btn-delete"
 								onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</button>
@@ -375,6 +499,7 @@ video {
 						</div>
 
 					</div>
+				</div>
 				</div>
 
 		</div>

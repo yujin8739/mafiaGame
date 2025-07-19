@@ -26,25 +26,39 @@
 	  padding: 40px 5%;
 	  min-height: 100vh;
 	  }
+	  
+	  .board-wrapper{
+		  color: #333;
+		border-radius: 12px;
+		padding: 0; /* ❌ 패딩 제거 */
+		box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+		max-width: 1000px;
+		margin: 40px auto;
+	  }
 	
 	  .card {
-	    background-color: #1e1e1e;
-	    border: none;
-	    border-radius: 12px;
-	    box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-	    max-width: 960px;
-	    margin: 0 auto;
-	    padding-bottom: 30px;
-	    min-height: 800px;
+	    background-color: #232323;
+	border: none;
+	border-radius: 12px;
+	padding: 30px; /* ✅ 패딩은 여기로 */
+	box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+	box-sizing: border-box; /* 추가 */
+	width: 100%; /* ✅ 가로 꽉 채우기 */
 	  }
 	
 	  .card-header {
-	    background-color: transparent;
-	    border-bottom: 1px solid #333;
-	    font-size: 24px;
-	    font-weight: bold;
-	    color: #fff;
-	  }
+	background-color: transparent;
+	border-bottom: 1px solid #333;
+	font-size: 24px;
+	font-weight: bold;
+	color: #fff;
+}
+
+.card-body {
+	font-size: 16px;
+	line-height: 1.7;
+	color: #f0f0f0;
+}
 	
 	  .form-group label {
 	    color: #ccc;
@@ -114,7 +128,7 @@
   <!-- 헤더 -->
   <div th:replace="~{common/header :: header}"></div>
 
-  <div class="container">
+  <div class="board-wrapper">
     <div class="card">
       <div class="card-header">게시글 수정</div>
       <div class="card-body">
