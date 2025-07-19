@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>갤러리 사진 업로드</title>
+
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+  <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+  <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+
+  <style>
+    body {
+      background-color: #0b0b0b;
+      font-family: 'Noto Sans KR', sans-serif;
+      color: #fff;
+    }
+
+    .board-wrapper {
+      color: #333;
+      border-radius: 12px;
+      padding: 0;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+      max-width: 1000px;
+      margin: 40px auto;
+    }
+
+    .card {
+      background-color: #232323;
+      border: none;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .card-header {
+      background-color: transparent;
+      border-bottom: 1px solid #333;
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .card-body {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #f0f0f0;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 30px;
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: block;
+      color: #f5f5f5;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      height: 48px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #2a2a2a;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    input::placeholder {
+      color: #aaa;
+    }
+
+    /* Quill 에디터 스타일 */
+    .ql-toolbar {
+      background-color: #f0f0f0 !important;
+      color: #333 !important;
+      border-radius: 6px 6px 0 0;
+    }
+
+    .ql-container {
+      border-radius: 0 0 6px 6px;
+      background-color: white;
+      color: #000;
+      min-height: 150px;
+    }
+
+    /* 버튼 그룹 */
+    .btn-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      background-color: #e63946;
+      color: #fff;
+    }
+
+    .btn-submit:hover {
+      background-color: #c9303c;
+    }
+
+    .btn-cancel {
+      background-color: transparent;
+      border: 1px solid #888;
+      color: #ccc;
+    }
+
+    .btn-cancel:hover {
+      color: white;
+      border-color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <div th:replace="~{/common/header :: header}"></div>
+
+  <!-- 본문 -->
+  <div class="board-wrapper">
+    <div class="card">
+      <div class="card-header">
+        <h1>갤러리 사진 업로드</h1>
+      </div>
+      <div class="card-body">
+        <form action="/board/gallery/upload" method="post" enctype="multipart/form-data" id="galleryUploadForm">
+          <input type="hidden" name="userName" th:value="${loginUser.userName}" />
+
+          <div class="form-group">
+            <label for="title">제목</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              placeholder="사진 제목을 입력하세요"
+              required
+              maxlength="100"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="uploadFile">사진 선택</label>
+            <input
+              type="file"
+              name="uploadFile"
+              id="uploadFile"
+              accept="image/*"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="description">설명</label>
+            <textarea name="description" id="hiddenDescription" style="display:none"></textarea>
+            <div id="editor"></div>
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn btn-submit">업로드</button>
+            <button type="button" class="btn btn-cancel" onclick="history.back()">취소</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div th:replace="~{/common/footer :: footer}"></div>
+
+  <script>
+    const toolbarOptions = [
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'header': [1, 2, false] }],
+      ['link', 'image']
+    ];
+
+    const quill = new Quill('#editor', {
+      modules: { toolbar: toolbarOptions },
+      placeholder: '사진에 대한 설명을 입력하세요...',
+      theme: 'snow'
+    });
+
+    // 폼 제출 시 에디터 내용 숨겨진 textarea에 복사
+    document.querySelector("#galleryUploadForm").addEventListener("submit", function (e) {
+      document.querySelector("#hiddenDescription").value = quill.root.innerHTML;
+    });
+  </script>
+</body>
+</html>

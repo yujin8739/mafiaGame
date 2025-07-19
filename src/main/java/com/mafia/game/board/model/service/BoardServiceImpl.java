@@ -113,22 +113,22 @@ public class BoardServiceImpl implements BoardService{
 		
 	
 		
-		//게시글 삭제
 		int result = dao.updateLoungeBoard(sqlSession, board);
+		int fileNo = dao.getFileNo(sqlSession,board.getBoardNo()); //기존 파일
 		
 
 		if(file != null) {//변경한 파일 있다면
 			result *= dao.insertFile(sqlSession, file); //변경 파일 추가
 			
 			
-			String statusOfFile = board.getFileList().get(0).getStatus();
-			if("Y".equals(statusOfFile)) { // 기존 파일 삭제
-				result *= dao.deleteFileOfBoard(sqlSession, board.getFileList().get(0).getFileNo());
+		
+			if(!board.getChangeName().equals("")) { // 기존 파일 삭제
+				result *= dao.deleteFileOfBoard(sqlSession, fileNo);
 			}
 		}else if(deleteFile){//변경한 파일 없고, 기존파일 삭제버튼 눌렀다면
 			
 			
-			result *= dao.deleteFileOfBoard(sqlSession, board.getFileList().get(0).getFileNo());
+			result *= dao.deleteFileOfBoard(sqlSession, fileNo);
 		}
 		
 		
