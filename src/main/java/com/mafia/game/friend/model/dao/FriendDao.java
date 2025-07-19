@@ -5,13 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
 
 import com.mafia.game.friend.model.vo.FriendList;
 import com.mafia.game.friend.model.vo.FriendRelation;
 import com.mafia.game.friend.model.vo.GameInvite;
 import com.mafia.game.member.model.vo.Member;
 
-import jakarta.data.repository.Repository;
+
 
 @Repository
 public class FriendDao {
