@@ -181,3 +181,30 @@ body {
   object-fit: cover;
   z-index: 1;
 }
+
+/* bgm 스타일 */
+.bgm-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+    z-index: 9999;
+    font-size: 0.9rem;
+}
+
+.bgm-controls button {
+    margin: 0 4px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.bgm-controls input[type=range] {
+    width: 100px;
+    vertical-align: middle;
+}
