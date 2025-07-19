@@ -524,26 +524,23 @@
 			  ,B.VIEWCOUNT
 			  ,F.CHANGENAME
 			  ,F.BOARDNO
-			  ,NVL(A.REPLY_COUNT,0) REPLY_COUNT
               ,B.LIKECOUNT
               ,B.DISLIKECOUNT
 		FROM BOARD_FILE F
 		JOIN BOARD B ON (F.BOARDNO = B.BOARDNO)
 		JOIN USER_INFO U ON (B.USERNAME = U.USERNAME)
-		LEFT JOIN (
-					SELECT B.BOARDNO 
-						  ,COUNT(*) REPLY_COUNT
-					FROM BOARD B
-					JOIN REPLY R ON (B.BOARDNO=R.BOARDNO)
-					WHERE R.STATUS = 'Y'
-                    GROUP BY B.BOARDNO
-				  ) A ON (B.BOARDNO = A.BOARDNO)		
 		WHERE F.TYPE = 'video'
 		AND B.BOARDNO = #{boardNo}
         AND B.STATUS = 'Y'
+        AND F.STATUS = 'Y'
 	</select>
 
-	
+	<select id="getFileNoWithBoardNo" resultType="_int">
+		SELECT FILENO
+		FROM BOARD_FILE
+		WHERE BOARDNO=#{boardNo}
+		AND STATUS = 'Y'
+	</select>
 	
 	
 	

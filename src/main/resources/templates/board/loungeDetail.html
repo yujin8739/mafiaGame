@@ -314,7 +314,7 @@ hr {
 	border-color: #2980b9;
 }
 
-.profile-img {
+.profileImg {
 	width: 44px;
 	height: 44px;
 	border-radius: 50%;
@@ -345,6 +345,8 @@ hr {
   font-size: 13px;
 }
 </style>
+
+
 </head>
 <body>
 
@@ -359,7 +361,7 @@ hr {
 				<div class="meta-info">
 					<span style="display: flex; align-items: center; gap: 8px;">
 						<img th:src="@{${board.profileUrl}}" alt="Badge"
-						class="profile-img" /> <strong th:text="${board.nickName}">작성자</strong>
+						class="profileImg" /> <strong th:text="${board.nickName}">작성자</strong>
 					</span> <span style="display: flex; align-items: center; gap: 12px;">작성일:
 						<span th:text="${board.createDate}">2025-07-04</span>
 					</span> <span style="display: flex; align-items: center; gap: 12px;">조회수:
