@@ -24,6 +24,7 @@ public interface FriendService {
      */
     ArrayList<GameInvite> getPendingGameInvites(String userName);
     
+
     /**
      * 사용자 검색 (아이디 또는 닉네임으로)
      */
@@ -33,16 +34,20 @@ public interface FriendService {
      * 친구 요청 보내기
      */
     int sendFriendRequest(FriendRelation friendRequest);
+    boolean checkExistingRelation(String userName1, String userName2);
+
     
     /**
      * 친구 요청 수락
      */
     int acceptFriendRequest(int relationNo, String userName);
     
+    
     /**
      * 친구 요청 거절
      */
     int rejectFriendRequest(int relationNo, String userName);
+    
     
     /**
      * 친구 삭제
@@ -58,4 +63,6 @@ public interface FriendService {
      * 게임 초대 응답 (수락/거절)
      */
     int respondGameInvite(int inviteNo, String status, String userName);
+    
+
 }
