@@ -1,715 +1,1035 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<meta charset="UTF-8" />
-<link rel="stylesheet" th:href="@{/css/common/header.css}" />
-<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-<link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
-<link rel="stylesheet" th:href="@{/css/index.css}" />
-<link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
-<link rel="stylesheet" th:href="@{/css/game/phoneModal.css}" />
-<title>GOD Father 0805 마피아 게임룸</title>
-<style>
-#voiceRemoteContainer audio {
-  display: block;
-  margin: 4px 0;
-}
-</style>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
+    <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
+    <link rel="stylesheet" th:href="@{/css/game/phoneModal.css}" />
+    <title>GOD Father 0805 마피아 게임룸</title>
+    <style>
+        #voiceRemoteContainer audio {
+            display: block;
+            margin: 4px 0;
+        }
+    </style>
 </head>
+
 <body>
-  <div th:replace="~{common/header :: header}"></div>
+    <div th:replace="~{common/header :: header}"></div>
 
-  <div class="home-wrapper">
-    <div class="sideAD"></div>
+    <div class="home-wrapper">
+        <div class="sideAD"></div>
 
-    <div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
+        <div th:replace="~{chat/gameMainChat :: gameMainChat}"></div>
 
-    <div class="player-panel-container" style="position: relative;">
-      <div id="controlPanel">
-        <div th:replace="~{game/job/playerPanel :: playerPanelFragment}"></div>
-        <div class="readyDiv" style="display: flex; align-items: center;">
-          <button class="startBtn" id="startBtn" onclick="startGame()">Start</button>
-            <button class="readyBtn" id="readyBtn" onclick="ready()">Ready</button>
-          <div id="readyCount">Ready: 0</div>
+        <div class="player-panel-container" style="position: relative;">
+            <div id="controlPanel">
+                <div th:replace="~{game/job/playerPanel :: playerPanelFragment}"></div>
+                <div class="readyDiv" style="display: flex; align-items: center;">
+                    <button class="startBtn" id="startBtn" onclick="startGame()">Start</button>
+                    <button class="readyBtn" id="readyBtn" onclick="ready()">Ready</button>
+                    <div id="readyCount">Ready: 0</div>
+                </div>
+                <div id="gamePhaseContainer" class="game-phase">
+                    <div id="dayCount" class="text-lg font-semibold text-gray-700">일차 : 0</div>
+                    <div id="killCount" class="text-lg font-semibold text-gray-700">투표 : 0</div>
+                    <div id="phaseDisplay" class="text-xl font-bold text-indigo-600">현재 단계: -</div>
+                    <div id="timerDisplay" class="text-lg text-gray-500">남은 시간: - 초</div>
+                    <button id="startVoiceBtn">🎙 음성채팅 시작</button>
+                    <button id="stopVoiceBtn">🔇 음성채팅 종료</button>
+                    <button id="muteVoiceBtn"> 🔈 </button>
+                </div>
+            </div>
+
+            <div id="voiceRemoteContainer"></div>
+
+            <div th:replace="game/phoneModal :: phoneModal" id="phoneModal"></div>
+            <button id="togglePhoneModalBtn" type="button" style="margin-top: 10px;">휴대폰 열기</button>
         </div>
-        <div id="gamePhaseContainer" class="game-phase">
-          <div id="dayCount" class="text-lg font-semibold text-gray-700">일차 : 0</div>
-          <div id="killCount" class="text-lg font-semibold text-gray-700">투표 : 0</div>
-          <div id="phaseDisplay" class="text-xl font-bold text-indigo-600">현재 단계: -</div>
-          <div id="timerDisplay" class="text-lg text-gray-500">남은 시간: - 초</div>
-        </div>
-      </div>
-
-      <button id="startVoiceBtn">🎙 음성채팅 시작</button>
-      <button id="stopVoiceBtn" disabled>🔇 음성채팅 종료</button>
-      <button id="muteVoiceBtn" disabled>🔈 음소거</button>
-
-      <div id="voiceRemoteContainer"></div>
-
-      <div th:replace="game/phoneModal :: phoneModal" id="phoneModal"
-        style="display: none; position: absolute; top: 100%; left: 0;"></div>
-      <button id="togglePhoneModalBtn" type="button"
-        style="margin-top: 10px;">휴대폰 열기</button>
     </div>
-  </div>
 
-  <div th:replace="~{common/footer :: footer}"></div>
+    <div th:replace="~{common/footer :: footer}"></div>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script th:inline="javascript">
-  /* ==========================
-     서버 템플릿 변수, 초기 변수
-  ========================== */
-  const roomNo = /*[[${roomNo}]]*/ 0;
-  let isGaming = false;
-  let isReady = false;
-  let readyCount = 0;
-  let nickName = /*[[${loginUser.nickName}]]*/ '익명';
-  let userName = /*[[${loginUser.userName}]]*/ '';
-  let room = /*[[${room}]]*/ null;
-  let dayNo = room ? room.dayNo : 0;
-  isGaming = room && room.isGaming === 'Y';
-  const isHost = (room && room.master === userName);
-  const chatArea = document.querySelector('#chatArea');
-  const startBtn = document.getElementById('startBtn');
-  const readyBtn = document.getElementById('readyBtn');
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script th:inline="javascript">
+        /* ==========================
+           서버 템플릿 변수, 초기 변수
+        ========================== */
+        const roomNo = /*[[${roomNo}]]*/ 0;
+        let isGaming = false;
+        let isReady = false;
+        let readyCount = 0;
+        let nickName = /*[[${loginUser.nickName}]]*/ '익명';
+        let userName = /*[[${loginUser.userName}]]*/ '';
+        let room = /*[[${room}]]*/ null;
+        let dayNo = room ? room.dayNo : 0;
+        isGaming = room && room.isGaming === 'Y';
+        const isHost = (room && room.master === userName);
+        const chatArea = document.querySelector('#chatArea');
+        const startBtn = document.getElementById('startBtn');
+        const readyBtn = document.getElementById('readyBtn');
+		const phoneModal = document.getElementById("phoneModal");
+		const toggleBtn = document.getElementById("togglePhoneModalBtn");
+		const closeBtn = phoneModal.querySelector("#closePhoneModalBtn");
 
-  /* (요청: remoteStream 삭제하지 말고 유지) */
-  const remoteStream = new MediaStream(); // (현재 사용 X / DEPRECATED 용도)
+        //블록검색용
+        let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
+        const pageSize = 30; // 한 블록에 몇 개의 메시지를 가져올지
+        let isLoading = false;
+        let isLastPage = false;
+        let isFirstLoad = true;
 
-  /* ==========================
-     유저 및 방 초기 상태 점검
-  ========================== */
-  if(!room || !room.roomNo) {
-    alert('방이 삭제되었습니다. 다른 게임에 접속해주세요');
-    window.location.href = /*[[ @{/} ]]*/ '/';
-  }
-  const userListArray = room && room.userList ? JSON.parse(room.userList) : [];
-  if(isGaming && !userListArray.includes(userName)) {
-    alert('이미 게임이 시작되었습니다. 다른 게임에 접속해주세요');
-    window.location.href = /*[[ @{/} ]]*/ '/';
-  }
-  if(userListArray.length >= room.headCount && !userListArray.includes(userName)) {
-    alert('이미 방이 꽉찼습니다. 다른 게임에 접속해주세요');
-    window.location.href = /*[[ @{/} ]]*/ '/';
-  }
-  if(room.master === userName || room.master === null) {
-    startBtn.style.display = 'block';
-    readyBtn.style.display = 'none';
-  }
-  if(isGaming) {
-    document.getElementById('sendBtn').disabled = true;
-    document.getElementById('chat').disabled = true;
-    document.getElementById('chat').placeholder = '재입장시 다음 낮까지 채팅이 불가능합니다.';
-  }
+        //게임용
+        var job = 'none';
+        let jobObj;
+        var isNight = false;
 
-  /* ==========================
-     WebSocket 연결 및 재연결 처리
-  ========================== */
-  let socket;
-  let reconnectAttempts = 0;
-  const maxReconnectAttempts = 10;
+        /* (요청: remoteStream 삭제하지 말고 유지) */
+        const remoteStream = new MediaStream(); // (현재 사용 X / DEPRECATED 용도)
 
-  function setupWebRTCSignaling() {
-    if(isHost) {
-      safeSend({ type:'rtcHello', userName: nickName, roomNo: roomNo });
-    }
-  }
-  function connectWebSocket() {
-    const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    socket = new WebSocket(protocol + location.host + '/chat/gameMainChat?roomNo=' + roomNo);
-
-    socket.onopen = () => {
-      console.log('✅ WebSocket 연결 성공');
-      reconnectAttempts = 0;
-      sendEnterMessage();
-      setupWebRTCSignaling();
-    };
-    socket.onerror = err => console.error('❌ WebSocket 오류', err);
-    socket.onclose = () => {
-      console.warn('⚠️ WebSocket 끊김');
-      disableGameUI();
-      if(reconnectAttempts < maxReconnectAttempts) {
-        setTimeout(() => {
-          reconnectAttempts++;
-          console.log('🔄 재연결 시도 #' + reconnectAttempts);
-          connectWebSocket();
-        }, Math.min(5000, reconnectAttempts * 1000));
-      } else {
-        alert('서버 재연결 실패. 새로고침 해주세요.');
-      }
-    };
-    socket.onmessage = event => {
-      const msgData = JSON.parse(event.data);
-      handleSocketMessage(msgData);
-    };
-  }
-  connectWebSocket();
-
-  function safeSend(obj) {
-    if(socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(obj));
-    } else {
-      console.warn('WebSocket이 열려있지 않아 전송 불가', obj);
-    }
-  }
-  function sendEnterMessage() {
-    safeSend({
-      type: 'enter',
-      userName: nickName,
-      msg: nickName + '님이 입장하셨습니다.',
-      roomNo: roomNo
-    });
-  }
-
-  /* ==========================
-     텍스트 채팅 WebRTC 시그널링
-  ========================== */
-  let peers = {};
-  let dataChannels = {};
-
-  async function createPeerConnection(peerUser, isInitiator) {
-    const pc = new RTCPeerConnection();
-    peers[peerUser] = pc;
-
-    pc.onicecandidate = e => {
-      if(e.candidate) {
-        safeSend({ type:'rtcIce', target:peerUser, candidate:e.candidate, from:userName });
-      }
-    };
-    if(isInitiator) {
-      const dc = pc.createDataChannel('chat');
-      dataChannels[peerUser] = dc;
-      setupDataChannel(peerUser, dc);
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      safeSend({ type:'rtcOffer', target:peerUser, sdp: offer, from: userName });
-    } else {
-      pc.ondatachannel = e => {
-        const dc = e.channel;
-        dataChannels[peerUser] = dc;
-        setupDataChannel(peerUser, dc);
-      };
-    }
-  }
-  function setupDataChannel(peerUser, dc) {
-    dc.onopen = () => console.log('DataChannel open:', peerUser);
-    dc.onmessage = e => handleRTCMessage(JSON.parse(e.data));
-    dc.onclose = () => console.log('DataChannel close:', peerUser);
-  }
-  function handleRTCMessage(msgData) {
-    const wasAtBottom = isScrolledToBottom(chatArea);
-    const div = document.createElement('div');
-    reciveMsg(msgData, div);
-    chatArea.appendChild(div);
-    scrollIfNeeded(wasAtBottom);
-  }
-
-  async function onRtcHello(sig) {
-    if(!isHost) return;
-    await createPeerConnection(sig.from, true);
-  }
-  async function onRtcOffer(sig) {
-    if(isHost) return;
-    if(!peers[sig.from]) await createPeerConnection(sig.from, false);
-    const pc = peers[sig.from];
-    await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    safeSend({ type:'rtcAnswer', target:sig.from, sdp: answer, from: userName });
-  }
-  async function onRtcAnswer(sig) {
-    const pc = peers[sig.from];
-    if(pc) await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
-  }
-  function onRtcIce(sig) {
-    const pc = peers[sig.from];
-    if(pc) {
-      try {
-        pc.addIceCandidate(new RTCIceCandidate(sig.candidate));
-      } catch(e) {
-        console.warn('ICE candidate 추가 실패', e);
-      }
-    }
-  }
-
-  /* ==========================
-     채팅 전송
-  ========================== */
-  function sendChatMessage(text) {
-    const msg = { type:'chat', userName:nickName, msg:text, roomNo:roomNo };
-    let sent = false;
-    Object.entries(dataChannels).forEach(([peerUser, dc]) => {
-      if(dc.readyState === 'open') {
-        dc.send(JSON.stringify(msg));
-        sent = true;
-      }
-    });
-    if(!sent) safeSend(msg);
-  }
-  document.getElementById('sendBtn').addEventListener('click', () => {
-    const chatInput = document.getElementById('chat');
-    const val = chatInput.value.trim();
-    if(val.length > 0) {
-      sendChatMessage(val);
-      chatInput.value = '';
-    }
-  });
-  document.getElementById('chat').addEventListener('keydown', e => {
-    if(e.key === 'Enter') {
-      e.preventDefault();
-      document.getElementById('sendBtn').click();
-    }
-  });
-
-  /* ==========================
-     게임 준비/시작
-  ========================== */
-  function ready() {
-    isReady = !isReady;
-    const type = isReady ? 'ready' : 'unReady';
-    const msg = isReady ? nickName + '님이 준비했습니다.' : nickName + '님이 준비 해제했습니다.';
-    safeSend({ type, userName: nickName, msg, roomNo });
-  }
-  function startGame() {
-    if(readyCount === (document.querySelectorAll('.slot').length - 1)) {
-      safeSend({ type:'start', userName:'시스템', msg:'게임 시작합니다.', roomNo });
-    } else {
-      alert('모든 플레이어가 준비되어야 시작할 수 있습니다.');
-    }
-  }
-
-  /* ==========================
-     게임 메시지 및 상태 처리
-  ========================== */
-  function handleSocketMessage(msgData) {
-    // 음성 메시지 우선 처리
-    if(msgData.type.startsWith('voice')) {
-      handleVoiceMsg(msgData);
-      return;
-    }
-    switch(msgData.type) {
-      case 'rtcHello': onRtcHello(msgData); break;
-      case 'rtcOffer': onRtcOffer(msgData); break;
-      case 'rtcAnswer': onRtcAnswer(msgData); break;
-      case 'rtcIce': onRtcIce(msgData); break;
-      case 'ready':
-      case 'unReady':
-        setReadyCount();
-        break;
-      case 'start':
-        setStart();
-        break;
-      case 'enter':
-      case 'leave':
-        if(isGaming) {
-          setStart();
+        /* ==========================
+           유저 및 방 초기 상태 점검
+        ========================== */
+        if (!room || !room.roomNo) {
+            alert('방이 삭제되었습니다. 다른 게임에 접속해주세요');
+            window.location.href = /*[[ @{/} ]]*/ '/';
         }
-        roomReloadToUserLoad();
-        break;
-      case 'phase':
-        setTimer(msgData.phase, msgData.remaining);
-        break;
-      case 'MAFIA_WIN':
-      case 'CITIZEN_WIN':
-      case 'NEUTRALITY_WIN':
-        setStop();
-        break;
-      default:
-        displayChatMessage(msgData);
-        break;
-    }
-  }
+        const userListArray = room && room.userList ? JSON.parse(room.userList) : [];
+        if (isGaming && !userListArray.includes(userName)) {
+            alert('이미 게임이 시작되었습니다. 다른 게임에 접속해주세요');
+            window.location.href = /*[[ @{/} ]]*/ '/';
+        } else if (isGaming) {
+            sendBtn.disabled = true;
+            sendBtn.classList.add('disabled-btn');
 
-  function displayChatMessage(msgData) {
-    const wasAtBottom = isScrolledToBottom(chatArea);
-    const div = document.createElement('div');
-    reciveMsg(msgData, div);
-    chatArea.appendChild(div);
-    scrollIfNeeded(wasAtBottom);
-  }
-
-  function setReadyCount() {
-    $.ajax({
-      url:'/room/readyCount',
-      data:{roomNo},
-      success: function(length) {
-        readyCount = length;
-        document.getElementById('readyCount').innerText = 'Ready: ' + length + '/' + (document.querySelectorAll('.slot').length - 1);
-      }
-    });
-  }
-  function setStart() {
-    isGaming = true;
-    document.querySelectorAll('.readyDiv').forEach(div => div.style.display = 'none');
-  }
-  function setStop() {
-    isGaming = false;
-    roomReload();
-    enableGameUI();
-  }
-  function roomReload() {
-    $.ajax({
-      url:'/room/reloadRoom',
-      data:{roomNo},
-      success: function(newRoom) {
-        room = newRoom;
-        dayNo = newRoom.dayNo;
-        document.getElementById('dayCount').innerText = '일차 : ' + dayNo + '일';
-      }
-    });
-  }
-  function roomReloadToUserLoad() {
-    $.ajax({
-      url:'/room/roomReloadToUserLoad',
-      data:{roomNo},
-      success: function(newRoom) {
-        userLoad(newRoom);
-      }
-    });
-  }
-  function userLoad(room) {
-    $.ajax({
-      url:'/room/userNickList',
-      data:{userList: room.userList},
-      success: function(userNickList) {
-        setUserNick(userNickList);
-        $.ajax({
-          url:'/room/userDeathList',
-          data:{roomNo},
-          success: function(deathList) {
-            loadUser(deathList);
-          }
-        });
-      }
-    });
-  }
-
-  /* ==========================
-     음성 채팅 기능 - 멀티파티 WebRTC
-  ========================== */
-  const voiceState = {
-    localStream: null,
-    peers: {},        // userName -> RTCPeerConnection
-    remoteAudioEls: {},// userName -> HTMLAudioElement
-    localMuted: false,
-    isHost: isHost,
-    isVoiceStarted: false,
-    offered: {}       // === NEW: Host가 Offer 보낸 사용자 기록
-  };
-  const voiceUI = {
-    startBtn: document.getElementById('startVoiceBtn'),
-    stopBtn: document.getElementById('stopVoiceBtn'),
-    muteBtn: document.getElementById('muteVoiceBtn'),
-    container: document.getElementById('voiceRemoteContainer')
-  };
-
-  voiceUI.startBtn.onclick = startVoiceChat;
-  voiceUI.stopBtn.onclick = stopVoiceChat;
-  voiceUI.muteBtn.onclick = toggleMute;
-
-  // =======================================================
-  // === ✨ [수정된 부분] START: startVoiceChat 함수 수정 ✨ ===
-  // =======================================================
-  async function startVoiceChat() {
-    if (voiceState.isVoiceStarted) return;
-
-    try {
-      // 1. (핵심 수정) `await`를 사용해 마이크 스트림을 완전히 받아올 때까지 기다립니다.
-      // 이것이 보장되어야만 다른 유저와의 연결(PeerConnection) 시 오디오 트랙을 정상적으로 추가할 수 있습니다.
-      voiceState.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-
-      console.log("✅ localStream 획득:", voiceState.localStream);
-
-      // 마이크 권한은 허용했으나, 실제 오디오 트랙이 없는 경우에 대한 예외처리
-      if (voiceState.localStream.getAudioTracks().length === 0) {
-        alert("연결된 마이크 장치가 없거나 인식되지 않습니다. 장치를 확인해주세요.");
-        console.warn("⚠️ 오디오 트랙이 없습니다 (장치/권한 문제)");
-        voiceState.localStream = null; // 스트림 상태 초기화
-        return; // 함수 종료
-      }
-
-      // 로컬 오디오 스트림 미리보기 (자신에게는 음소거 상태로)
-      let localPrev = document.getElementById('localAudio');
-      if (!localPrev) {
-        localPrev = document.createElement('audio');
-        localPrev.id = 'localAudio';
-        localPrev.autoplay = true;
-        localPrev.muted = true;
-        localPrev.playsInline = true;
-        document.getElementById('voiceRemoteContainer').appendChild(localPrev);
-      }
-      localPrev.srcObject = voiceState.localStream;
-      localPrev.play().catch(e => console.warn("로컬 프리뷰 재생 실패:", e));
-
-      // 2. (수정) 스트림을 성공적으로 얻은 후에 상태를 변경하고 UI를 업데이트합니다.
-      voiceState.isVoiceStarted = true;
-      voiceUI.startBtn.disabled = true;
-      voiceUI.stopBtn.disabled = false;
-      voiceUI.muteBtn.disabled = false;
-
-      // 3. (수정) 모든 설정이 끝난 후, 시그널링 메시지를 전송합니다.
-      if (voiceState.isHost) {
-        // 방장은 본인이 시작했다는 신호만 보내고, 다른 클라이언트들의 'voiceReady'를 기다립니다.
-        safeSend({ type: 'voiceHostStart', userName, roomNo });
-      } else {
-        // 클라이언트는 방장에게 연결 준비가 되었음을 알립니다.
-        safeSend({ type: 'voiceReady', userName, roomNo });
-      }
-
-    } catch (e) {
-      console.error("❌ startVoiceChat 오류:", e);
-      // 사용자에게 더 친절한 오류 메시지 제공
-      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
-          alert('마이크 사용 권한이 거부되었습니다. 브라우저 설정에서 마이크 권한을 허용하고 페이지를 새로고침 해주세요.');
-      } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
-          alert('사용 가능한 마이크 장치를 찾을 수 없습니다.');
-      } else {
-          alert('마이크를 시작하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-      }
-      // 실패 시 상태 원복
-      voiceState.isVoiceStarted = false;
-      voiceState.localStream = null;
-    }
-  }
-  // =====================================================
-  // === ✨ [수정된 부분] END: startVoiceChat 함수 수정 ✨ ===
-  // =====================================================
-
-  function stopVoiceChat() {
-    if(!voiceState.isVoiceStarted) return;
-    voiceState.isVoiceStarted = false;
-    if(voiceState.localStream) {
-      voiceState.localStream.getTracks().forEach(t => t.stop());
-      voiceState.localStream = null;
-    }
-    clearVoiceConnections();
-    voiceUI.startBtn.disabled = false;
-    voiceUI.stopBtn.disabled = true;
-    voiceUI.muteBtn.disabled = true;
-    if(voiceState.isHost) {
-      safeSend({ type:'voiceHostStop', userName, roomNo });
-    }
-  }
-  function toggleMute() {
-    if(!voiceState.localStream) return;
-    voiceState.localMuted = !voiceState.localMuted;
-    voiceState.localStream.getAudioTracks().forEach(track => track.enabled = !voiceState.localMuted);
-    voiceUI.muteBtn.textContent = voiceState.localMuted ? '🔇 음소거' : '🔈 음소거 해제';
-    safeSend({ type: voiceState.localMuted ? 'voiceMute' : 'voiceUnmute', userName, roomNo });
-  }
-
-  function clearVoiceConnections() {
-    for(const peerUser in voiceState.peers) {
-      const pc = voiceState.peers[peerUser];
-      if(pc) pc.close();
-    }
-    voiceState.peers = {};
-    voiceState.offered = {};
-    for(const key in voiceState.remoteAudioEls) {
-      const el = voiceState.remoteAudioEls[key];
-      if(el && el.parentNode) el.parentNode.removeChild(el);
-    }
-    voiceState.remoteAudioEls = {};
-    const localAudio = document.getElementById('localAudio');
-    if(localAudio && localAudio.parentNode) localAudio.parentNode.removeChild(localAudio);
-  }
-
-  /* -------- 음성 시그널 처리 Offer / Answer / Candidate -------- */
-  async function onVoiceOffer(msg) {
-    if (!voiceState.isVoiceStarted) {
-      console.warn("🔸 아직 startVoiceChat 하지 않아 Offer 무시");
-      return;
-    }
-    const fromUser = msg.from;
-    const pc = createVoicePeerConnection(fromUser);
-
-    if (pc.remoteDescription) {
-      console.warn("이미 remoteDescription 있음 → 중복 Offer 무시");
-      return;
-    }
-
-    try {
-      await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-      console.log("✅ Offer SDP 적용:", fromUser);
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      safeSend({ type: 'voiceAnswer', target: fromUser, sdp: answer, from: userName });
-      console.log("📨 Answer 전송 →", fromUser);
-    } catch (e) {
-      console.error("❌ Offer 처리 실패:", e);
-    }
-  }
-
-  async function onVoiceAnswer(msg) {
-    const fromUser = msg.from;
-    const pc = voiceState.peers[fromUser];
-    if (!pc) {
-      console.warn("Answer 수신했지만 pc 없음:", fromUser);
-      return;
-    }
-    if (pc.signalingState !== 'have-local-offer') {
-      console.warn("Answer 수신 시 signalingState 불일치:", pc.signalingState);
-    }
-    try {
-      await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-      console.log("✅ Answer SDP 적용:", fromUser);
-    } catch (e) {
-      console.error("❌ Answer 적용 실패:", e);
-    }
-  }
-
-  function onVoiceCandidate(msg) {
-    const pc = voiceState.peers[msg.from];
-    if(!pc) return;
-    pc.addIceCandidate(new RTCIceCandidate(msg.candidate)).catch(e => {
-      console.warn('voiceCandidate 추가 실패:', e);
-    });
-  }
-
-  function createVoicePeerConnection(remoteUser) {
-    if (voiceState.peers[remoteUser]) return voiceState.peers[remoteUser];
-
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-    });
-    voiceState.peers[remoteUser] = pc;
-
-    console.log("🌐 Voice PC 생성:", remoteUser);
-
-    // 로컬 트랙 추가
-    if (voiceState.localStream) {
-      voiceState.localStream.getAudioTracks().forEach(track => {
-        console.log(`➡️ addTrack to ${remoteUser}:`, track.label);
-        pc.addTrack(track, voiceState.localStream);
-      });
-    } else {
-      // 이 경고는 startVoiceChat을 수정했기 때문에 거의 발생하지 않아야 합니다.
-      console.warn("⚠️ localStream 없음 (startVoiceChat 호출 전?)");
-    }
-
-    pc.onicecandidate = (e) => {
-      if (e.candidate) {
-        safeSend({
-          type: 'voiceCandidate',
-          target: remoteUser,
-          candidate: e.candidate,
-          from: userName
-        });
-      }
-    };
-
-    pc.ontrack = (e) => {
-      console.log("📡 remote track from", remoteUser, e.streams);
-      addRemoteAudio(remoteUser, e.streams[0]);
-    };
-
-    pc.onconnectionstatechange = () => {
-      console.log(`🔁 PC(${remoteUser}) connectionState =`, pc.connectionState);
-      if (['failed','disconnected','closed'].includes(pc.connectionState)) {
-        removeRemoteAudio(remoteUser);
-        try { pc.close(); } catch (_) { }
-        delete voiceState.peers[remoteUser];
-        delete voiceState.offered[remoteUser];
-      }
-    };
-
-    return pc;
-  }
-
-  function addRemoteAudio(peerUser, stream) {
-    let el = voiceState.remoteAudioEls[peerUser];
-    if (!el) {
-      el = document.createElement('audio');
-      el.id = 'remote-' + peerUser;
-      el.autoplay = true;
-      el.playsInline = true;
-      el.controls = false; // 컨트롤러 숨김
-      el.muted = false; // 상대방 소리는 들려야 함
-      el.dataset.user = peerUser;
-      el.style.display = 'block';
-      el.title = peerUser;
-      document.getElementById('voiceRemoteContainer').appendChild(el);
-      voiceState.remoteAudioEls[peerUser] = el;
-    }
-    el.srcObject = stream;
-    el.play()
-      .then(() => console.log("🔊 원격 재생 시작:", peerUser))
-      .catch(err => console.warn("⚠️ 원격 재생 실패:", peerUser, err));
-  }
-
-  // ✨ [수정된 부분] 중복 정의 제거 및 단일 함수 유지
-  function removeRemoteAudio(peerUser) {
-    const el = voiceState.remoteAudioEls[peerUser];
-    if (el) {
-      el.srcObject = null;
-      if (el.parentNode) el.parentNode.removeChild(el);
-      delete voiceState.remoteAudioEls[peerUser];
-    }
-  }
-
-  // 음성 관련 메시지 처리
-function handleVoiceMsg(msgData) {
-    switch(msgData.type) {
-      case 'voiceHostStart':
-        // 방장이 시작하면, 아직 시작 안한 클라이언트들이 자동으로 시작
-        if(!voiceState.isHost && !voiceState.isVoiceStarted) {
-          startVoiceChat();
+            chatInput.disabled = true;
+            chatInput.placeholder = "재입장시 다음번 낮까지 채팅이 불가능합니다.";
         }
-        break;
-      
-      // ✨✨✨ 여기가 가장 중요하게 변경된 부분입니다 (Mesh 구조로 변경) ✨✨✨
-      case 'voiceReady':
-        // 'voiceReady' 신호는 새로운 참여자가 보낸 "나 여기 있어요!" 라는 방송입니다.
-        // 이 신호를 받은 기존의 모든 참여자(나 자신 제외)는 그 새로운 참여자에게 연결을 시도해야 합니다.
-        
-        // 내가 보낸 신호는 무시
-        if (msgData.userName === userName) break;
-        
-        // 내가 음성 채팅에 참여중일 때만 반응
-        if (voiceState.isVoiceStarted) {
-          console.log(`[MESH] 새로운 참여자(${msgData.userName})가 접속했습니다. 연결을 시작합니다.`);
-          const newcomer = msgData.userName;
-          
-          // 이미 Offer를 보냈다면 중복 실행 방지
-          if (voiceState.offered[newcomer]) {
-            console.log(`↩ 이미 ${newcomer}에게 Offer를 보냈으므로 건너뜁니다.`);
-            break;
-          }
+        if (userListArray.length >= room.headCount && !userListArray.includes(userName)) {
+            alert('이미 방이 꽉찼습니다. 다른 게임에 접속해주세요');
+            window.location.href = /*[[ @{/} ]]*/ '/';
+        }
+        if (room.master === userName || room.master === null) {
+            startBtn.style.display = 'block';
+            readyBtn.style.display = 'none';
+        }
+        if (isGaming) {
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('chat').disabled = true;
+            document.getElementById('chat').placeholder = '재입장시 다음 낮까지 채팅이 불가능합니다.';
+        }
 
-          // PeerConnection을 생성하고 Offer를 보내는 로직 (기존에 방장만 하던 일)
-          const pc = createVoicePeerConnection(newcomer);
-          (async () => {
-            try {
-              const offer = await pc.createOffer();
-              await pc.setLocalDescription(offer);
-              voiceState.offered[newcomer] = true; // Offer 전송 기록
-              safeSend({ type: 'voiceOffer', target: newcomer, sdp: offer, from: userName });
-              console.log(`📨 voiceOffer 전송 → ${newcomer}`);
-            } catch (e) {
-              console.error(`❌ ${newcomer}에게 Offer 생성 실패:`, e);
+        toggleBtn.addEventListener("click", () => {
+            if (phoneModal.style.display === "none" || phoneModal.style.display === "") {
+                phoneModal.style.display = "block";
+                togglePhoneModalBtn.style.display = "none";
+                controlPanel.style.display = "none";
+            } else {
+                phoneModal.style.display = "none";
+                togglePhoneModalBtn.style.display = "block";
+                controlPanel.style.display = "block";
             }
-          })();
+        });
+
+        closeBtn.addEventListener("click", () => {
+            phoneModal.style.display = "none";
+            togglePhoneModalBtn.style.display = "block";
+            controlPanel.style.display = "block";
+        });
+
+        chatLoad(job);
+
+        /* ==========================
+           WebSocket 연결 및 재연결 처리
+        ========================== */
+        let socket;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+
+        function setupWebRTCSignaling() {
+            if (isHost) {
+                safeSend({ type: 'rtcHello', userName: nickName, roomNo: roomNo });
+            }
         }
-        break;
-      case 'voiceOffer': onVoiceOffer(msgData); break;
-      case 'voiceAnswer': onVoiceAnswer(msgData); break;
-      case 'voiceCandidate': onVoiceCandidate(msgData); break;
-      case 'voiceHostStop':
-        stopVoiceChat();
-        break;
-      case 'voiceMute':
-        muteRemoteAudio(msgData.userName, true);
-        break;
-      case 'voiceUnmute':
-        muteRemoteAudio(msgData.userName, false);
-        break;
-    }
-  }
-  function muteRemoteAudio(user, mute) {
-    const el = voiceState.remoteAudioEls[user];
-    if(el) el.muted = mute;
-  }
-  </script>
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+            socket = new WebSocket(protocol + location.host + '/chat/gameMainChat?roomNo=' + roomNo);
+
+            socket.onopen = () => {
+                console.log('✅ WebSocket 연결 성공');
+                reconnectAttempts = 0;
+                sendEnterMessage();
+                setupWebRTCSignaling();
+            };
+            socket.onerror = err => console.error('❌ WebSocket 오류', err);
+            socket.onclose = () => {
+                console.warn('⚠️ WebSocket 끊김');
+                disableGameUI();
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    setTimeout(() => {
+                        reconnectAttempts++;
+                        console.log('🔄 재연결 시도 #' + reconnectAttempts);
+                        connectWebSocket();
+                        //방 삭제되었을때 소캣 무한 재접속 방지
+                        if (!room || !room.roomNo) {
+                            alert('방이 삭제되었습니다. 다른 게임에 접속해주세요');
+                            window.location.href = /*[[ @{/} ]]*/ '/';
+                        }
+                        if (userListArray.length >= room.headCount && !userListArray.includes(userName)) {
+                            alert('이미 방이 꽉찼습니다. 다른 게임에 접속해주세요');
+                            window.location.href = /*[[ @{/} ]]*/ '/';
+                        }
+                        if (isGaming && !userListArray.includes(userName)) {
+                            alert('이미 게임이 시작되었습니다. 다른 게임에 접속해주세요');
+                            window.location.href = /*[[ @{/} ]]*/ '/';
+                        }
+                    }, Math.min(5000, reconnectAttempts * 1000));
+                } else {
+                    alert('서버 재연결 실패. 새로고침 해주세요.');
+                }
+            };
+            socket.onmessage = event => {
+                const msgData = JSON.parse(event.data);
+                handleSocketMessage(msgData);
+            };
+        }
+        connectWebSocket();
+
+        function safeSend(obj) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(obj));
+            } else {
+                console.warn('WebSocket이 열려있지 않아 전송 불가', obj);
+            }
+        }
+        function sendEnterMessage() {
+            safeSend({
+                type: 'enter',
+                userName: nickName,
+                msg: nickName + '님이 입장하셨습니다.',
+                roomNo: roomNo
+            });
+        }
+
+        /* ==========================
+           텍스트 채팅 WebRTC 시그널링
+        ========================== */
+        let peers = {};
+        let dataChannels = {};
+
+        async function createPeerConnection(peerUser, isInitiator) {
+            const pc = new RTCPeerConnection();
+            peers[peerUser] = pc;
+
+            pc.onicecandidate = e => {
+                if (e.candidate) {
+                    safeSend({ type: 'rtcIce', target: peerUser, candidate: e.candidate, from: userName });
+                }
+            };
+            if (isInitiator) {
+                const dc = pc.createDataChannel('chat');
+                dataChannels[peerUser] = dc;
+                setupDataChannel(peerUser, dc);
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                safeSend({ type: 'rtcOffer', target: peerUser, sdp: offer, from: userName });
+            } else {
+                pc.ondatachannel = e => {
+                    const dc = e.channel;
+                    dataChannels[peerUser] = dc;
+                    setupDataChannel(peerUser, dc);
+                };
+            }
+        }
+        function setupDataChannel(peerUser, dc) {
+            dc.onopen = () => console.log('DataChannel open:', peerUser);
+            dc.onmessage = e => handleRTCMessage(JSON.parse(e.data));
+            dc.onclose = () => console.log('DataChannel close:', peerUser);
+        }
+        function handleRTCMessage(msgData) {
+            const wasAtBottom = isScrolledToBottom(chatArea);
+            const div = document.createElement('div');
+            reciveMsg(msgData, div);
+            chatArea.appendChild(div);
+            scrollIfNeeded(wasAtBottom);
+        }
+
+        async function onRtcHello(sig) {
+            if (!isHost) return;
+            await createPeerConnection(sig.from, true);
+        }
+        async function onRtcOffer(sig) {
+            if (isHost) return;
+            if (!peers[sig.from]) await createPeerConnection(sig.from, false);
+            const pc = peers[sig.from];
+            await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            safeSend({ type: 'rtcAnswer', target: sig.from, sdp: answer, from: userName });
+        }
+        async function onRtcAnswer(sig) {
+            const pc = peers[sig.from];
+            if (pc) await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+        }
+        function onRtcIce(sig) {
+            const pc = peers[sig.from];
+            if (pc) {
+                try {
+                    pc.addIceCandidate(new RTCIceCandidate(sig.candidate));
+                } catch (e) {
+                    console.warn('ICE candidate 추가 실패', e);
+                }
+            }
+        }
+
+        /* ==========================
+           채팅 전송
+        ========================== */
+        function sendChatMessage(text) {
+            const msg = { type: 'chat', userName: nickName, msg: text, roomNo: roomNo };
+            let sent = false;
+            Object.entries(dataChannels).forEach(([peerUser, dc]) => {
+                if (dc.readyState === 'open') {
+                    dc.send(JSON.stringify(msg));
+                    sent = true;
+                }
+            });
+            if (!sent) safeSend(msg);
+        }
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const chatInput = document.getElementById('chat');
+            const val = chatInput.value.trim();
+            if (val.length > 0) {
+                sendChatMessage(val);
+                chatInput.value = '';
+            }
+        });
+        document.getElementById('chat').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('sendBtn').click();
+            }
+        });
+
+        /* ==========================
+           게임 준비/시작
+        ========================== */
+        function ready() {
+            isReady = !isReady;
+            const type = isReady ? 'ready' : 'unReady';
+            const msg = isReady ? nickName + '님이 준비했습니다.' : nickName + '님이 준비 해제했습니다.';
+            safeSend({ type, userName: nickName, msg, roomNo });
+        }
+		
+        function startGame() {
+            if (readyCount === (document.querySelectorAll('.slot').length - 1)) {
+                safeSend({ type: 'start', userName: '시스템', msg: '게임 시작합니다.', roomNo });
+            } else {
+                alert('모든 플레이어가 준비되어야 시작할 수 있습니다.');
+            }
+        }
+
+        /* ==========================
+           게임 메시지 및 상태 처리
+        ========================== */
+        function handleSocketMessage(msgData) {
+            // 음성 메시지 우선 처리
+            if (msgData.type.startsWith('voice')) {
+                handleVoiceMsg(msgData);
+                return;
+            }
+            switch (msgData.type) {
+                case 'rtcHello': onRtcHello(msgData); break;
+                case 'rtcOffer': onRtcOffer(msgData); break;
+                case 'rtcAnswer': onRtcAnswer(msgData); break;
+                case 'rtcIce': onRtcIce(msgData); break;
+                case 'ready':
+                case 'unReady':
+                    setReadyCount();
+                    addEtcMsg(msgData);
+                    break;
+                case 'start':
+                    setStart();
+                    loadHintList(roomNo);
+                    addEtcMsg(msgData);
+                    break;
+                case 'enter':
+                case 'leave':
+                    if (isGaming) {
+                        setStart();
+                        loadHintList(roomNo);
+                    }
+                    roomReloadToUserLoad();
+                    addEtcMsg(msgData);
+                    break;
+                case 'phase':
+                    setTimer(msgData.phase, msgData.remaining);
+                    break;
+                case 'MAFIA_WIN':
+                case 'CITIZEN_WIN':
+                case 'NEUTRALITY_WIN':
+                    setStop();
+                    break;
+                default:
+                    displayChatMessage(msgData);
+                    break;
+            }
+        }
+
+        function addEtcMsg(msgData) {
+            const wasAtBottom = isScrolledToBottom(chatArea);
+            const div = document.createElement("div");
+            reciveMsg(msgData, div);
+            chatArea.appendChild(div);
+            scrollIfNeeded(wasAtBottom);
+        }
+
+        function displayChatMessage(msgData) {
+            const wasAtBottom = isScrolledToBottom(chatArea);
+            const div = document.createElement("div");
+
+            if (msgData.type && msgData.type.includes("death")) {
+                if (job !== "ghost" && job !== "mafiaGhost" && job !== "spiritualists") {
+                    return;
+                } else {
+                    const typeDiv = document.createElement("div");
+                    typeDiv.classList.add("type-Text");
+                    typeDiv.textContent = "『사망자』";
+                    div.appendChild(typeDiv);
+                }
+            } else if (msgData.type && msgData.type === "mafia") {
+                if (job !== "mafia") {
+                    return;
+                } else {
+                    const typeDiv = document.createElement("div");
+                    typeDiv.classList.add("type-Text");
+                    typeDiv.textContent = "『마피아』";
+                    div.appendChild(typeDiv);
+                }
+            }
+
+            reciveMsg(msgData, div);
+            chatArea.appendChild(div);
+            scrollIfNeeded(wasAtBottom);
+        }
+
+        function setReadyCount() {
+            $.ajax({
+                url: '/room/readyCount',
+                data: { roomNo },
+                success: function (length) {
+                    readyCount = length;
+                    document.getElementById('readyCount').innerText = 'Ready: ' + length + '/' + (document.querySelectorAll('.slot').length - 1);
+                }
+            });
+        }
+        function setStart() {
+            isGaming = true;
+            document.querySelectorAll('.readyDiv').forEach(div => div.style.display = 'none');
+
+            $.ajax({
+                url: '/room/getJob',
+                data: { roomNo: roomNo },
+                success: function (myJob) {
+                    jobObj = myJob;
+                    job = myJob.jobName;
+                    chatLoad(job);
+                    if (isStart) {
+                        alert("당신의 직업은 " + myJob.jobVisible + "입니다.");
+                    }
+                    console.log();
+                }
+            })
+        }
+        function setStop() {
+            isGaming = false;
+            roomReload();
+            enableGameUI();
+        }
+        function roomReload() {
+            $.ajax({
+                url: '/room/reloadRoom',
+                data: { roomNo },
+                success: function (newRoom) {
+                    room = newRoom;
+                    dayNo = newRoom.dayNo;
+                    document.getElementById('dayCount').innerText = '일차 : ' + dayNo + '일';
+                }
+            });
+        }
+
+        function roomReloadToUserLoad() {
+            $.ajax({
+                url: '/room/roomReloadToUserLoad',
+                data: { roomNo },
+                success: function (newRoom) {
+                    userLoad(newRoom);
+                }
+            });
+        }
+        function userLoad(room) {
+            $.ajax({
+                url: '/room/userNickList',
+                data: { userList: room.userList },
+                success: function (userNickList) {
+                    setUserNick(userNickList);
+                    $.ajax({
+                        url: '/room/userDeathList',
+                        data: { roomNo },
+                        success: function (deathList) {
+                            loadUser(deathList);
+                        }
+                    });
+                }
+            });
+        }
+
+        /* ==========================
+           음성 채팅 기능 - 멀티파티 WebRTC
+        ========================== */
+        const voiceState = {
+            localStream: null,
+            peers: {},        // userName -> RTCPeerConnection
+            remoteAudioEls: {},// userName -> HTMLAudioElement
+            localMuted: false,
+            isHost: isHost,
+            isVoiceStarted: false,
+            offered: {}       // === NEW: Host가 Offer 보낸 사용자 기록
+        };
+        const voiceUI = {
+            startBtn: document.getElementById('startVoiceBtn'),
+            stopBtn: document.getElementById('stopVoiceBtn'),
+            muteBtn: document.getElementById('muteVoiceBtn'),
+            container: document.getElementById('voiceRemoteContainer')
+        };
+
+        voiceUI.startBtn.onclick = startVoiceChat;
+        voiceUI.stopBtn.onclick = stopVoiceChat;
+        voiceUI.muteBtn.onclick = toggleMute;
+
+        // =======================================================
+        // === ✨ [수정된 부분] START: startVoiceChat 함수 수정 ✨ ===
+        // =======================================================
+        async function startVoiceChat() {
+            if (voiceState.isVoiceStarted) return;
+
+            try {
+                // 1. (핵심 수정) `await`를 사용해 마이크 스트림을 완전히 받아올 때까지 기다립니다.
+                // 이것이 보장되어야만 다른 유저와의 연결(PeerConnection) 시 오디오 트랙을 정상적으로 추가할 수 있습니다.
+                voiceState.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                console.log("✅ localStream 획득:", voiceState.localStream);
+
+                // 마이크 권한은 허용했으나, 실제 오디오 트랙이 없는 경우에 대한 예외처리
+                if (voiceState.localStream.getAudioTracks().length === 0) {
+                    alert("연결된 마이크 장치가 없거나 인식되지 않습니다. 장치를 확인해주세요.");
+                    console.warn("⚠️ 오디오 트랙이 없습니다 (장치/권한 문제)");
+                    voiceState.localStream = null; // 스트림 상태 초기화
+                    return; // 함수 종료
+                }
+
+                // 로컬 오디오 스트림 미리보기 (자신에게는 음소거 상태로)
+                let localPrev = document.getElementById('localAudio');
+                if (!localPrev) {
+                    localPrev = document.createElement('audio');
+                    localPrev.id = 'localAudio';
+                    localPrev.autoplay = true;
+                    localPrev.muted = true;
+                    localPrev.playsInline = true;
+                    document.getElementById('voiceRemoteContainer').appendChild(localPrev);
+                }
+                localPrev.srcObject = voiceState.localStream;
+                localPrev.play().catch(e => console.warn("로컬 프리뷰 재생 실패:", e));
+
+                // 2. (수정) 스트림을 성공적으로 얻은 후에 상태를 변경하고 UI를 업데이트합니다.
+                voiceState.isVoiceStarted = true;
+                voiceUI.startBtn.style.display = "none";   // startBtn 숨김
+                voiceUI.stopBtn.style.display = "inline-block"; // stopBtn 표시
+                voiceUI.muteBtn.style.display = "inline-block"; // muteBtn 표
+
+                // 3. (수정) 모든 설정이 끝난 후, 시그널링 메시지를 전송합니다.
+                if (voiceState.isHost) {
+                    // 방장은 본인이 시작했다는 신호만 보내고, 다른 클라이언트들의 'voiceReady'를 기다립니다.
+                    safeSend({ type: 'voiceHostStart', userName, roomNo });
+                } else {
+                    // 클라이언트는 방장에게 연결 준비가 되었음을 알립니다.
+                    safeSend({ type: 'voiceReady', userName, roomNo });
+                }
+
+            } catch (e) {
+                console.error("❌ startVoiceChat 오류:", e);
+                // 사용자에게 더 친절한 오류 메시지 제공
+                if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
+                    alert('마이크 사용 권한이 거부되었습니다. 브라우저 설정에서 마이크 권한을 허용하고 페이지를 새로고침 해주세요.');
+                } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
+                    alert('사용 가능한 마이크 장치를 찾을 수 없습니다.');
+                } else {
+                    alert('마이크를 시작하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                }
+                // 실패 시 상태 원복
+                voiceState.isVoiceStarted = false;
+                voiceState.localStream = null;
+            }
+        }
+        // =====================================================
+        // === ✨ [수정된 부분] END: startVoiceChat 함수 수정 ✨ ===
+        // =====================================================
+
+        function stopVoiceChat() {
+            if (!voiceState.isVoiceStarted) return;
+            voiceState.isVoiceStarted = false;
+
+            if (voiceState.localStream) {
+                voiceState.localStream.getTracks().forEach(t => t.stop());
+                voiceState.localStream = null;
+            }
+            clearVoiceConnections();
+
+            // 버튼 보이기/숨기기 전환
+            voiceUI.startBtn.style.display = "inline-block"; // 다시 보이게
+            voiceUI.stopBtn.style.display = "none";          // 숨김
+            voiceUI.muteBtn.style.display = "none";          // 숨김
+
+            if (voiceState.isHost) {
+                safeSend({ type: 'voiceHostStop', userName, roomNo });
+            }
+        }
+
+        function toggleMute() {
+            if (!voiceState.localStream) return;
+            voiceState.localMuted = !voiceState.localMuted;
+            voiceState.localStream.getAudioTracks().forEach(track => track.enabled = !voiceState.localMuted);
+            voiceUI.muteBtn.textContent = voiceState.localMuted ? ' 🔇 ' : ' 🔈 ';
+            safeSend({ type: voiceState.localMuted ? 'voiceMute' : 'voiceUnmute', userName, roomNo });
+        }
+
+        function clearVoiceConnections() {
+            for (const peerUser in voiceState.peers) {
+                const pc = voiceState.peers[peerUser];
+                if (pc) pc.close();
+            }
+            voiceState.peers = {};
+            voiceState.offered = {};
+            for (const key in voiceState.remoteAudioEls) {
+                const el = voiceState.remoteAudioEls[key];
+                if (el && el.parentNode) el.parentNode.removeChild(el);
+            }
+            voiceState.remoteAudioEls = {};
+            const localAudio = document.getElementById('localAudio');
+            if (localAudio && localAudio.parentNode) localAudio.parentNode.removeChild(localAudio);
+        }
+
+        /* -------- 음성 시그널 처리 Offer / Answer / Candidate -------- */
+        async function onVoiceOffer(msg) {
+            if (!voiceState.isVoiceStarted) {
+                console.warn("🔸 아직 startVoiceChat 하지 않아 Offer 무시");
+                return;
+            }
+            const fromUser = msg.from;
+            const pc = createVoicePeerConnection(fromUser);
+
+            if (pc.remoteDescription) {
+                console.warn("이미 remoteDescription 있음 → 중복 Offer 무시");
+                return;
+            }
+
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+                console.log("✅ Offer SDP 적용:", fromUser);
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                safeSend({ type: 'voiceAnswer', target: fromUser, sdp: answer, from: userName });
+                console.log("📨 Answer 전송 →", fromUser);
+            } catch (e) {
+                console.error("❌ Offer 처리 실패:", e);
+            }
+        }
+
+        async function onVoiceAnswer(msg) {
+            const fromUser = msg.from;
+            const pc = voiceState.peers[fromUser];
+            if (!pc) {
+                console.warn("Answer 수신했지만 pc 없음:", fromUser);
+                return;
+            }
+            if (pc.signalingState !== 'have-local-offer') {
+                console.warn("Answer 수신 시 signalingState 불일치:", pc.signalingState);
+            }
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+                console.log("✅ Answer SDP 적용:", fromUser);
+            } catch (e) {
+                console.error("❌ Answer 적용 실패:", e);
+            }
+        }
+
+        function onVoiceCandidate(msg) {
+            const pc = voiceState.peers[msg.from];
+            if (!pc) return;
+            pc.addIceCandidate(new RTCIceCandidate(msg.candidate)).catch(e => {
+                console.warn('voiceCandidate 추가 실패:', e);
+            });
+        }
+
+        function createVoicePeerConnection(remoteUser) {
+            if (voiceState.peers[remoteUser]) return voiceState.peers[remoteUser];
+
+            const pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+            voiceState.peers[remoteUser] = pc;
+
+            console.log("🌐 Voice PC 생성:", remoteUser);
+
+            // 로컬 트랙 추가
+            if (voiceState.localStream) {
+                voiceState.localStream.getAudioTracks().forEach(track => {
+                    console.log(`➡️ addTrack to ${remoteUser}:`, track.label);
+                    pc.addTrack(track, voiceState.localStream);
+                });
+            } else {
+                // 이 경고는 startVoiceChat을 수정했기 때문에 거의 발생하지 않아야 합니다.
+                console.warn("⚠️ localStream 없음 (startVoiceChat 호출 전?)");
+            }
+
+            pc.onicecandidate = (e) => {
+                if (e.candidate) {
+                    safeSend({
+                        type: 'voiceCandidate',
+                        target: remoteUser,
+                        candidate: e.candidate,
+                        from: userName
+                    });
+                }
+            };
+
+            pc.ontrack = (e) => {
+                console.log("📡 remote track from", remoteUser, e.streams);
+                addRemoteAudio(remoteUser, e.streams[0]);
+            };
+
+            pc.onconnectionstatechange = () => {
+                console.log(`🔁 PC(${remoteUser}) connectionState =`, pc.connectionState);
+                if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+                    removeRemoteAudio(remoteUser);
+                    try { pc.close(); } catch (_) { }
+                    delete voiceState.peers[remoteUser];
+                    delete voiceState.offered[remoteUser];
+                }
+            };
+
+            return pc;
+        }
+
+        function addRemoteAudio(peerUser, stream) {
+            let el = voiceState.remoteAudioEls[peerUser];
+            if (!el) {
+                el = document.createElement('audio');
+                el.id = 'remote-' + peerUser;
+                el.autoplay = true;
+                el.playsInline = true;
+                el.controls = false; // 컨트롤러 숨김
+                el.muted = false; // 상대방 소리는 들려야 함
+                el.dataset.user = peerUser;
+                el.style.display = 'block';
+                el.title = peerUser;
+                document.getElementById('voiceRemoteContainer').appendChild(el);
+                voiceState.remoteAudioEls[peerUser] = el;
+            }
+            el.srcObject = stream;
+            el.play()
+                .then(() => console.log("🔊 원격 재생 시작:", peerUser))
+                .catch(err => console.warn("⚠️ 원격 재생 실패:", peerUser, err));
+        }
+
+        // ✨ [수정된 부분] 중복 정의 제거 및 단일 함수 유지
+        function removeRemoteAudio(peerUser) {
+            const el = voiceState.remoteAudioEls[peerUser];
+            if (el) {
+                el.srcObject = null;
+                if (el.parentNode) el.parentNode.removeChild(el);
+                delete voiceState.remoteAudioEls[peerUser];
+            }
+        }
+
+        // 음성 관련 메시지 처리
+        function handleVoiceMsg(msgData) {
+            switch (msgData.type) {
+                case 'voiceHostStart':
+                    // 방장이 시작하면, 아직 시작 안한 클라이언트들이 자동으로 시작
+                    if (!voiceState.isHost && !voiceState.isVoiceStarted) {
+                        startVoiceChat();
+                    }
+                    break;
+
+                // ✨✨✨ 여기가 가장 중요하게 변경된 부분입니다 (Mesh 구조로 변경) ✨✨✨
+                case 'voiceReady':
+                    // 'voiceReady' 신호는 새로운 참여자가 보낸 "나 여기 있어요!" 라는 방송입니다.
+                    // 이 신호를 받은 기존의 모든 참여자(나 자신 제외)는 그 새로운 참여자에게 연결을 시도해야 합니다.
+
+                    // 내가 보낸 신호는 무시
+                    if (msgData.userName === userName) break;
+
+                    // 내가 음성 채팅에 참여중일 때만 반응
+                    if (voiceState.isVoiceStarted) {
+                        console.log(`[MESH] 새로운 참여자(${msgData.userName})가 접속했습니다. 연결을 시작합니다.`);
+                        const newcomer = msgData.userName;
+
+                        // 이미 Offer를 보냈다면 중복 실행 방지
+                        if (voiceState.offered[newcomer]) {
+                            console.log(`↩ 이미 ${newcomer}에게 Offer를 보냈으므로 건너뜁니다.`);
+                            break;
+                        }
+
+                        // PeerConnection을 생성하고 Offer를 보내는 로직 (기존에 방장만 하던 일)
+                        const pc = createVoicePeerConnection(newcomer);
+                        (async () => {
+                            try {
+                                const offer = await pc.createOffer();
+                                await pc.setLocalDescription(offer);
+                                voiceState.offered[newcomer] = true; // Offer 전송 기록
+                                safeSend({ type: 'voiceOffer', target: newcomer, sdp: offer, from: userName });
+                                console.log(`📨 voiceOffer 전송 → ${newcomer}`);
+                            } catch (e) {
+                                console.error(`❌ ${newcomer}에게 Offer 생성 실패:`, e);
+                            }
+                        })();
+                    }
+                    break;
+                case 'voiceOffer': onVoiceOffer(msgData); break;
+                case 'voiceAnswer': onVoiceAnswer(msgData); break;
+                case 'voiceCandidate': onVoiceCandidate(msgData); break;
+                case 'voiceHostStop':
+                    stopVoiceChat();
+                    break;
+                case 'voiceMute':
+                    muteRemoteAudio(msgData.userName, true);
+                    break;
+                case 'voiceUnmute':
+                    muteRemoteAudio(msgData.userName, false);
+                    break;
+            }
+        }
+
+        function muteRemoteAudio(user, mute) {
+            const el = voiceState.remoteAudioEls[user];
+            if (el) el.muted = mute;
+        }
+
+        //힌트 로딩
+        function loadHintList(roomNo) {
+            $.ajax({
+                url: "/room/getRoomHint",
+                type: "GET",
+                data: { roomNo: roomNo },
+                success: function (data) {
+                    const container = $("#hintListContainer");
+                    container.empty();
+                    setHintList(data, container);
+                },
+                error: function () {
+                    console.error("힌트 불러오기 실패");
+                }
+            });
+        }
+
+        //이벤트 발생
+        function sendEvent(eventNo, targetNick) {
+            $.ajax({
+                url: '/chat/selectEvent',
+                type: 'GET',
+                data: {
+                    eventNo: eventNo,
+                    userName: targetNick //원래 여기에 마피아가 선택하거나 능력 사용하여 선택한 닉네임이 들어가야 하지만 임시 처리
+                },
+                success: function (msg) {
+                    if (msg === "") return;
+
+                    const messageObj = {
+                        type: "event",
+                        userName: '시스템',
+                        msg: msg,
+                        roomNo: roomNo
+                    };
+
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify(messageObj));
+                        msgInput.value = "";
+                    } else {
+                        alert("이벤트를 불러오지 못했습니다.");
+                    }
+                },
+                error: function () {
+                    alert("이벤트를 불러오지 못했습니다.");
+                }
+            });
+        }
+
+        //채팅 로딩
+        function chatLoad(job) {
+            if (isLoading || isLastPage) return;
+            isLoading = true;
+
+            $.ajax({
+                url: '/room/loadMessage',
+                type: 'GET',
+                data: {
+                    roomNo: roomNo,
+                    page: currentPage,
+                    size: pageSize,
+                    job: job
+                },
+                success: function (messages) {
+                    if (messages.length === 0) {
+                        isLastPage = true;  // 더 이상 불러올 메시지 없음
+                        return;
+                    }
+                    currentPage++;
+
+                    // 불러오기 전 스크롤 위치 저장 (스크롤 아래로부터 거리)
+                    const scrollBefore = chatArea.scrollHeight - chatArea.scrollTop;
+
+                    messages.forEach(msgData => {
+                        const div = document.createElement("div");
+
+                        if (msgData.type && msgData.type.includes("death")) {
+                            if (job !== "ghost" && job !== "mafiaGhost" && job !== "spiritualists") {
+                                return;
+                            } else {
+                                const typeDiv = document.createElement("div");
+                                typeDiv.classList.add("type-Text");
+                                typeDiv.textContent = "『사망자』";
+                                div.appendChild(typeDiv);
+                            }
+                        } else if (msgData.type && msgData.type === "mafia") {
+                            if (job !== "mafia") {
+                                return;
+                            } else {
+                                const typeDiv = document.createElement("div");
+                                typeDiv.classList.add("type-Text");
+                                typeDiv.textContent = "『마피아』";
+                                div.appendChild(typeDiv);
+                            }
+                        }
+
+                        reciveMsg(msgData, div);
+
+                        // 메시지를 기존 채팅창 맨 위에 삽입
+                        chatArea.insertBefore(div, chatArea.firstChild);
+                    });
+
+                    // 이미지가 있으면 모두 로드될 때까지 대기 후 스크롤 위치 보정
+                    if (isFirstLoad) {
+                        isFirstLoad = false;
+                        scrollToBottomAfterImagesLoad(chatArea);
+                    }
+
+                    // 불러오기 후 스크롤 위치 보정: 추가된 메시지 높이만큼 스크롤 내리기
+                    const scrollAfter = chatArea.scrollHeight;
+                    chatArea.scrollTop = scrollAfter - scrollBefore;
+                },
+                complete: function () {
+                    isLoading = false;
+                }
+            });
+        }
+
+        //직업동작		
+        function setAlive() {
+            $.ajax({
+                url: "/room/userDeathList",
+                data: { roomNo: roomNo },
+                success: function (deathList) {
+                    updateUserStatus(deathList);
+                },
+                error: function () {
+                    alert("이벤트를 불러오지 못했습니다.");
+                }
+            });
+        }
+
+        function voteKill(targetName) {
+            $.ajax({
+                url: "/room/voteResult",
+                method: "GET",
+                data: {
+                    roomNo: roomNo,
+                    dayNo: dayNo,
+                    targetName: targetName,
+                },
+                success: function (kill) {
+                    if (!kill) return;
+
+                    let killList = [];
+                    try {
+                        killList = JSON.parse(kill);
+                        const total = document.querySelectorAll(".slot").length;
+                        const current = killList.length;
+                        document.getElementById("killCount").innerText = "투표: " + current + " / " + total;
+                    } catch (e) {
+                        console.error("투표 리스트 파싱 실패", e);
+                    }
+                },
+                error: function () {
+                    alert("투표 요청 중 오류가 발생했습니다.");
+                }
+            });
+        }
+
+        function mafiaKill(targetName) {
+            $.ajax({
+                url: "/room/mafiaKillResult",
+                method: "GET",
+                data: {
+                    roomNo: roomNo,
+                    dayNo: dayNo,
+                    targetName: targetName,
+                },
+                success: function (kill) { },
+                error: function () {
+                    alert("투표 요청 중 오류가 발생했습니다.");
+                }
+            });
+        }
+
+        function doctorHeal(targetName) {
+            $.ajax({
+                url: "/room/healResult",
+                method: "GET",
+                data: {
+                    roomNo: roomNo,
+                    dayNo: dayNo,
+                    targetName: targetName,
+                },
+                success: function (kill) { },
+                error: function () {
+                    alert("투표 요청 중 오류가 발생했습니다.");
+                }
+            });
+        }
+
+        function policeCheck(targetName) {
+            $.ajax({
+                url: "/room/policeCheck",
+                method: "GET",
+                data: {
+                    roomNo: roomNo,
+                    dayNo: dayNo,
+                    targetName: targetName,
+                },
+                success: function (result) {
+                    alert(targetName + "의 직업은 " + result.jobVisible + "입니다.");
+                },
+                error: function () {
+                    alert("투표 요청 중 오류가 발생했습니다.");
+                }
+            });
+        }
+    </script>
 </body>
+
 </html>
