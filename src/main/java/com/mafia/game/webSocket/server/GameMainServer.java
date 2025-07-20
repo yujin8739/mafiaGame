@@ -1,12 +1,14 @@
 package com.mafia.game.webSocket.server;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
@@ -21,6 +23,8 @@ public class GameMainServer extends TextWebSocketHandler {
 
     @Autowired
     private GameRoomManager roomManager;
+    
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     private final ObjectMapper mapper = new ObjectMapper();
     private static final Set<String> VOICE_TYPES = Set.of(
@@ -36,7 +40,7 @@ public class GameMainServer extends TextWebSocketHandler {
         Member loginUser = (Member) session.getAttributes().get("loginUser");
         if (loginUser != null) {
             String userId = loginUser.getUserName();
-            roomManager.addUserToRoom(roomNo, userId);  // 기존 로직 유지
+            roomManager.addUserToRoom(roomNo, userId);
             roomManager.bindUserSession(roomNo, userId, session); // NEW: Failover & WebRTC
         }
         roomManager.addSession(roomNo, session);
@@ -61,17 +65,30 @@ public class GameMainServer extends TextWebSocketHandler {
                 WebSocketSession targetSession = roomManager.getSessionByUser(roomNo, target);
 
                 if (targetSession != null && targetSession.isOpen()) {
-                    targetSession.sendMessage(new TextMessage(json));
+                	executor.submit(()->{
+	                    try {
+							targetSession.sendMessage(new TextMessage(json));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+                	});
                 } else {
                     // (선택적) 디버깅을 위해 대상이 없을 경우 로그를 남길 수 있습니다.
                     System.out.println("## WebRTC 음성 신호 타겟 유저를 찾지 못했습니다: " + target);
                 }
                 
             } else {
-                // target이 없는 메시지(voiceReady, voiceHostStart 등)는 기존처럼 전체 방송합니다.
                 for (WebSocketSession s : roomManager.getSessions(roomNo)) {
                     if (s.isOpen() && !s.getId().equals(session.getId())) {
-                        s.sendMessage(new TextMessage(json));
+                    	executor.submit(()->{
+	                        try {
+								s.sendMessage(new TextMessage(json));
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+                    	});
                     }
                 }
             }
@@ -84,7 +101,7 @@ public class GameMainServer extends TextWebSocketHandler {
             return;
         }
 
-        // 기존 게임 메시지 처리
+        //게임 메시지 처리
         Message msg = mapper.convertValue(raw, Message.class);
 
         // DB 저장
@@ -103,7 +120,7 @@ public class GameMainServer extends TextWebSocketHandler {
 
         String json = mapper.writeValueAsString(payload);
 
-        // 브로드캐스트 (기존 필터링)
+        // 브로드캐스트 필터링
         for (WebSocketSession s : roomManager.getSessions(roomNo)) {
             if (!s.isOpen()) continue;
 
@@ -112,15 +129,49 @@ public class GameMainServer extends TextWebSocketHandler {
             } else if ("unReady".equals(type)) {
                 roomManager.removeReady(roomNo, userName);
             } else if ("start".equals(type)) {
-                roomManager.updateStart(roomNo);
+                try {
+                    roomManager.updateStart(roomNo);
+                } catch (IllegalArgumentException e) {
+                    // 6~15명 벗어난 경우 발생하는 예외 처리
+                    try {
+                        Map<String, Object> errorPayload = new HashMap<>();
+                        errorPayload.put("type", "error");
+                        errorPayload.put("msg", e.getMessage());
+                        errorPayload.put("userName", "system");
+
+                        String errorJson = mapper.writeValueAsString(errorPayload);
+
+                        // 현재 세션에만 메시지 보내기
+                        if (s.isOpen()) {
+                            s.sendMessage(new TextMessage(errorJson));
+                        }
+                    } catch (IOException ioEx) {
+                        ioEx.printStackTrace(); // 전파 안 하고 그냥 로그만
+                    }
+
+                    // 게임 시작 로직 중단
+                    return;
+                } catch (Exception ex) {
+                    // 예기치 못한 예외도 모두 처리
+                    ex.printStackTrace();
+                    return;
+                }
                 roomManager.addJobToSession(roomNo, s);
             }
+
 
             GameRoom room = roomManager.selectRoom(roomNo);
             Job job = (Job) s.getAttributes().get("job");
 
             if (allowSend(type, room, job)) {
-                s.sendMessage(new TextMessage(json));
+            	executor.submit(()->{
+	                try {
+						s.sendMessage(new TextMessage(json));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            	});
             }
         }
     }
@@ -144,9 +195,15 @@ public class GameMainServer extends TextWebSocketHandler {
         String json = mapper.writeValueAsString(payload);
 
         for (WebSocketSession s : roomManager.getSessions(roomNo)) {
-            if (s.isOpen() && !s.getId().equals(session.getId())) {
-                s.sendMessage(new TextMessage(json));
-            }
+        	executor.submit(()->{
+	        	if (s.isOpen() && !s.getId().equals(session.getId())) {
+	                try {
+						s.sendMessage(new TextMessage(json));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+	            }
+        	});
         }
     }
 
