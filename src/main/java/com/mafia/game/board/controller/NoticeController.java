@@ -153,7 +153,7 @@ public class NoticeController {
 	        // 새로운 파일 업로드 및 Notice 객체에 파일 정보 반영
 	        String changeName = saveFile(reUploadFile); // 경로 포함하지 않음
 	        notice.setOriginName(reUploadFile.getOriginalFilename());
-	        notice.setChangeName("/resources/uploadFiles/" + changeName); // DB에 저장될 경로
+	        notice.setChangeName("/resources/uploadFile/" + changeName); // DB에 저장될 경로
 	    }
 
 	    // 공지사항 DB 업데이트
@@ -197,7 +197,7 @@ public class NoticeController {
             String changeName = saveFile(uploadFile);
 
             notice.setOriginName(uploadFile.getOriginalFilename());
-            notice.setChangeName("/resources/uploadFiles/" + changeName);
+            notice.setChangeName("/resources/uploadFile/" + changeName);
         }
 
         int result = service.writeNotice(notice);
