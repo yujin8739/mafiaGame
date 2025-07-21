@@ -152,6 +152,23 @@ public class BoardDao {
 		return sqlSession.selectOne("boardMapper.videoDetail", boardNo);
 	}
 
+	public int updateFileLevel(SqlSessionTemplate sqlSession, int fileNo, int fileLevel) {
+		
+		HashMap<String,Integer> needed = new HashMap<>();
+		needed.put("fileNo", fileNo);
+		needed.put("fileLevel", fileLevel);
+		
+		return sqlSession.update("boardMapper.updateFileLevel", needed);
+	}
+
+	public int deleteBoardFile(SqlSessionTemplate sqlSession, int fileNo) {
+		return sqlSession.update("boardMapper.deleteBoardFile", fileNo);
+	}
+
+	public String selectFileName(SqlSessionTemplate sqlSession, String deletedId) {
+		return sqlSession.selectOne("boardMapper.selectFileName", deletedId);
+	}
+
 
 
 	

@@ -252,6 +252,38 @@
       border-color: #c82e38;
       color: #fff !important;
     }
+    
+     .search-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-bar select, .search-bar input {
+      border: 1px solid #ccc;
+      padding: 7px 14px;
+      border-radius: 25px;
+      font-size: 14px;
+    }
+
+    .search-bar input {
+      width: 200px;
+    }
+
+    .search-bar button {
+      background-color: #444;
+      color: white;
+      padding: 7px 16px;
+      border: none;
+      border-radius: 25px;
+      transition: all 0.2s;
+    }
+
+    .search-bar button:hover {
+      background-color: #c82e38;
+    }
   </style>
 </head>
 <body>
@@ -264,13 +296,27 @@
 	      <a th:href="@{/board/gallery}">갤러리</a>
 	      <a th:href="@{/board/video}" class="active">하이라이트 영상</a>
 	    </div>
+	    
+	    <!-- 검색창 -->
+    <form class="search-bar" method="get" th:action="@{/board/video}" th:object="${filterMap}">
+      <select name="condition">
+        <option value="title" th:selected="*{condition == 'title'}">제목</option>
+        <option value="writer" th:selected="*{condition == 'writer'}">작성자</option>
+        <option value="content" th:selected="*{condition == 'content'}">내용</option>
+      </select>
+      <input type="text" name="keyword" placeholder="검색어 입력" th:value="*{keyword}">
+      <input type="hidden" name="typeName" th:value="*{typeName}">
+      <button type="submit">검색</button>
+    </form>
+    
+    
 	<div class="d-flex justify-content-between align-items-center mb-2">
       <h4 class="mb-0 font-weight-bold">하이라이트</h4>
       <button class="upload-btn" onclick="location.href='/board/video/upload'">업로드</button>
     </div>
 
     <!-- 명예의 전당 (좋아요 10 이상 영상만) -->
-    <div class="hall-of-fame" th:if="${topVideoList != null and #lists.size(topVideoList) > 0}">
+    <div class="hall-of-fame mt-4" th:if="${topVideoList != null and #lists.size(topVideoList) > 0}">
       <h3>🔥 HIGHLIGHT</h3>
       <div class="hof-cards">
         <div class="hof-card" th:each="video : ${topVideoList}" th:onclick="'location.href=\'' + @{/board/video/detail/{boardNo}(boardNo=${video.boardNo})} + '\';'"
@@ -308,7 +354,7 @@
         <!-- 페이지네이션 -->
 	    <ul class="pagination" th:if="${pi.endPage != 0}" th:object="${filterMap}">
 	      <li th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">
-	        <a class="page-link" th:href="@{/board/lounge(currentPage=${i},type=*{type},condition=*{condition},keyword=*{keyword})}" th:text="${i}"></a>
+	        <a class="page-link" th:href="@{/board/lounge(currentPage=${i},typeName=*{typeName},condition=*{condition},keyword=*{keyword})}" th:text="${i}"></a>
 	      </li>
 	    </ul>
     </nav>
