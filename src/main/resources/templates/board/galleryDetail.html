@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title th:text="'영상 | ' + ${video.title}">영상 상세</title>
+<title th:text="'영상 | ' + ${board.title}">영상 상세</title>
 
 <!-- Bootstrap + jQuery -->
 <link rel="stylesheet"
@@ -48,24 +48,27 @@ body {
 	box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
 	width: 100%; /* ✅ 가로 꽉 채우기 */
 }
-
+hr {
+	border-color: #444;
+}
 .video-title {
   background-color: transparent;
 	border-bottom: 1px solid #333;
 	font-size: 24px;
 	font-weight: bold;
 	color: #fff;
+	 margin-bottom: 5px;  /* ✅ 제목 아래 여백 추가 */
 }
-hr {
-	border-color: #444;
-}
+
 .video-body{
 	font-size: 16px;
 	line-height: 1.7;
 	color: #f0f0f0;
 }
 
-
+h2{
+	padding : 10px;
+}
 .video-meta {
   display: flex;
   align-items: center;
@@ -402,10 +405,6 @@ video {
   margin-right: 8px;
   font-size: 13px;
 }
-
-h2{
-	padding : 10px;
-}
 </style>
 
 </head>
@@ -417,22 +416,25 @@ h2{
 	<div class="video-wrapper">
 		<div class="video-card">
 		
-			<div class="video-title" th:utext="|<h2>${video.title}</h2>|">영상 제목</div>
+			<div class="video-title" th:utext="|<h2>${board.title}</h2>|">영상 제목</div>
 			
 			<div class="video-body">
 			<div class="video-meta" >
-				<img th:if="${video.profileUrl}" th:src="${video.profileUrl}"
-					alt="프로필"/> <span th:text="${video.nickName}">닉네임</span> <span
-					th:text="${video.createDate}">2025.07.15</span> <span>조회수 <span
-					th:text="${video.viewCount}">123</span></span> <span>❤ <span
-					th:text="${video.likeCount}">12</span></span>
+				<img th:if="${board.profileUrl}" th:src="${board.profileUrl}"
+					alt="프로필"/> <span th:text="${board.nickName}">닉네임</span> <span
+					th:text="${board.createDate}">2025.07.15</span> <span>조회수 <span
+					th:text="${board.viewCount}">123</span></span> <span>❤ <span
+					th:text="${board.likeCount}">12</span></span>
 			</div>
 
-			<div class="video-player">
-				<video id="video" controls></video>
+			<div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+			  <img 
+			  th:each="img : ${board.fileList}"
+			  th:src="@{/godDaddy_uploadImage/galleryImage/{imgUrl}(imgUrl=${img.changeName})}" 
+			       style="width: 100%; height: auto; border-radius: 12px; box-shadow: 0 0 8px rgba(0,0,0,0.4);" />
 			</div>
 
-			<div class="video-description" th:utext="${video.detail}">영상에 대한
+			<div class="video-description" th:utext="${board.detail}">영상에 대한
 				설명입니다. 재미있었던 하이라이트 장면을 소개합니다.</div>
 				
 			<!-- ✅ 게시글 좋아요/싫어요 버튼: 본문 바로 아래에 위치 -->
@@ -443,13 +445,13 @@ h2{
 						class="btn btn-outline-danger d-flex align-items-center"
 						style="gap: 6px;">
 						<i class="fas fa-heart"></i> 좋아요 <span id="likeCount"
-							th:text="${video.likeCount}">0</span>
+							th:text="${board.likeCount}">0</span>
 					</button>
 					<button id="btnDislike" type="button"
 						class="btn btn-outline-primary d-flex align-items-center"
 						style="gap: 6px;">
 						<i class="fas fa-thumbs-down"></i> 싫어요 <span id="dislikeCount"
-							th:text="${video.dislikeCount}">0</span>
+							th:text="${board.dislikeCount}">0</span>
 					</button>
 				</div>
 
@@ -459,14 +461,14 @@ h2{
 
 				<div class="btn-group-custom">
 					<a onclick="history.go(-1)" class="btn btn-custom btn-list">목록으로</a>
-					<th:block th:if="${loginUser.userName == video.userName}">
+					<th:block th:if="${loginUser.userName == board.userName}">
 						<a
-							th:href="@{/board/video/update/{boardNo}(boardNo=${video.boardNo})}"
+							th:href="@{/board/gallery/update/{boardNo}(boardNo=${board.boardNo})}"
 							class="btn btn-custom btn-update">수정</a>
 					</th:block>
-					<th:block th:if="${loginUser.userName == video.userName}">
+					<th:block th:if="${loginUser.userName == board.userName}">
 						<form
-							th:action="@{/board/video/delete/{boardNo}(boardNo=${video.boardNo})}"
+							th:action="@{/board/gallery/delete/{boardNo}(boardNo=${board.boardNo})}"
 							method="POST">
 							<button class="btn btn-custom btn-delete"
 								onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</button>
@@ -520,7 +522,6 @@ h2{
 	<!-- 푸터 -->
 	<div th:replace="common/footer :: footer"></div>
 
-	<!-- HLS.js video 재생 -->
 	<script th:inline="javascript">
 	
 	function loadComments() {
@@ -529,7 +530,7 @@ h2{
 		  $.ajax({
 		    url: '/board/getReplyList',
 		    data: {
-		      boardNo: /*[[${video.boardNo}]]*/ 0
+		      boardNo: /*[[${board.boardNo}]]*/ 0
 		    },
 		    success: function (replyList) {
 		      $('#bestCommentList').empty();
@@ -616,17 +617,6 @@ h2{
 		}
 	
 	  $(function () {
-	    const video = document.getElementById('video');
-	    const videoSrc = '/godDaddy_uploadVideo/hls/' + /*[[${#strings.replace(video.changeName, '.mp4', '.m3u8')}]]*/ '';
-	
-	    if (Hls.isSupported()) {
-	      const hls = new Hls();
-	      hls.loadSource(videoSrc);
-	      hls.attachMedia(video);
-	    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-	      video.src = videoSrc;
-	    }
-		
 	    loadComments();
 	    
 		  $('#commentImage').on('change', function (e) {
@@ -650,7 +640,7 @@ h2{
 				
 				  const formData = new FormData();
 				  formData.append('replyContent', content);
-				  formData.append('boardNo',/*[[${video.boardNo}]]*/ 0);
+				  formData.append('boardNo',/*[[${board.boardNo}]]*/ 0);
 				  formData.append('userName',/*[[${loginUser.userName}]]*/ '');
 				  if (imageFile) formData.append('image', imageFile);
 				  if(content === '' && !imageFile){
@@ -758,7 +748,7 @@ h2{
 		    $.ajax({
 		    	url : "/board/like",
 		    	data : {
-		    		boardNo : /*[[${video.boardNo}]]*/ 0,
+		    		boardNo : /*[[${board.boardNo}]]*/ 0,
 		    		type : 'L'
 		    	},
 		    	success : function(result){
@@ -787,7 +777,7 @@ h2{
 		    $.ajax({
 		    	url : "/board/like",
 		    	data : {
-		    		boardNo : /*[[${video.boardNo}]]*/ 0,
+		    		boardNo : /*[[${board.boardNo}]]*/ 0,
 		    		type : 'D'
 		    	},
 		    	success : function(result){
