@@ -9,12 +9,12 @@
   <style>
   body {
     background-color: #121212;
-    color: white;
+    color: #000;
   }
   
   .container h3,
   .container p {
-    color: white;
+    color: #000;
   }
 
   .btn {
@@ -27,14 +27,14 @@
   }
   
   	a {
-    color: #fff; /* 기본 색상을 흰색으로 설정 */
+    color: #000; /* 검은색 */
     text-decoration: none; /* 밑줄 제거 */
 	}
 	
 	a:hover,
 	a:focus,
 	a:active {
-	    color: #fff; /* 마우스 오버, 클릭, 포커스 상태에서도 흰색 */
+	    color: #000; /* 마우스 오버, 클릭, 포커스 상태에서도 흰색 */
 	}
   
 </style>
@@ -60,6 +60,9 @@
       <p th:text="'설명: ' + ${art.description}">설명</p>
       <p th:text="'판매자: ' + ${art.sellerName}">판매자</p>
       <p th:text="'가격: ' + ${art.price} + ' 원'">가격</p>
+      <!-- 신고 버튼 -->
+<a th:href="@{/report/form(type='art', targetId=${art.artId}, targetUser=${art.sellerName})}" class="btn btn-warning">신고하기</a>
+      
 
       <!-- 로그인한 사용자와 판매자가 같을 때 -->
 		<div th:if="${loginUser != null}">

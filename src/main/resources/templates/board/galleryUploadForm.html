@@ -101,6 +101,14 @@
       min-height: 150px;
     }
 
+    /* 파일 리스트 */
+    #fileList {
+      margin-top: 10px;
+      color: #ddd;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
     /* 버튼 그룹 */
     .btn-group {
       display: flex;
@@ -153,6 +161,9 @@
       <div class="card-body">
         <form action="/board/gallery/upload" method="post" enctype="multipart/form-data" id="galleryUploadForm">
           <input type="hidden" name="userName" th:value="${loginUser.userName}" />
+          <input type="hidden" name="typeName" value="갤러리" />
+          <input type="hidden" name="typeClass" value="4" />
+          
 
           <div class="form-group">
             <label for="title">제목</label>
@@ -167,19 +178,21 @@
           </div>
 
           <div class="form-group">
-            <label for="uploadFile">사진 선택</label>
+            <label for="uploadFile">사진 선택 (여러 장 가능)</label>
             <input
               type="file"
-              name="uploadFile"
+              name="uploadFiles"
               id="uploadFile"
               accept="image/*"
+              multiple
               required
             />
+            <div id="fileList"></div>
           </div>
 
           <div class="form-group">
             <label for="description">설명</label>
-            <textarea name="description" id="hiddenDescription" style="display:none"></textarea>
+            <textarea name="detail" id="hiddenDescription" style="display:none"></textarea>
             <div id="editor"></div>
           </div>
 
@@ -212,6 +225,24 @@
     // 폼 제출 시 에디터 내용 숨겨진 textarea에 복사
     document.querySelector("#galleryUploadForm").addEventListener("submit", function (e) {
       document.querySelector("#hiddenDescription").value = quill.root.innerHTML;
+    });
+
+    // 선택한 파일명 리스트 출력
+    $('#uploadFile').on('change', function () {
+      const files = this.files;
+      const $fileList = $('#fileList');
+      $fileList.empty();
+
+      if (files.length === 0) {
+        $fileList.text('선택된 파일이 없습니다.');
+        return;
+      }
+
+      const list = $('<ul></ul>');
+      for (let i = 0; i < files.length; i++) {
+        list.append($('<li></li>').text(files[i].name));
+      }
+      $fileList.append(list);
     });
   </script>
 </body>

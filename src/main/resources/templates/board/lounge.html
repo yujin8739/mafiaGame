@@ -14,7 +14,7 @@
   <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
   <!-- HEAD 부분에 Cinzel 폰트 추가 -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet" />
-
+  
   <style>
   
     body {
@@ -520,22 +520,24 @@
 
   <div class="board-wrapper">
     <div class="main-tabs mb-4" th:object="${filterMap}">
-      <a th:href="@{/board/lounge}" th:class="*{type == null || type == '' || type.contains('lounge') ? 'active' : ''}">라운지</a>
+      <a th:href="@{/board/lounge}" th:class="*{typeName == null || typeName == '' || 
+      											typeName == '자유' || typeName == '플레이' ||
+      											typeClass == '3' ? 'active' : ''}">라운지</a>
       <a th:href="@{/board/gallery}">갤러리</a>
       <a th:href="@{/board/video}">하이라이트 영상</a>
     </div>
 
     <div class="sub-tabs" th:object="${filterMap}">
-      <a th:href="@{/board/lounge}" th:class="*{type == null || type == '' ? 'active' : ''}">전체</a>
-      <a th:href="@{/board/lounge(type='lounge_free')}" th:class="*{type == 'lounge_free' ? 'active' : ''}">자유</a>
-      <a th:href="@{/board/lounge(type='lounge_play')}" th:class="*{type == 'lounge_play' ? 'active' : ''}">플레이</a>
-      <a th:href="@{/board/lounge(type='lounge_job')}" th:class="*{type != null and type.contains('lounge_job') ? 'active' : ''}">직업</a>
+      <a th:href="@{/board/lounge}" th:class="*{typeName == null || typeName == '' ? 'active' : ''}">전체</a>
+      <a th:href="@{/board/lounge(typeName='자유')}" th:class="*{typeName == '자유' ? 'active' : ''}">자유</a>
+      <a th:href="@{/board/lounge(typeName='플레이')}" th:class="*{typeName == '플레이' ? 'active' : ''}">플레이</a>
+      <a th:href="@{/board/lounge(typeName='직업')}" th:class="*{typeClass != null AND typeClass == '3' ? 'active' : ''}">직업</a>
     </div>
 
     <!-- 직업 탭 선택 시 표시될 팀 탭 -->
     <div id="teamTabs" class="team-tabs" th:object="${filterMap}">
-      <a th:href="@{/board/lounge(type='lounge_job')}" class="team-tab" data-team="all"
-      th:classappend="*{type == 'lounge_job' ? ' active' : ''}">전체</a>
+      <a th:href="@{/board/lounge(typeName='직업')}" class="team-tab" data-team="all"
+      th:classappend="*{typeName == '직업' ? ' active' : ''}">전체</a>
       <a href="#" class="team-tab" data-team="mafia" id="team-mafia">팀 마피아</a>
       <a href="#" class="team-tab" data-team="citizen" id="team-citizen">팀 시민</a>
       <a href="#" class="team-tab" data-team="third" id="team-third">팀 제3세력</a>
@@ -543,22 +545,32 @@
 
     <!-- 각 팀별 직업 탭 -->
     <div id="roleTabs-mafia" class="role-tabs" th:object="${filterMap}">
-      <a th:href="@{/board/lounge(type='lounge_job_mafia')}" data-job="mafia" id="mafia"
-      th:class="*{type == 'lounge_job_mafia' ? 'active' : ''}">마피아</a>
+      <a th:href="@{/board/lounge(typeName='마피아')}" data-job="mafia" id="mafia"
+      th:class="*{typeName == '마피아' ? 'active' : ''}">마피아</a>
     </div>
 
     <div id="roleTabs-citizen" class="role-tabs" th:object="${filterMap}">
-      <a th:href="@{/board/lounge(type='lounge_job_police')}" data-job="police" id="police"
-      th:class="*{type == 'lounge_job_police' ? 'active' : ''}">경찰</a>
-      <a th:href="@{/board/lounge(type='lounge_job_doctor')}" data-job="doctor" id="doctor"
-      th:class="*{type == 'lounge_job_doctor' ? 'active' : ''}">의사</a>
-      <a th:href="@{/board/lounge(type='lounge_job_spiritualist')}" data-job="spiritualist" id="spiritualist"
-      th:class="*{type == 'lounge_job_spiritualist' ? 'active' : ''}">영매사</a>
+      <a th:href="@{/board/lounge(typeName ='경찰')}" data-job="police" id="police"
+      th:class="*{typeName == '경찰' ? 'active' : ''}">경찰</a>
+      <a th:href="@{/board/lounge(typeName='의사')}" data-job="doctor" id="doctor"
+      th:class="*{typeName == '의사' ? 'active' : ''}">의사</a>
+      <a th:href="@{/board/lounge(typeName='정치인')}" data-job="politician" id="politician"
+      th:class="*{typeName == '정치인' ? 'active' : ''}">정치인</a>
+      <a th:href="@{/board/lounge(typeName='연인')}" data-job="marriage" id="marriage"
+      th:class="*{typeName == '연인' ? 'active' : ''}">연인</a>
+      <a th:href="@{/board/lounge(typeName='군인')}" data-job="soldier" id="soldier"
+      th:class="*{typeName == '군인' ? 'active' : ''}">군인</a>
+      <a th:href="@{/board/lounge(typeName='예언자')}" data-job="prophet" id="prophet"
+      th:class="*{typeName == '예언자' ? 'active' : ''}">예언자</a>
+      <a th:href="@{/board/lounge(typeName='영매사')}" data-job="spiritualist" id="spiritualist"
+      th:class="*{typeName == '영매사' ? 'active' : ''}">영매사</a>
     </div>
 
     <div id="roleTabs-third" class="role-tabs" th:object="${filterMap}">
-      <a th:href="@{/board/lounge(type='lounge_job_disruptor')}" data-job="disruptor" id="disruptor"
-      th:class="*{type == 'lounge_job_disruptor' ? 'active' : ''}">훼방꾼</a>
+      <a th:href="@{/board/lounge(typeName='훼방꾼')}" data-job="disruptor" id="disruptor"
+      th:class="*{typeName == '훼방꾼' ? 'active' : ''}">훼방꾼</a>
+      <a th:href="@{/board/lounge(typeName='도굴꾼')}" data-job="robber" id="robber"
+      th:class="*{typeName == '도굴꾼' ? 'active' : ''}">도굴꾼</a>
     </div>
 
     
@@ -573,7 +585,7 @@
         <option value="content" th:selected="*{condition == 'content'}">내용</option>
       </select>
       <input type="text" name="keyword" placeholder="검색어 입력" th:value="*{keyword}">
-      <input type="hidden" name="type" th:value="*{type}">
+      <input type="hidden" name="typeName" th:value="*{typeName}">
       <button type="submit">검색</button>
     </form>
     
@@ -581,7 +593,7 @@
 	  <button class="write-btn" onclick="location.href='/board/lounge/write'">글쓰기</button>
 	</div>
 	
-	<div class="top5-likes mb-4">
+	<div class="top5-likes mb-4" th:if="${!#lists.isEmpty(topLikedList)}">
 	  <h3>🔥 MOST LIKED</h3>
 	  <div class="top5-cards">
 	    <a th:each="post : ${topLikedList}"
@@ -626,7 +638,7 @@
 	    </tr>
 	    <tr th:each="b : ${boardList}">
 	      <td>
-	        <span class="board-tag" th:text="${b.displayName}"></span>
+	        <span class="board-tag" th:text="${b.typeName}"></span>
 	      </td>
 	      <td style="text-align: left;">
 	        <a th:href="@{/board/lounge/detail/{boardNo}(boardNo=${b.boardNo})}"
@@ -650,63 +662,77 @@
     <!-- 페이지네이션 -->
     <ul class="pagination" th:if="${pi.endPage != 0}" th:object="${filterMap}">
       <li th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">
-        <a class="page-link" th:href="@{/board/lounge(currentPage=${i},type=*{type},condition=*{condition},keyword=*{keyword})}" th:text="${i}"></a>
+        <a class="page-link" th:href="@{/board/lounge(currentPage=${i},typeName=*{typeName},condition=*{condition},keyword=*{keyword})}" th:text="${i}"></a>
       </li>
     </ul>
   </div>
 
   <div th:replace="common/footer :: footer"></div>
 
-  <script>
-    $(function () {
-      // 직업 탭이면 팀 탭 보여줌
-      const currentUrl = window.location.href
-      const isJobTabActive = currentUrl.includes("type=lounge_job");
-      if (isJobTabActive) {
-        $("#teamTabs").show();// 전체, 팀 마피아, 팀 시민, 팀 제 3세력 탭 보여주기
+  <script th:inline="javascript">
+  $(function () {
+    const typeClass = /*[[${filterMap.typeClass}]]*/ 0;
+    const decodedUrl = decodeURIComponent(window.location.href);
+    const isJobTabActive = decodedUrl.includes("typeName=직업");
+
+    // 직업 탭이면 팀 탭 보여주기
+    if (isJobTabActive || typeClass == 3) {
+      $("#teamTabs").show();
+      // 현재 활성화된 팀에 맞춰 역할탭 보여주기
+      if ($("#roleTabs-mafia a.active").length) {
+        $("#team-mafia").addClass("active");
+        $("#roleTabs-mafia").show();
+      } else if ($("#roleTabs-citizen a.active").length) {
+        $("#team-citizen").addClass("active");
+        $("#roleTabs-citizen").show();
+      } else if ($("#roleTabs-third a.active").length) {
+        $("#team-third").addClass("active");
+        $("#roleTabs-third").show();
+      } else {
+        // 기본은 전체 팀, 역할탭 숨김
+        $("#teamTabs a[data-team='all']").addClass("active");
+        $(".role-tabs").hide();
       }
-      
+    } else {
+      $("#teamTabs").hide();
+      $(".role-tabs").hide();
+    }
 
-      $(".sub-tabs a").on("click", function () { //전체, 자유, 플레이, 직업 클릭시
-        if ($(this).attr("href").includes("lounge_job")) { // 직업 클릭했다면
-          $("#teamTabs").fadeIn(200); //전체, 팀 마피아, 팀 시민, 팀 제 3세력 나올 수 있도록 (div영역)
-        } else {// 전체, 자유, 플레이 클릭했다면
-          $("#teamTabs").fadeOut(200); //전체, 팀 마피아, 팀 시민, 팀 제 3세력 사라질 수 있도록
-          $(".role-tabs").hide(); //마피아,시민,경찰,의사 등 직업 탭 숨길 수 있도록
-        }
-      });
+    // 서브탭 클릭 (전체, 자유, 플레이, 직업)
+    $(".sub-tabs a").on("click", function () {
+      // 여기선 클릭 후 페이지가 이동하므로, fade 효과는 사실 의미가 없음
+      // 하지만 이동 안 할 경우를 대비해 작성
 
-      $(".team-tab").on("click", function (e) { //전체, 팀 마피아, 팀 시민, 팀 제 3세력 클릭했을시 (a태그)
-        //e.preventDefault(); //일단 이동 막기
-        $(".team-tab").removeClass("active"); 
-        $(this).addClass("active");  // 전체, 팀 마피아, 팀 시민, 팀 제 3세력 클릭한것만 활성화시키기
-
-        const team = $(this).data("team"); //마피아 팀인지, 시민 팀인지, 제3세력 팀인지 문자열 출력(all,mafia,citizen,third)
-        $(".role-tabs").hide(); //직업 div 숨기기
-        if (team === "mafia") $("#roleTabs-mafia").fadeIn(200); //마피아 팀이라면 마피아 div 나오게 하기
-        else if (team === "citizen") $("#roleTabs-citizen").fadeIn(200); //시민 팀이라면 시민 div 나오게 하기
-        else if (team === "third") $("#roleTabs-third").fadeIn(200); //제 3세력 팀이라면 제 3세력 div 나오게 하기
-      });
-      
-      $("#roleTabs-mafia a").each(function(index,el){ //마피아 직업군 선택했으면 팀 마피아 탭 활성화시키기
-    	  if($(el).attr('class') === 'active'){
-			$("#team-mafia").click();    		  
-    	  }
-      });
-      
-      $("#roleTabs-citizen a").each(function(index,el){ //시민 직업군 선택했으면 팀 마피아 탭 활성화시키기
-    	  if($(el).attr('class') === 'active'){
-			$("#team-citizen").click();    		  
-    	  }
-      });
-      
-      $("#roleTabs-third a").each(function(index,el){ //제3세력 직업군 선택했으면 팀 마피아 탭 활성화시키기
-    	  if($(el).attr('class') === 'active'){
-			$("#team-third").click();    		  
-    	  }
-      });
-
+      // 필터맵에 의존하지 말고, URL로 판단하거나 typeClass 재조회 권장
+      if (typeClass == 3) {
+        $("#teamTabs").fadeIn(200);
+      } else {
+        $("#teamTabs").fadeOut(200);
+        $(".role-tabs").hide();
+      }
     });
-  </script>
+
+    // 팀 탭 클릭 (전체, 팀 마피아, 팀 시민, 팀 제3세력)
+    $(".team-tab").on("click", function (e) {
+      // 이동 막지 않고 탭 스타일만 변경 (필요시 e.preventDefault() 추가)
+      $(".team-tab").removeClass("active");
+      $(this).addClass("active");
+
+      const team = $(this).data("team");
+
+      $(".role-tabs").hide();
+
+      if (team === "mafia") {
+        $("#roleTabs-mafia").fadeIn(200);
+      } else if (team === "citizen") {
+        $("#roleTabs-citizen").fadeIn(200);
+      } else if (team === "third") {
+        $("#roleTabs-third").fadeIn(200);
+      }
+      // team === 'all'인 경우 역할탭 숨김
+    });
+
+  });
+</script>
 </body>
 </html>

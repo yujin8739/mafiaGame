@@ -69,7 +69,11 @@ public class ShopServiceImpl implements ShopService {
     public String getProfileImage(int userName) {
         return shopDao.getProfileImage(sqlSession, userName);
     }
-    
+    @Transactional
+    @Override
+    public int resetProfileImage(String userName) {
+        return shopDao.resetProfileImage(sqlSession, userName);
+    }
 
   
 }

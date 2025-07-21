@@ -126,4 +126,9 @@ public class GameRoomServiceImpl implements GameRoomService {
 	public void updateStop(int roomNo) {
 		gameRoomDao.updateStop(sqlSession, roomNo);
 	}
+
+	@Override
+	public void deleteAllGameRooms() {
+		gameRoomDao.deleteAllGameRooms(sqlSession);
+	}
 }

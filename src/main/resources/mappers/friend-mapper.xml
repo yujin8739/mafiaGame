@@ -280,5 +280,4 @@
 	           OR (USERNAME = #{userName2} AND FRIENDUSERNAME = #{userName1} AND STATUS = 'ACCEPTED')
 	    )
 	</select>
-	
 </mapper>

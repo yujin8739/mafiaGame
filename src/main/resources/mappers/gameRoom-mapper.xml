@@ -224,4 +224,8 @@
 	    FROM ROOM_HINT
 	    WHERE ROOMNO = #{roomNo}
 	</select>
+	
+	<delete id="deleteAllGameRooms">
+		DELETE FROM GAME_ROOM
+	</delete>
 </mapper>

@@ -25,6 +25,8 @@ public interface ShopService {
     
     String getProfileImage(int userName);
 
+    int resetProfileImage(String userName);
+
 	
 
 

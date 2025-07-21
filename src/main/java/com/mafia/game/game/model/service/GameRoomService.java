@@ -48,4 +48,6 @@ public interface GameRoomService {
 	List<Job> getJobDetails(List<Integer> jobList);
 
 	void updateStop(int roomNo);
+
+	void deleteAllGameRooms();
 }

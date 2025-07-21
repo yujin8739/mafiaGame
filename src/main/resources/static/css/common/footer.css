@@ -1,6 +1,6 @@
 .site-footer {
-    background-color: #1c1c1e;
-    color: #ddd;
+    background-color:rgba(0,0,0,0.001);
+    color: #000;
     padding: 30px 20px;
     font-size: 14px;
     text-align: center;
@@ -16,14 +16,14 @@
 }
 
 .footer-links a {
-    color: #ccc;
+    color: #000;
     margin: 0 12px;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 .footer-links a:hover {
-    color: #ffffff;
+    color: #000;
     text-decoration: underline;
 }
 
@@ -32,14 +32,15 @@
 }
 
 .footer-text span {
-    color: #ddd;
+    color: #000;
     font-size: 14px;
 }
 
 .footer-company {
     font-size: 13px;
-    color: #999;
+    color: #000;
 }
+
 
 /* @media (max-width: 600px) {
     .footer-links a {
