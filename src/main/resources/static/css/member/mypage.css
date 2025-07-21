@@ -86,13 +86,13 @@ body {
 }
 
 .mypage-btn:hover {
-    color: #ff3b3b;
-    border-color: #ff3b3b;
+    color: #cc2e2e;
+    border-color: #cc2e2e;
 }
 
 .mypage-btn.primary {
-    background-color: #ff3b3b;
-    border-color: #ff3b3b;
+    background-color: #cc2e2e;
+    border-color: #cc2e2e;
 }
 
 .mypage-btn.primary:hover {
@@ -100,16 +100,26 @@ body {
     border-color: #cc2e2e;
     color: white;
 }
+.mypage-btn.item {
+    background-color: #cc2e2e;
+    border-color: #cc2e2e;
+    color: white;
+}
+.mypage-btn.item:hover {
+    background-color: #cc2e2e;
+    border-color: #cc2e2e;
+    color: white;
+}
 
 .mypage-btn.delete {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: #cc2e2e;
+    border-color: #cc2e2e;
     color: white;
 }
 
 .mypage-btn.delete:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+    background-color: #cc2e2e;
+    border-color: #cc2e2e;
     color: white;
 }
 
