@@ -114,20 +114,21 @@ public class BoardServiceImpl implements BoardService{
 	
 		
 		int result = dao.updateLoungeBoard(sqlSession, board);
-		int fileNo = dao.getFileNo(sqlSession,board.getBoardNo()); //기존 파일
+		
 		
 
 		if(file != null) {//변경한 파일 있다면
-			result *= dao.insertFile(sqlSession, file); //변경 파일 추가
 			
-			
-		
 			if(!board.getChangeName().equals("")) { // 기존 파일 삭제
+				int fileNo = dao.getFileNo(sqlSession,board.getBoardNo()); //기존 파일
 				result *= dao.deleteFileOfBoard(sqlSession, fileNo);
 			}
+			
+			result *= dao.insertFile(sqlSession, file); //변경 파일 추가
+			
 		}else if(deleteFile){//변경한 파일 없고, 기존파일 삭제버튼 눌렀다면
 			
-			
+			int fileNo = dao.getFileNo(sqlSession,board.getBoardNo()); //기존 파일
 			result *= dao.deleteFileOfBoard(sqlSession, fileNo);
 		}
 		
@@ -175,6 +176,7 @@ public class BoardServiceImpl implements BoardService{
 	}
 	
 	@Override
+	@Transactional
 	public int deleteReply(Reply reply) {
 		
 		String changeName = reply.getChangeName();
@@ -281,6 +283,86 @@ public class BoardServiceImpl implements BoardService{
 	}
 	
 	
+	@Override
+	@Transactional
+	public int uploadGalleryBoard(Board board, ArrayList<BoardFile> boardFiles) {
+		
+		int boardNo = dao.getBoardNo(sqlSession);
+		int result = 1;
+		
+		if(boardNo > 0) {
+			board.setBoardNo(boardNo);
+			result *= dao.writeLoungeBoard(sqlSession, board);
+			
+			for(BoardFile file : boardFiles) {
+				file.setBoardNo(boardNo);
+				result *= dao.insertFile(sqlSession, file);
+			}
+			
+		}else {
+			return boardNo;
+		}
+		
+		return result;
+	}
+	
+	
+	@Override
+	@Transactional
+	public int updateGalleryBoard(Board board, int[] remainFileList,
+							      ArrayList<BoardFile> boardFiles,String deletedFileList) {
+		
+			
+		int result = 1;
+
+	    // 1. 게시글 수정
+	    result *= dao.updateLoungeBoard(sqlSession, board);
+
+	    int fileLevel = 1;
+
+	    // 2. 남아 있는 기존 파일 fileLevel 재정렬
+	    if(remainFileList != null) {
+		    for (int fileNo : remainFileList) {
+		        result *= dao.updateFileLevel(sqlSession, fileNo, fileLevel++);
+		    }
+	    }
+
+	    // 3. 삭제된 파일 삭제 처리
+	    if (deletedFileList != null && !deletedFileList.isEmpty()) {
+	        String[] deletedIds = deletedFileList.split(",");
+	        for (String idStr : deletedIds) {
+	            int fileNo = Integer.parseInt(idStr.trim());
+	            result *= dao.deleteBoardFile(sqlSession, fileNo);
+	        }
+	    }
+
+	    // 4. 새로 추가된 파일 저장
+	    for (BoardFile file : boardFiles) {
+	        file.setBoardNo(board.getBoardNo());
+	        file.setFileLevel(fileLevel++);
+	        result *= dao.insertFile(sqlSession, file);
+	    }
+
+	    return result;
+	    
+	}
+	
+	@Override
+	public ArrayList<String> selectFileNames(String deletedFileList) {
+		
+		
+        String[] deletedIds = deletedFileList.split(",");
+        
+        ArrayList<String> deletedFileNames = new ArrayList<>();
+        
+        for(String deletedId : deletedIds) {
+        	deletedFileNames.add(dao.selectFileName(sqlSession, deletedId));
+        }
+        
+		
+		return deletedFileNames;
+	
+	}
 	
 
 }
