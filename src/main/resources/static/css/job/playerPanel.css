@@ -1,7 +1,7 @@
 .playerPanel {
     width: 372px;
     height: 380px;
-    background-color: black;
+    background-color: rgba(173, 216, 230, 0.7);
     display: flex;
     justify-content: center; /* 내부를 가로 중앙 정렬 */
     align-items: flex-start; /* 세로는 위부터 정렬 */

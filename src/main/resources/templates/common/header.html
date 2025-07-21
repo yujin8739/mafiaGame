@@ -129,59 +129,11 @@
     });
     </script>
 
+
+
 <div class="top-nav">
   <ul class="menu">
 	
-	<!-- 🎵 BGM -->
-	<div class="bgm-controls">
-	    <span id="songTitle">BGM: 기본 music</span>
-	    <button onclick="sendToPlayer('PLAY')">▶️</button>
-	    <button onclick="sendToPlayer('PAUSE')">⏸️</button>
-	    <button onclick="sendToPlayer('MUTE')">🔇</button>
-	    <button onclick="sendToPlayer('UNMUTE')">🔊</button>
-	    <input type="range" id="volumeRange" min="0" max="1" step="0.01">
-	</div>
-	<iframe id="bgmFrame" src="/common/bgm-player" style="display:none; width:0; height:0; border:0;"></iframe>
-	
-	<script>
-	    // iframe에 메시지를 보내는 함수
-	    function sendToPlayer(action, value = null) {
-	        const iframe = document.getElementById("bgmFrame");
-	        if (iframe && iframe.contentWindow) {
-	            iframe.contentWindow.postMessage({ type: action, value: value }, "*");
-	        }
-	    }
-	
-	    // 볼륨을 iframe과 localStorage에 설정하는 함수
-	    function updateVolume(vol) {
-	        const volume = parseFloat(vol);
-	        sendToPlayer("SET_VOLUME", volume);           // iframe에 메시지 전송
-	        localStorage.setItem("bgmVolume", volume);    // 로컬 저장소에 저장
-	    }
-	
-	    document.addEventListener("DOMContentLoaded", () => {
-	        const volumeRange = document.getElementById("volumeRange");
-	
-	        // 저장된 볼륨 값 가져오기, 없으면 기본값 0.4
-	        const savedVolume = parseFloat(localStorage.getItem("bgmVolume")) || 0.4;
-	
-	        // 슬라이더 초기화
-	        if (volumeRange) {
-	            volumeRange.value = savedVolume;
-	            volumeRange.addEventListener("input", (e) => {
-	                updateVolume(e.target.value);
-	            });
-	        }
-	
-	        // iframe 로딩 후 볼륨 적용
-	        const iframe = document.getElementById("bgmFrame");
-	        if (iframe) {
-	            iframe.addEventListener("load", () => {
-	                sendToPlayer("SET_VOLUME", savedVolume);
-	            });
-	        }
-	    });
-	</script>
 
 
     <!-- 게임 -->
@@ -218,6 +170,7 @@
       <div class="menu-column">
         <a th:href="@{/board/gallery}">갤러리</a>
         <a th:href="@{/board/video}">하이라이트 영상</a>
+        <a th:href="@{/introduce/list}">게임소개</a>
       </div>
       <!-- 커뮤니티 하위 메뉴 -->
       <div class="menu-column">
@@ -232,6 +185,40 @@
       </div>
     </div>
   </div>
+  
+  <div style="position: fixed; top: 10px; left: 10px; z-index: 9999; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px;">
+      <audio id="bgm-audio" src="/music/test1.mp3" loop></audio>
+      <button id="play-btn">▶️ 재생</button>
+      <button id="pause-btn">⏸️ 정지</button>
+  </div>
+
+	<script>
+	window.onload = () => {
+	    const audio = document.getElementById('bgm-audio');
+	    const playBtn = document.getElementById('play-btn');
+	    const pauseBtn = document.getElementById('pause-btn');
+	
+	    const bgmState = localStorage.getItem('bgmState');
+	
+	    if (bgmState === 'playing') {
+	        audio.play().catch(() => {
+	            console.log("자동 재생이 차단되었습니다. 사용자가 직접 재생해야 합니다.");
+	        });
+	    }
+	
+	    playBtn.onclick = () => {
+	        audio.play();
+	        console.log("오디오 재생됨");
+	        localStorage.setItem('bgmState', 'playing');
+	    };
+	
+	    pauseBtn.onclick = () => {
+	        audio.pause();
+	        console.log("오디오 정지됨");
+	        localStorage.setItem('bgmState', 'paused');
+	    };
+	};
+	</script>
 </div>
 
 <script>

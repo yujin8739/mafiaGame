@@ -1,21 +1,19 @@
 package com.mafia.game.webSocket.server;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.Clob;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,196 +21,227 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.service.RoomHintService;
-import com.mafia.game.game.model.vo.GameRoom;
-import com.mafia.game.game.model.vo.Hint;
-import com.mafia.game.game.model.vo.Message;
-import com.mafia.game.game.model.vo.RoomHint;
-import com.mafia.game.game.model.vo.Kill;
+import com.mafia.game.game.model.vo.*;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
-import com.mafia.game.webSocket.timer.PhaseBroadcaster;
-
 import com.mafia.game.job.model.vo.Job;
+import com.mafia.game.webSocket.timer.PhaseBroadcaster;
+import com.mafia.game.webSocket.timer.RoomCleanupScheduler;
 
-/**
- * 게임룸을 관리하는 내부 클래스
- */
+import jakarta.annotation.PostConstruct;
+
 @Component
 public class GameRoomManager {
 
 	@Autowired
 	private GameRoomService gameRoomService;
-	
 	@Autowired
 	private ChatService chatService;
-	
 	@Autowired
 	private MemberService memberService;
-	
 	@Autowired
 	private RoomHintService roomHintService;
 	
-	//현존하는 게임방의 객체 (vo)
-    private final Map<Integer, GameRoom> gameRoomMap = new ConcurrentHashMap<>();
-    //방의 세션
-    private final Map<Integer, List<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
-    
-    private final Map<Integer, PhaseBroadcaster> phaseBroadcasters = new ConcurrentHashMap<>();
+    @Value("${game.room.empty-delete-delay-ms:300000}") // 5분
+    private long cleanupDelayMs;
+	
+	private RoomCleanupScheduler roomCleanupScheduler; // 수동 생성
 
-    public void addSession(int roomNo, WebSocketSession session) {
-        roomSessions.putIfAbsent(roomNo, new CopyOnWriteArrayList<>());
-        roomSessions.get(roomNo).add(session);
-    }
+	private final Map<Integer, GameRoom> gameRoomMap = new ConcurrentHashMap<>();
+	private final Map<Integer, List<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
+	private final Map<Integer, PhaseBroadcaster> phaseBroadcasters = new ConcurrentHashMap<>();
 
-    public void removeSession(int roomNo, WebSocketSession session, CloseStatus status) {
-        List<WebSocketSession> sessions = roomSessions.get(roomNo);
-        if (sessions != null) {
-            sessions.remove(session);
+	/** NEW: roomNo -> (userName -> session) */
+	private final Map<Integer, Map<String, WebSocketSession>> roomUserSessions = new ConcurrentHashMap<>();
+	/** NEW: cache master */
+	private final Map<Integer, String> roomMasterCache = new ConcurrentHashMap<>();
 
-            // 유저 ID 추출
-            Member member = (Member) session.getAttributes().get("loginUser");
-            String userName = member.getUserName();
+	private final ObjectMapper mapper = new ObjectMapper();
+	
+	private final ExecutorService executor = Executors.newCachedThreadPool();
+	
+	 @PostConstruct
+	 public void initScheduler() {
+		 this.roomCleanupScheduler = new RoomCleanupScheduler(gameRoomService, this, cleanupDelayMs);
+	 }
+	    
+	 // 캐시 삭제 메서드 추가
+	 public void removeRoomCaches(int roomNo) {
+		 roomSessions.remove(roomNo);
+		 roomUserSessions.remove(roomNo);
+		 roomMasterCache.remove(roomNo);
+		 phaseBroadcasters.remove(roomNo);
+		 gameRoomMap.remove(roomNo);
+	}
 
-            // 2. DB에서 해당 방 조회
-            GameRoom room = gameRoomService.selectRoom(roomNo);
-            if (room != null && userName != null) {
-                try {
-                    ObjectMapper mapper = new ObjectMapper();
-                    List<String> userList = new ArrayList<>();
-                    List<String> readyList = new ArrayList<>();
+	/* ---------- 세션 등록 ---------- */
+	public void addSession(int roomNo, WebSocketSession session) {
+		roomSessions.putIfAbsent(roomNo, new CopyOnWriteArrayList<>());
+		roomSessions.get(roomNo).add(session);
+	}
 
-                    if (room.getUserList() != null && !room.getUserList().isEmpty()) {
-                        userList = mapper.readValue(room.getUserList(), new TypeReference<List<String>>() {});
-                    }
-                    userList.remove(userName);
-                    //게임방 세션 나갈시
-                    if (room.getReadyUser() != null && !room.getReadyUser().isEmpty()) {
-                    	readyList = mapper.readValue(room.getReadyUser(), new TypeReference<List<String>>() {});
-                    }
-                    readyList.remove(userName);
-                    System.out.println(userList.toString());
-                    if (userList.isEmpty()) {
-                        // 남은 유저가 없으면 방 제거
-                        gameRoomService.deleteRoom(roomNo);
-                        roomSessions.remove(roomNo);
-                    } else {
-                        // 아니면 DB에 유저리스트만 갱신
-                        String updatedList = mapper.writeValueAsString(userList);
-                        String updateReady = mapper.writeValueAsString(readyList);
-                        //게임 진행중에는 유저 리스트 업데이트 막기
-                        if(!room.getIsGaming().equals("Y")) {
-	                        gameRoomService.updateUserList(roomNo, updatedList);
-	                        if(userList.size() >= 1) { //유저 갱신될때마다 방장 변경
-	                        	gameRoomService.updateRoomMaster(roomNo, userList.get(0));
-	                        }
-	                        gameRoomService.updateReadyList(roomNo, updateReady);
-                        }
-                    }
-                    
-                    if (userList.isEmpty()) {
-                        // 타이머 종료
-                        stopPhaseBroadcast(roomNo);
+	/* ---------- 유저 ↔ 세션 바인딩 (Failover 시 교체) ---------- */
+	public void bindUserSession(int roomNo, String userName, WebSocketSession session) {
+		roomUserSessions.computeIfAbsent(roomNo, rn -> new ConcurrentHashMap<>());
+		Map<String, WebSocketSession> m = roomUserSessions.get(roomNo);
+		WebSocketSession old = m.put(userName, session);
+		if (old != null && old.isOpen() && !old.getId().equals(session.getId())) {
+			try {
+				old.close(new CloseStatus(4000, "REPLACED"));
+			} catch (Exception ignore) {
+			}
+		}
+	}
 
-                        // 기존 로직
-                        gameRoomService.deleteRoom(roomNo);
-                        roomSessions.remove(roomNo);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace(); // 로깅 처리 권 장
-                }
-            }
+	public WebSocketSession getSessionByUser(int roomNo, String userName) {
+		Map<String, WebSocketSession> m = roomUserSessions.get(roomNo);
+		return (m == null ? null : m.get(userName));
+	}
 
-            // 메모리에서도 제거
-            if (sessions.isEmpty()) {
-                roomSessions.remove(roomNo);
-            }
-        }
-    }
+	public void setRoomMasterCache(int roomNo, String userName) {
+		roomMasterCache.put(roomNo, userName);
+	}
 
-    
-    public void addUserToRoom(int roomNo, String userName) {
-        GameRoom room = gameRoomService.selectRoom(roomNo);
-        
-        if (room == null) {
-            System.out.println("존재하지 않는 방 번호입니다: " + roomNo);  // 혹은 로깅 처리
-            return; // 방이 없으면 더 이상 진행하지 않음
-        }
-        
-        List<String> users = new ArrayList<>();
-        try {
-            users = new ObjectMapper().readValue(room.getUserList(), new TypeReference<List<String>>() {});
-        } catch (Exception e) {
-            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
-        }
+	public String getRoomMasterUser(int roomNo) {
+		String cached = roomMasterCache.get(roomNo);
+		if (cached != null)
+			return cached;
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		if (room != null) {
+			roomMasterCache.put(roomNo, room.getMaster());
+			return room.getMaster();
+		}
+		return null;
+	}
 
-        if (!users.contains(userName)) {
-            users.add(userName);
-            try {
-                String updatedList = new ObjectMapper().writeValueAsString(users);
-                gameRoomService.updateUserList(roomNo, updatedList);
-                if(users.size() >= 1) {//유저 갱신될때마다 방장 변경
-                	gameRoomService.updateRoomMaster(roomNo, users.get(0));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        
-    }
-    
-    public void addReadyToRoom(int roomNo, String userName) { 
-        GameRoom room = gameRoomService.selectRoom(roomNo);
-        
-        if (room == null) {
-            System.out.println("존재하지 않는 방 번호입니다: " + roomNo);  // 혹은 로깅 처리
-            return; // 방이 없으면 더 이상 진행하지 않음
-        }
-        
-        List<String> users = new ArrayList<>();
-        try {
-            users = new ObjectMapper().readValue(room.getReadyUser(), new TypeReference<List<String>>() {});
-        } catch (Exception e) {
-            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
-        }
+	/* ---------- 시그널 전달 ---------- */
+	public void forwardSignal(int roomNo, String signalJson, String targetUser) {
+		WebSocketSession targetSession = getSessionByUser(roomNo, targetUser);
+		if (targetSession != null && targetSession.isOpen()) {
+			executor.submit(()->{
+				try {
+					targetSession.sendMessage(new TextMessage(signalJson));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		}
+	}
 
-        if (!users.contains(userName)) {
-            users.add(userName);
-            try {
-                String updatedList = new ObjectMapper().writeValueAsString(users);
-                gameRoomService.updateReadyList(roomNo, updatedList);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	/* ---------- 세션 제거 ---------- */
+	public void removeSession(int roomNo, WebSocketSession session, CloseStatus status) {
+		List<WebSocketSession> sessions = roomSessions.get(roomNo);
+		if (sessions != null)
+			sessions.remove(session);
+
+		Member member = (Member) session.getAttributes().get("loginUser");
+		String userName = (member != null ? member.getUserName() : null);
+
+		if (userName != null) {
+			Map<String, WebSocketSession> userMap = roomUserSessions.get(roomNo);
+			if (userMap != null) {
+				userMap.remove(userName);
+				if (userMap.isEmpty())
+					roomUserSessions.remove(roomNo);
+			}
+		}
+
+		try {
+			GameRoom room = gameRoomService.selectRoom(roomNo);
+			if (room != null && userName != null) {
+				List<String> userList = parseJsonList(room.getUserList());
+				List<String> readyList = parseJsonList(room.getReadyUser());
+
+				userList.remove(userName);
+				readyList.remove(userName);
+
+				// 우선 DB에 현재 상태 반영 (게임 중 아닐 때만 업데이트)
+				if (!"Y".equals(room.getIsGaming())) {
+					gameRoomService.updateUserList(roomNo, mapper.writeValueAsString(userList));
+					gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(readyList));
+					if (!userList.isEmpty()) {
+						gameRoomService.updateRoomMaster(roomNo, userList.get(0));
+						roomMasterCache.put(roomNo, userList.get(0));
+					} else {
+						// 마스터 없앰
+						gameRoomService.updateRoomMaster(roomNo, null);
+						roomMasterCache.remove(roomNo);
+					}
+				} else {
+					// 게임 중인데 유저 나감 → 게임 룰에 따라 별도 처리 필요하면 여기서
+				}
+
+				// 최종적으로 방 인원에 따라 삭제 예약 또는 예약 취소
+				if (userList.isEmpty()) {
+					// 게임 진행 여부와 무관하게 모두 나갔으면 삭제 예약
+					roomCleanupScheduler.scheduleIfEmpty(roomNo);
+					// ※ 게임 진행용 타이머/브로드캐스트를 즉시 멈출지 여부는 선택
+					stopPhaseBroadcast(roomNo); // 필요하면 유지 / 제거
+				} else {
+					// 아직 유저 있음 → 혹시 이전에 예약된 삭제를 취소
+					roomCleanupScheduler.cancel(roomNo);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		if (sessions != null && sessions.isEmpty()) {
+			roomSessions.remove(roomNo);
+		}
+	}
+
+	public void addUserToRoom(int roomNo, String userName) {
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		if (room == null)
+			return;
+
+		List<String> users = parseJsonList(room.getUserList());
+		if (!users.contains(userName)) {
+			users.add(userName);
+			try {
+				gameRoomService.updateUserList(roomNo, mapper.writeValueAsString(users));
+				if (!users.isEmpty()) {
+					gameRoomService.updateRoomMaster(roomNo, users.get(0));
+					roomMasterCache.put(roomNo, users.get(0));
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void addReadyToRoom(int roomNo, String userName) {
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		if (room == null)
+			return;
+		List<String> ready = parseJsonList(room.getReadyUser());
+		if (!ready.contains(userName)) {
+			ready.add(userName);
+			try {
+				gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public void removeReady(int roomNo, String userName) {
 		GameRoom room = gameRoomService.selectRoom(roomNo);
-        
-        if (room == null) {
-            System.out.println("존재하지 않는 방 번호입니다: " + roomNo);  // 혹은 로깅 처리
-            return; // 방이 없으면 더 이상 진행하지 않음
-        }
-        
-        List<String> users = new ArrayList<>();
-		
-        try {
-            users = new ObjectMapper().readValue(room.getReadyUser(), new TypeReference<List<String>>() {});
-        } catch (Exception e) {
-            e.printStackTrace(); // JSON 파싱 실패 시 빈 리스트 유지
-        }
-        if (users.contains(userName)) {
-        	users.remove(userName);
-        	try {
-                String updatedList = new ObjectMapper().writeValueAsString(users);
-                gameRoomService.updateReadyList(roomNo, updatedList);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+		if (room == null)
+			return;
+		List<String> ready = parseJsonList(room.getReadyUser());
+		if (ready.remove(userName)) {
+			try {
+				gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
-	public void updateStart(int roomNo) {//게임 시작중 처리, 준비중 인원 초기화
+	/* ---------- 게임 시작 ---------- */
+	public void updateStart(int roomNo) {
 		GameRoom room = gameRoomService.selectRoom(roomNo);
 		List<String> users = new ArrayList<>();
         
@@ -282,7 +311,7 @@ public class GameRoomManager {
         List<WebSocketSession> sessions = getSessions(roomNo);
         
         if (phaseBroadcasters.containsKey(roomNo)) {
-            phaseBroadcasters.get(roomNo).stop(); // 기존 타이머 종료 (필요시)
+            phaseBroadcasters.get(roomNo).stop(); // 타이머 종료
         }
         
         PhaseBroadcaster broadcaster = new PhaseBroadcaster(sessions,roomNo,this);
@@ -290,20 +319,48 @@ public class GameRoomManager {
 
         phaseBroadcasters.put(roomNo, broadcaster); // Map에 등록
 	}
-	
+
 	public void stopPhaseBroadcast(int roomNo) {
-	    PhaseBroadcaster broadcaster = phaseBroadcasters.remove(roomNo);
-	    if (broadcaster != null) {
-	        broadcaster.stop();
-	    }
+		PhaseBroadcaster broadcaster = phaseBroadcasters.remove(roomNo);
+		if (broadcaster != null)
+			broadcaster.stop();
 	}
-	
-    public void addJobToSession(int roomNo, WebSocketSession session) {
+
+	/* ---------- 기타: DB 전달 ---------- */
+	public void sendMessage(Message msg) {
+		chatService.sendMessage(msg);
+	}
+
+	public GameRoom selectRoom(int roomNo) {
+		return gameRoomService.selectRoom(roomNo);
+	}
+
+	public List<WebSocketSession> getSessions(int roomNo) {
+		return roomSessions.getOrDefault(roomNo, Collections.emptyList());
+	}
+
+	public static String clobToString(Clob clob) {
+		if (clob == null)
+			return null;
+		try (Reader reader = clob.getCharacterStream(); StringWriter writer = new StringWriter()) {
+			char[] buffer = new char[2048];
+			int length;
+			while ((length = reader.read(buffer)) != -1)
+				writer.write(buffer, 0, length);
+			return writer.toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public void addJobToSession(int roomNo, WebSocketSession session) {
 		Member loginUser = (Member) session.getAttributes().get("loginUser");
 		if (loginUser == null) {
-		    return;
+			return;
 		}
 		String userName = loginUser.getUserName();
+
 		System.out.println(">> 로그인 유저: " + userName);
 		Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
 		String userListJson = clobToString((Clob) result.get("USERLIST"));
@@ -311,83 +368,98 @@ public class GameRoomManager {
 		
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			if(userListJson != null &&jobJson != null) {
+			if (userListJson != null && jobJson != null) {
 				System.out.println(">> userListJson: " + userListJson);
-				 System.out.println(">> jobJson: " + jobJson);
-		    	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
-				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
-				
+				System.out.println(">> jobJson: " + jobJson);
+				List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {
+				});
+				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {
+				});
+
 				int index = userList.indexOf(userName);
 				String userNick = loginUser.getNickName();
-				if(!jobList.isEmpty()) {
+				if (!jobList.isEmpty()) {
 					int myJob = jobList.get(index);
-					session.getAttributes().put("job",gameRoomService.getJobDetail(myJob));
-					
+					session.getAttributes().put("job", gameRoomService.getJobDetail(myJob));
+
 					Hint hint = roomHintService.selectRandomHintByJob(myJob, userNick);
-					
+
 					RoomHint roomHint = new RoomHint(roomNo, userName, hint.getHint(), userNick);
-					
+
 					roomHintService.insertRoomHint(roomHint);
 				}
-								
+
 			}
-			
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
+
+		} catch (JsonProcessingException e) { // TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-    
+
 	public void mafiaKill(int roomNo) {
 		GameRoom room = gameRoomService.selectRoom(roomNo);
 		Kill kill = gameRoomService.selectKill(roomNo, room.getDayNo());
 		String deathUser = null;
-		
-		if (kill == null) return;
-		try{
+
+		if (kill == null)
+			return;
+		try {
 			ObjectMapper objectMapper = new ObjectMapper();
-			List<String> kills = objectMapper.readValue(kill.getKillUser(), new TypeReference<List<String>>() {});
-			List<String> heals = objectMapper.readValue(kill.getHealUser(), new TypeReference<List<String>>() {});
-			
+			List<String> kills = objectMapper.readValue(kill.getKillUser(), new TypeReference<List<String>>() {
+			});
+			List<String> heals = objectMapper.readValue(kill.getHealUser(), new TypeReference<List<String>>() {
+			});
+
 			Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
 			String userListJson = clobToString((Clob) result.get("USERLIST"));
 			String jobJson = (String) result.get("JOB");
-			
-			List<String> userList = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {});
-			List<Integer> jobList = objectMapper.readValue(jobJson, new TypeReference<List<Integer>>() {}); 
 
-			//마피아가 여러명이고 각각 죽일수 있으므로 for문으로 확인
-			for(String killedUser : kills) {
+			List<String> userList = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {
+			});
+			List<Integer> jobList = objectMapper.readValue(jobJson, new TypeReference<List<Integer>>() {
+			});
+
+			// 마피아가 여러명이고 각각 죽일수 있으므로 for문으로 확인
+			for (String killedUser : kills) {
 				boolean isHealSuccess = false;
 				String updatedJobJson = null;
 				int index = userList.indexOf(killedUser);
 				if (index != -1 && index < jobList.size()) {
 					jobList.set(index, 0);
 					updatedJobJson = objectMapper.writeValueAsString(jobList);
-					
-					//의사가 힐할 대상이 죽는지 확인
-					//의사도 여러명일 수 있음
-					for(String healUser : heals) {
-						if(healUser.equals(killedUser)) {
+
+					// 의사가 힐할 대상이 죽는지 확인
+					// 의사도 여러명일 수 있음
+					for (String healUser : heals) {
+						if (healUser.equals(killedUser)) {
 							isHealSuccess = true;
 						}
 					}
 				}
-				
-				//의사 치료 적중 실패시에만 동작
-				if(!isHealSuccess) { 
+
+				// 의사 치료 적중 실패시에만 동작
+				if (!isHealSuccess) {
 					ObjectMapper mapper = new ObjectMapper();
 					Map<String, Object> payload = new HashMap<>();
-					
+
 					payload.put("userName", "시스템"); // nickName
-					payload.put("msg", chatService.selectEvent(6, memberService.getMemberByUserName(killedUser).getNickName()));     // 메시지 본문
+					payload.put("msg",
+							chatService.selectEvent(6, memberService.getMemberByUserName(killedUser).getNickName())); // 메시지
+																														// 본문
 					payload.put("type", "EVENT");
-					gameRoomService.updateJob(roomNo,updatedJobJson);
-					
+					gameRoomService.updateJob(roomNo, updatedJobJson);
+
 					String json = mapper.writeValueAsString(payload);
-					
+
 					for (WebSocketSession s : getSessions(roomNo)) {
-						s.sendMessage(new TextMessage(json));
+						executor.submit(()->{
+							try {
+								s.sendMessage(new TextMessage(json));
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						});
 					}
 				}
 			}
@@ -396,160 +468,138 @@ public class GameRoomManager {
 		} finally {
 			updateDayNo(roomNo);
 		}
-		
+
 	}
-    
-    public void voteKill(int roomNo) {
+
+	public void voteKill(int roomNo) {
 		GameRoom room = gameRoomService.selectRoom(roomNo);
 		Kill kill = gameRoomService.selectKill(roomNo, room.getDayNo());
 		String mostKilldUser = null;
-			        
-		if (kill == null) return;
-		
-		try{
+
+		if (kill == null)
+			return;
+
+		try {
 			ObjectMapper objectMapper = new ObjectMapper();
-			List<String> kills = objectMapper.readValue(kill.getVote(), new TypeReference<List<String>>() {});
-			
+			List<String> kills = objectMapper.readValue(kill.getVote(), new TypeReference<List<String>>() {
+			});
+
 			Map<String, Integer> countMap = new HashMap<>();
 			for (String name : kills) {
 				countMap.put(name, countMap.getOrDefault(name, 0) + 1);
 			}
-			
+
 			mostKilldUser = Collections.max(countMap.entrySet(), Map.Entry.comparingByValue()).getKey();
-			
-			
+
 			Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
 			String userListJson = clobToString((Clob) result.get("USERLIST"));
 			String jobJson = (String) result.get("JOB");
-			
-			List<String> userList = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {});
-			List<Integer> jobList = objectMapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
-			
+
+			List<String> userList = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {
+			});
+			List<Integer> jobList = objectMapper.readValue(jobJson, new TypeReference<List<Integer>>() {
+			});
+
 			int index = userList.indexOf(mostKilldUser);
 			if (index != -1 && index < jobList.size()) {
 				jobList.set(index, 0);
 				String updatedJobJson = objectMapper.writeValueAsString(jobList);
-				gameRoomService.updateJob(roomNo,updatedJobJson);
+				gameRoomService.updateJob(roomNo, updatedJobJson);
 			}
-			
-			String targetName = memberService.getMemberByUserName(mostKilldUser).getNickName();
-			
-			ObjectMapper mapper = new ObjectMapper();
-			
-	        Map<String, Object> payload = new HashMap<>(); 
-	        payload.put("userName", "시스템"); // nickName
-	        payload.put("msg", chatService.selectEvent(9, targetName));     // 메시지 본문
-	        payload.put("type", "EVENT");
 
-	        String json = mapper.writeValueAsString(payload);
-	        
-	        for (WebSocketSession s : getSessions(roomNo)) {
-	        	s.sendMessage(new TextMessage(json));
-	        }
+			String targetName = memberService.getMemberByUserName(mostKilldUser).getNickName();
+
+			ObjectMapper mapper = new ObjectMapper();
+
+			Map<String, Object> payload = new HashMap<>();
+			payload.put("userName", "시스템"); // nickName
+			payload.put("msg", chatService.selectEvent(9, targetName)); // 메시지 본문
+			payload.put("type", "EVENT");
+
+			String json = mapper.writeValueAsString(payload);
+
+			for (WebSocketSession s : getSessions(roomNo)) {
+				executor.submit(()->{
+					try {
+						s.sendMessage(new TextMessage(json));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				});
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-    
-    public String checkWinner(int roomNo) {
-        Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
-        String jobJson = (String) result.get("JOB");
-        ObjectMapper mapper = new ObjectMapper();
 
-        try {
-            if (jobJson == null) {
-                return "NO_GAME_DATA";
-            }
+	public String checkWinner(int roomNo) {
+		Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+		String jobJson = (String) result.get("JOB");
+		ObjectMapper mapper = new ObjectMapper();
 
-            // JSON → List<Integer>
-            List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+		try {
+			if (jobJson == null) {
+				return "NO_GAME_DATA";
+			}
 
-            // MyBatis 호출
-            List<Job> jobDetails = gameRoomService.getJobDetails(jobList);
+			// JSON → List<Integer>
+			List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {
+			});
 
-            // 카운트
-            int mafiaCount = 0;
-            int citizenCount = 0;
-            int neutralityCount = 0;
+			// MyBatis 호출
+			List<Job> jobDetails = gameRoomService.getJobDetails(jobList);
 
-            for (Job job : jobDetails) {
-                if (job.getJobClass() == 1) {
-                    mafiaCount++;
-                } else if (job.getJobClass() == 2) {
-                    citizenCount++;
-                } else if (job.getJobClass() == 3) {
-                	neutralityCount++;
-                }
-            }
+			// 카운트
+			int mafiaCount = 0;
+			int citizenCount = 0;
+			int neutralityCount = 0;
 
-            // 승리 조건 체크
-            if (mafiaCount > (citizenCount + neutralityCount)) {
-                return "MAFIA_WIN";
-            } else if (mafiaCount == 0 && neutralityCount == 0) {
-                return "CITIZEN_WIN";
-            } else if (mafiaCount == 0 && citizenCount == 0) {
-            	return "NEUTRALITY_WIN";
-            }
+			for (Job job : jobDetails) {
+				if (job.getJobClass() == 1) {
+					mafiaCount++;
+				} else if (job.getJobClass() == 2) {
+					citizenCount++;
+				} else if (job.getJobClass() == 3) {
+					neutralityCount++;
+				}
+			}
 
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+			// 승리 조건 체크
+			if (mafiaCount > (citizenCount + neutralityCount)) {
+				return "MAFIA_WIN";
+			} else if (mafiaCount == 0 && neutralityCount == 0) {
+				return "CITIZEN_WIN";
+			} else if (mafiaCount == 0 && citizenCount == 0) {
+				return "NEUTRALITY_WIN";
+			}
 
-        return "CONTINUE";
-    }
-    
-    public GameRoom selectRoom(int roomNo) {
-		return gameRoomService.selectRoom(roomNo);
-    }
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 
-    public List<WebSocketSession> getSessions(int roomNo) {
-        return roomSessions.getOrDefault(roomNo, Collections.emptyList());
-    }
-
-    public void createRoom(GameRoom room) {
-        gameRoomMap.put(room.getRoomNo(), room);
-    }
-
-    public GameRoom getRoom(int roomNo) {
-        return gameRoomMap.get(roomNo);
-    }
-
-	public void sendMessage(Message msg) {
-		chatService.sendMessage(msg);
-	}
-	
-    public GameRoomService getGameRoomService() {
-		return gameRoomService;
+		return "CONTINUE";
 	}
 
-	public void setGameRoomService(GameRoomService gameRoomService) {
-		this.gameRoomService = gameRoomService;
-	}
-	
 	public void updateDayNo(int roomNo) {
 		GameRoom room = gameRoomService.selectRoom(roomNo);
-		gameRoomService.updateDayNo(roomNo, room.getDayNo()+1);
+		gameRoomService.updateDayNo(roomNo, room.getDayNo() + 1);
 	}
-
-	public static String clobToString(Clob clob) {
-        if (clob == null) return null;
-
-        try (Reader reader = clob.getCharacterStream();
-             StringWriter writer = new StringWriter()) {
-            char[] buffer = new char[2048];
-            int length;
-            while ((length = reader.read(buffer)) != -1) {
-                writer.write(buffer, 0, length);
-            }
-            return writer.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
 	public void updateStop(int roomNo) {
 		gameRoomService.updateStop(roomNo);
 	}
 
+	/* ---------- util ---------- */
+	public List<String> parseJsonList(String json) {
+		if (json == null || json.isBlank())
+			return new ArrayList<>();
+		try {
+			return mapper.readValue(json, new TypeReference<List<String>>() {
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
+	}
 }
