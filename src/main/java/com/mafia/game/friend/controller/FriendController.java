@@ -245,36 +245,66 @@ public class FriendController {
 	@PostMapping("/invite")
 	@ResponseBody
 	public Map<String, Object> inviteToGame(@RequestParam String inviteUserName, @RequestParam int roomNo,
-			@SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+	        @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
 
-		Map<String, Object> result = new HashMap<>();
+	    Map<String, Object> result = new HashMap<>();
 
-		// 로그인 체크
-		if (loginUser == null) {
-			result.put("success", false);
-			result.put("message", "로그인이 필요합니다.");
-			return result;
-		}
+	    // 로그인 체크
+	    if (loginUser == null) {
+	        result.put("success", false);
+	        result.put("message", "로그인이 필요합니다.");
+	        return result;
+	    }
 
-		// 게임 초대 생성
-		GameInvite gameInvite = new GameInvite();
-		gameInvite.setSenderName(loginUser.getUserName());
-		gameInvite.setReceiverName(inviteUserName); // inviteUserName -> receiverName
-		gameInvite.setRoomNo(roomNo);
-		gameInvite.setInviteStatus("PENDING");
+	    try {
+	        // 1. 친구 여부 확인
+	        boolean isFriend = friendService.checkFriendship(loginUser.getUserName(), inviteUserName);
+	        if (!isFriend) {
+	            result.put("success", false);
+	            result.put("message", "친구만 초대할 수 있습니다.");
+	            return result;
+	        }
 
-		// 게임 초대 보내기
-		int success = friendService.sendGameInvite(gameInvite);
+	        // 2. 중복 초대 방지
+	        boolean alreadyInvited = friendService.checkExistingGameInvite(inviteUserName, roomNo);
+	        if (alreadyInvited) {
+	            result.put("success", false);
+	            result.put("message", "이미 해당 방에 초대를 보냈습니다.");
+	            return result;
+	        }
 
-		if (success > 0) {
-			result.put("success", true);
-			result.put("message", "게임 초대를 보냈습니다.");
-		} else {
-			result.put("success", false);
-			result.put("message", "게임 초대에 실패했습니다.");
-		}
+	        // 3. 게임방 검증 (방 상태, 인원, 권한 한번에 체크)
+	        String validationMessage = friendService.validateGameRoom(roomNo, loginUser.getUserName());
+	        if (validationMessage != null) {
+	            result.put("success", false);
+	            result.put("message", validationMessage);
+	            return result;
+	        }
 
-		return result;
+	        // 모든 검증 통과 후 게임 초대 생성
+	        GameInvite gameInvite = new GameInvite();
+	        gameInvite.setSenderName(loginUser.getUserName());
+	        gameInvite.setReceiverName(inviteUserName);
+	        gameInvite.setRoomNo(roomNo);
+	        gameInvite.setInviteStatus("PENDING");
+
+	        int success = friendService.sendGameInvite(gameInvite);
+
+	        if (success > 0) {
+	            result.put("success", true);
+	            result.put("message", "게임 초대를 보냈습니다.");
+	        } else {
+	            result.put("success", false);
+	            result.put("message", "게임 초대에 실패했습니다.");
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        result.put("success", false);
+	        result.put("message", "게임 초대 중 오류가 발생했습니다.");
+	    }
+
+	    return result;
 	}
 
 	/**
