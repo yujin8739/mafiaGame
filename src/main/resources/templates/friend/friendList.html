@@ -3,423 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>친구 목록 사이드바</title>
+    <title>친구목록 - GodFather 0805</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        /* 기본 스타일 */
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0b0b0b;
-            color: #f5f5f5;
-            overflow-x: hidden;
-        }
-
-        /* 사이드바 오버레이 */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* 친구 사이드바 */
-        .friend-sidebar {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            width: 400px;
-            height: 100vh;
-            background-color: #1a1a1a;
-            border-left: 1px solid #333;
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
-            z-index: 1001;
-            transition: right 0.3s ease;
-            overflow-y: auto;
-        }
-
-        .friend-sidebar.active {
-            right: 0;
-        }
-
-        /* 사이드바 헤더 */
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #222;
-        }
-
-        .sidebar-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #ff3b3b;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: #ccc;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .close-btn:hover {
-            color: #ff3b3b;
-            background-color: #333;
-        }
-
-        /* 친구 검색 섹션 */
-        .friend-search-section {
-            padding: 20px;
-            border-bottom: 1px solid #333;
-        }
-
-        .search-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #444;
-            border-radius: 6px;
-            background-color: #111;
-            color: #eee;
-            font-size: 14px;
-        }
-
-        .search-btn {
-            padding: 10px 15px;
-            background-color: #ff3b3b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
-        }
-
-        .search-btn:hover {
-            background-color: #cc2e2e;
-        }
-
-        /* 검색 결과 */
-        .search-result {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #222;
-            border-radius: 6px;
-            border: 1px solid #444;
-            display: none;
-        }
-
-        .search-result.show {
-            display: block;
-        }
-
-        .search-user {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-info {
-            flex: 1;
-        }
-
-        .user-name {
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .user-nickname {
-            font-size: 12px;
-            color: #888;
-        }
-
-        /* 탭 메뉴 */
-        .sidebar-tabs {
-            display: flex;
-            background-color: #222;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            color: #ccc;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-bottom: 2px solid transparent;
-        }
-
-        .tab-btn.active {
-            color: #ff3b3b;
-            border-bottom-color: #ff3b3b;
-            background-color: #1a1a1a;
-        }
-
-        .tab-btn:hover {
-            color: #ff3b3b;
-            background-color: #333;
-        }
-
-        /* 컨텐츠 영역 */
-        .sidebar-content {
-            padding: 0;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* 친구 목록 */
-        .friend-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .friend-item {
-            display: flex;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #333;
-            transition: background-color 0.3s ease;
-        }
-
-        .friend-item:hover {
-            background-color: #222;
-            margin: 0 -20px;
-            padding-left: 20px;
-            padding-right: 20px;
-        }
-
-        .friend-item:last-child {
-            border-bottom: none;
-        }
-
-        .friend-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #444;
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: #ff3b3b;
-            position: relative;
-        }
-
-        .online-status {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid #1a1a1a;
-        }
-
-        .online {
-            background-color: #4CAF50;
-        }
-
-        .offline {
-            background-color: #888;
-        }
-
-        .friend-info {
-            flex: 1;
-        }
-
-        .friend-name {
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 2px;
-        }
-
-        .friend-status {
-            font-size: 12px;
-            color: #888;
-        }
-
-        .friend-actions {
-            display: flex;
-            gap: 5px;
-        }
-
-        .action-btn {
-            padding: 6px 10px;
-            font-size: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .message-btn {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .message-btn:hover {
-            background-color: #45a049;
-        }
-
-        .invite-btn {
-            background-color: #2196F3;
-            color: white;
-        }
-
-        .invite-btn:hover {
-            background-color: #1976D2;
-        }
-
-        .remove-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .remove-btn:hover {
-            background-color: #c82333;
-        }
-
-        .accept-btn {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .accept-btn:hover {
-            background-color: #218838;
-        }
-
-        .reject-btn {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .reject-btn:hover {
-            background-color: #5a6268;
-        }
-
-        /* 빈 상태 */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #888;
-        }
-
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        /* 알림 배지 */
-        .notification-badge {
-            background-color: #ff3b3b;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 12px;
-            margin-left: 8px;
-            font-weight: bold;
-        }
-
-        /* 메인 컨텐츠 (데모용) */
-        .main-content {
-            padding: 50px;
-            text-align: center;
-        }
-
-        .open-sidebar-btn {
-            padding: 12px 24px;
-            background-color: #ff3b3b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 20px;
-        }
-
-        .open-sidebar-btn:hover {
-            background-color: #cc2e2e;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" th:href="@{/css/friend/friendList.css}" />
 </head>
 <body>
-    <!-- 메인 컨텐츠 (데모용) -->
-    <div class="main-content">
-        <h1>메인 페이지</h1>
-        <button class="open-sidebar-btn" onclick="openFriendSidebar()">친구 목록 열기</button>
-        <p>헤더의 친구목록 버튼을 클릭하면 오른쪽에서 사이드바가 나타납니다.</p>
-    </div>
-
     <!-- 사이드바 오버레이 -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeFriendSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- 친구 사이드바 -->
     <div class="friend-sidebar" id="friendSidebar">
         <!-- 사이드바 헤더 -->
         <div class="sidebar-header">
             <div class="sidebar-title">👥 친구 목록</div>
-            <button class="close-btn" onclick="closeFriendSidebar()">&times;</button>
+            <button class="close-btn" id="closeSidebarBtn">&times;</button>
         </div>
 
         <!-- 친구 검색 섹션 -->
         <div class="friend-search-section">
             <div class="search-container">
                 <input type="text" class="search-input" id="friendSearchInput" placeholder="친구 검색 (아이디 또는 닉네임)">
-                <button class="search-btn" onclick="searchFriend()">검색</button>
+                <button class="search-btn" id="searchFriendBtn">검색</button>
             </div>
             
             <!-- 검색 결과 -->
             <div class="search-result" id="searchResult">
                 <div class="search-user">
                     <div class="user-info">
-                        <div class="user-name">검색된 사용자</div>
-                        <div class="user-nickname">사용자 닉네임</div>
+                        <div class="user-name" id="searchedUserName"></div>
+                        <div class="user-nickname" id="searchedUserNickname"></div>
                     </div>
-                    <button class="action-btn accept-btn" onclick="sendFriendRequest()">친구 요청</button>
+                    <button class="action-btn friend-request-btn" id="sendRequestBtn">친구 요청</button>
                 </div>
             </div>
         </div>
 
         <!-- 탭 메뉴 -->
         <div class="sidebar-tabs">
-            <button class="tab-btn active" onclick="switchTab('friends')">
-                친구 목록 <span class="notification-badge" id="friendCount">5</span>
+            <button class="tab-btn active" data-tab="friends">
+                친구 목록 <span class="notification-badge" id="friendCount">0</span>
             </button>
-            <button class="tab-btn" onclick="switchTab('requests')">
-                요청 <span class="notification-badge" id="requestCount">2</span>
+            <button class="tab-btn" data-tab="requests">
+                요청 <span class="notification-badge" id="requestCount">0</span>
+            </button>
+            <button class="tab-btn" data-tab="invites">
+                게임 초대 <span class="notification-badge" id="inviteCount">0</span>
             </button>
         </div>
 
@@ -428,202 +60,416 @@
             <!-- 친구 목록 탭 -->
             <div class="tab-content active" id="friendsTab">
                 <ul class="friend-list" id="friendList">
-                    <!-- 친구 목록 아이템들 -->
-                    <li class="friend-item">
-                        <div class="friend-avatar">
-                            👤
-                            <div class="online-status online"></div>
-                        </div>
-                        <div class="friend-info">
-                            <div class="friend-name">친구1</div>
-                            <div class="friend-status">온라인</div>
-                        </div>
-                        <div class="friend-actions">
-                            <button class="action-btn message-btn">쪽지</button>
-                            <button class="action-btn invite-btn">초대</button>
-                            <button class="action-btn remove-btn">삭제</button>
-                        </div>
-                    </li>
-                    <li class="friend-item">
-                        <div class="friend-avatar">
-                            👤
-                            <div class="online-status offline"></div>
-                        </div>
-                        <div class="friend-info">
-                            <div class="friend-name">친구2</div>
-                            <div class="friend-status">오프라인</div>
-                        </div>
-                        <div class="friend-actions">
-                            <button class="action-btn message-btn">쪽지</button>
-                            <button class="action-btn invite-btn">초대</button>
-                            <button class="action-btn remove-btn">삭제</button>
-                        </div>
-                    </li>
+                    <!-- 친구 목록이 여기에 동적으로 추가됩니다 -->
                 </ul>
+                <div class="empty-state" id="friendsEmpty" style="display: none;">
+                    <div class="empty-icon">👥</div>
+                    <div>아직 친구가 없습니다.</div>
+                    <div>새로운 친구를 검색해보세요!</div>
+                </div>
             </div>
 
             <!-- 친구 요청 탭 -->
             <div class="tab-content" id="requestsTab">
                 <ul class="friend-list" id="requestList">
-                    <li class="friend-item">
-                        <div class="friend-avatar">👤</div>
-                        <div class="friend-info">
-                            <div class="friend-name">요청자1</div>
-                            <div class="friend-status">친구 요청을 보냈습니다</div>
-                        </div>
-                        <div class="friend-actions">
-                            <button class="action-btn accept-btn">수락</button>
-                            <button class="action-btn reject-btn">거절</button>
-                        </div>
-                    </li>
-                    <li class="friend-item">
-                        <div class="friend-avatar">👤</div>
-                        <div class="friend-info">
-                            <div class="friend-name">요청자2</div>
-                            <div class="friend-status">친구 요청을 보냈습니다</div>
-                        </div>
-                        <div class="friend-actions">
-                            <button class="action-btn accept-btn">수락</button>
-                            <button class="action-btn reject-btn">거절</button>
-                        </div>
-                    </li>
+                    <!-- 친구 요청 목록이 여기에 동적으로 추가됩니다 -->
                 </ul>
+                <div class="empty-state" id="requestsEmpty" style="display: none;">
+                    <div class="empty-icon">📬</div>
+                    <div>받은 친구 요청이 없습니다.</div>
+                </div>
+            </div>
+
+            <!-- 게임 초대 탭 -->
+            <div class="tab-content" id="invitesTab">
+                <ul class="friend-list" id="inviteList">
+                    <!-- 게임 초대 목록이 여기에 동적으로 추가됩니다 -->
+                </ul>
+                <div class="empty-state" id="invitesEmpty" style="display: none;">
+                    <div class="empty-icon">🎮</div>
+                    <div>받은 게임 초대가 없습니다.</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // 사이드바 열기
-        function openFriendSidebar() {
-            document.getElementById('sidebarOverlay').classList.add('active');
-            document.getElementById('friendSidebar').classList.add('active');
-            document.body.style.overflow = 'hidden'; // 스크롤 방지
-            
-            // 친구 목록 로드
-            loadFriendData();
-        }
+ <script th:inline="javascript">
+   $(document).ready(function() {
+       // 페이지 로드 시 자동으로 사이드바 열기
+       openFriendSidebar();
+       
+       // 사이드바 열기/닫기 이벤트
+       $('#closeSidebarBtn, #sidebarOverlay').on('click', function() {
+           closeFriendSidebar();
+       });
 
-        // 사이드바 닫기
-        function closeFriendSidebar() {
-            document.getElementById('sidebarOverlay').classList.remove('active');
-            document.getElementById('friendSidebar').classList.remove('active');
-            document.body.style.overflow = 'auto'; // 스크롤 복원
-        }
+       // 탭 전환 이벤트
+       $('.tab-btn').on('click', function() {
+           const tabName = $(this).data('tab');
+           switchTab(tabName);
+       });
 
-        // 탭 전환
-        function switchTab(tabName) {
-            // 탭 버튼 활성화
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // 탭 컨텐츠 전환
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(tabName + 'Tab').classList.add('active');
-        }
+       // 친구 검색 이벤트
+       $('#searchFriendBtn').on('click', searchFriend);
+       $('#friendSearchInput').on('keypress', function(e) {
+           if (e.which === 13) { // Enter key
+               searchFriend();
+           }
+       });
 
-        // 친구 검색
-        function searchFriend() {
-            const searchKeyword = document.getElementById('friendSearchInput').value.trim();
-            
-            if (!searchKeyword) {
-                alert('검색어를 입력해주세요.');
-                return;
-            }
-            
-            // AJAX 요청
-            $.ajax({
-                url: '/friend/search',
-                type: 'POST',
-                data: { searchKeyword: searchKeyword },
-                success: function(response) {
-                    if (response.success) {
-                        showSearchResult(response.user);
-                    } else {
-                        alert(response.message);
-                        hideSearchResult();
-                    }
-                },
-                error: function() {
-                    alert('검색 중 오류가 발생했습니다.');
-                }
-            });
-        }
+       // 친구 요청 보내기 이벤트
+       $('#sendRequestBtn').on('click', sendFriendRequest);
 
-        // 검색 결과 표시
-        function showSearchResult(user) {
-            const searchResult = document.getElementById('searchResult');
-            searchResult.querySelector('.user-name').textContent = user.userName;
-            searchResult.querySelector('.user-nickname').textContent = user.nickName;
-            searchResult.classList.add('show');
-        }
+       // ESC 키로 사이드바 닫기
+       $(document).on('keydown', function(e) {
+           if (e.which === 27) { // ESC key
+               closeFriendSidebar();
+           }
+       });
 
-        // 검색 결과 숨기기
-        function hideSearchResult() {
-            document.getElementById('searchResult').classList.remove('show');
-        }
+       // 초기 데이터 로드
+       loadFriendData();
+   });
 
-        // 친구 요청 보내기
-        function sendFriendRequest() {
-            const targetUser = document.querySelector('#searchResult .user-name').textContent;
-            
-            $.ajax({
-                url: '/friend/request',
-                type: 'POST',
-                data: { targetUserName: targetUser },
-                success: function(response) {
-                    alert(response.message);
-                    if (response.success) {
-                        hideSearchResult();
-                        document.getElementById('friendSearchInput').value = '';
-                    }
-                },
-                error: function() {
-                    alert('친구 요청 중 오류가 발생했습니다.');
-                }
-            });
-        }
+   // 사이드바 열기 함수 (전역 함수로 헤더에서 호출)
+   function openFriendSidebar() {
+       $('#sidebarOverlay').addClass('active');
+       $('#friendSidebar').addClass('active');
+       $('body').css('overflow', 'hidden');
+       loadFriendData(); // 사이드바 열 때마다 최신 데이터 로드
+   }
 
-        // 친구 데이터 로드
-        function loadFriendData() {
-            // AJAX로 친구 목록 및 요청 로드
-            $.ajax({
-                url: '/friend/notifications',
-                type: 'GET',
-                success: function(response) {
-                    if (response.success) {
-                        updateFriendList(response.friendRequests);
-                        // 여기서 친구 목록도 업데이트 (추가 AJAX 필요)
-                    }
-                }
-            });
-        }
+   // 사이드바 닫기
+   function closeFriendSidebar() {
+       $('#sidebarOverlay').removeClass('active');
+       $('#friendSidebar').removeClass('active');
+       $('body').css('overflow', 'auto');
+       hideSearchResult();
+   }
 
-        // 친구 목록 업데이트
-        function updateFriendList(requests) {
-            const requestList = document.getElementById('requestList');
-            const requestCount = document.getElementById('requestCount');
-            
-            if (requests && requests.length > 0) {
-                requestCount.textContent = requests.length;
-                // 요청 목록 업데이트 로직
-            } else {
-                requestCount.textContent = '0';
-            }
-        }
+   // 탭 전환
+   function switchTab(tabName) {
+       $('.tab-btn').removeClass('active');
+       $(`[data-tab="${tabName}"]`).addClass('active');
+       
+       $('.tab-content').removeClass('active');
+       $(`#${tabName}Tab`).addClass('active');
+   }
 
-        // 엔터키로 검색
-        document.getElementById('friendSearchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchFriend();
-            }
-        });
+   // 친구 검색
+   function searchFriend() {
+       const searchKeyword = $('#friendSearchInput').val().trim();
+       
+       if (!searchKeyword) {
+           alert('검색어를 입력해주세요.');
+           return;
+       }
+       
+       $.ajax({
+           url: '/friend/search',
+           type: 'POST',
+           data: { searchKeyword: searchKeyword },
+           success: function(response) {
+               if (response.success) {
+                   showSearchResult(response.user);
+               } else {
+                   alert(response.message);
+                   hideSearchResult();
+               }
+           },
+           error: function() {
+               alert('검색 중 오류가 발생했습니다.');
+           }
+       });
+   }
 
-        // ESC 키로 사이드바 닫기
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeFriendSidebar();
-            }
-        });
-    </script>
+   // 검색 결과 표시
+   function showSearchResult(user) {
+       $('#searchedUserName').text(user.userName);
+       $('#searchedUserNickname').text(user.nickName);
+       $('#searchResult').addClass('show');
+   }
+
+   // 검색 결과 숨기기
+   function hideSearchResult() {
+       $('#searchResult').removeClass('show');
+   }
+
+   // 친구 요청 보내기
+   function sendFriendRequest() {
+       const targetUser = $('#searchedUserName').text();
+       
+       $.ajax({
+           url: '/friend/request',
+           type: 'POST',
+           data: { targetUserName: targetUser },
+           success: function(response) {
+               alert(response.message);
+               if (response.success) {
+                   hideSearchResult();
+                   $('#friendSearchInput').val('');
+               }
+           },
+           error: function() {
+               alert('친구 요청 중 오류가 발생했습니다.');
+           }
+       });
+   }
+
+   // 친구 데이터를 Ajax로 실시간 로드
+   function loadFriendData() {
+       $.ajax({
+           url: '/friend/notifications',
+           type: 'GET',
+           success: function(response) {
+               if (response.success) {
+                   updateFriendList(response.friendList || []);
+                   updateRequestList(response.friendRequests || []);
+                   updateInviteList(response.gameInvites || []);
+               }
+           },
+           error: function() {
+               console.log('친구 데이터 로드 중 오류가 발생했습니다.');
+               // 오류 시 기존 Thymeleaf 데이터 사용
+               loadFriendListFallback();
+               loadFriendRequestsFallback();
+               loadGameInvitesFallback();
+           }
+       });
+   }
+
+   // 친구 목록 업데이트
+   function updateFriendList(friendList) {
+       $('#friendList').empty();
+       $('#friendCount').text(friendList.length);
+       
+       if (friendList.length === 0) {
+           $('#friendsEmpty').show();
+           return;
+       }
+       
+       $('#friendsEmpty').hide();
+       friendList.forEach(function(friend) {
+           const friendItem = createFriendItem(friend);
+           $('#friendList').append(friendItem);
+       });
+   }
+
+   // 친구 요청 목록 업데이트
+   function updateRequestList(friendRequests) {
+       $('#requestList').empty();
+       $('#requestCount').text(friendRequests.length);
+       
+       if (friendRequests.length === 0) {
+           $('#requestsEmpty').show();
+           return;
+       }
+       
+       $('#requestsEmpty').hide();
+       friendRequests.forEach(function(request) {
+           const requestItem = createRequestItem(request);
+           $('#requestList').append(requestItem);
+       });
+   }
+
+   // 게임 초대 목록 업데이트
+   function updateInviteList(gameInvites) {
+       $('#inviteList').empty();
+       $('#inviteCount').text(gameInvites.length);
+       
+       if (gameInvites.length === 0) {
+           $('#invitesEmpty').show();
+           return;
+       }
+       
+       $('#invitesEmpty').hide();
+       gameInvites.forEach(function(invite) {
+           const inviteItem = createInviteItem(invite);
+           $('#inviteList').append(inviteItem);
+       });
+   }
+
+   // 백업용 Thymeleaf 데이터 로드 함수들
+   function loadFriendListFallback() {
+       const friendList = /*[[${friendList}]]*/ [];
+       updateFriendList(friendList);
+   }
+
+   function loadFriendRequestsFallback() {
+       const friendRequests = /*[[${friendRequests}]]*/ [];
+       updateRequestList(friendRequests);
+   }
+
+   function loadGameInvitesFallback() {
+       const gameInvites = /*[[${gameInvites}]]*/ [];
+       updateInviteList(gameInvites);
+   }
+
+   // 친구 아이템 생성
+   function createFriendItem(friend) {
+       return $(`
+           <li class="friend-item">
+               <div class="friend-avatar">
+                   👤
+                   <div class="online-status offline"></div>
+               </div>
+               <div class="friend-info">
+                   <div class="friend-name">${friend.friendNickName || friend.friendUserName}</div>
+                   <div class="friend-status">오프라인</div>
+               </div>
+               <div class="friend-actions">
+                   <button class="action-btn message-btn" onclick="sendMessage('${friend.friendUserName}')">쪽지</button>
+                   <button class="action-btn invite-btn" onclick="inviteToGame('${friend.friendUserName}')">초대</button>
+                   <button class="action-btn remove-btn" onclick="removeFriend('${friend.friendUserName}')">삭제</button>
+               </div>
+           </li>
+       `);
+   }
+
+   // 친구 요청 아이템 생성
+   function createRequestItem(request) {
+       return $(`
+           <li class="friend-item">
+               <div class="friend-avatar">👤</div>
+               <div class="friend-info">
+                   <div class="friend-name">${request.requesterNickName || request.requesterName}</div>
+                   <div class="friend-status">친구 요청을 보냈습니다</div>
+               </div>
+               <div class="friend-actions">
+                   <button class="action-btn accept-btn" onclick="acceptFriendRequest(${request.relationNo})">수락</button>
+                   <button class="action-btn reject-btn" onclick="rejectFriendRequest(${request.relationNo})">거절</button>
+               </div>
+           </li>
+       `);
+   }
+
+   // 게임 초대 아이템 생성
+   function createInviteItem(invite) {
+       return $(`
+           <li class="friend-item">
+               <div class="friend-avatar">🎮</div>
+               <div class="friend-info">
+                   <div class="friend-name">${invite.senderNickName || invite.senderName}</div>
+                   <div class="friend-status">${invite.roomName}에 초대했습니다</div>
+               </div>
+               <div class="friend-actions">
+                   <button class="action-btn accept-btn" onclick="acceptGameInvite(${invite.inviteNo})">수락</button>
+                   <button class="action-btn reject-btn" onclick="rejectGameInvite(${invite.inviteNo})">거절</button>
+               </div>
+           </li>
+       `);
+   }
+
+   // 친구 요청 수락
+   function acceptFriendRequest(relationNo) {
+       $.ajax({
+           url: '/friend/accept',
+           type: 'POST',
+           data: { relationNo: relationNo },
+           success: function(response) {
+               alert(response.message);
+               if (response.success) {
+                   loadFriendData();
+               }
+           },
+           error: function() {
+               alert('친구 요청 수락 중 오류가 발생했습니다.');
+           }
+       });
+   }
+
+   // 친구 요청 거절
+   function rejectFriendRequest(relationNo) {
+       $.ajax({
+           url: '/friend/reject',
+           type: 'POST',
+           data: { relationNo: relationNo },
+           success: function(response) {
+               alert(response.message);
+               if (response.success) {
+                   loadFriendData();
+               }
+           },
+           error: function() {
+               alert('친구 요청 거절 중 오류가 발생했습니다.');
+           }
+       });
+   }
+
+   // 친구 삭제
+   function removeFriend(friendUserName) {
+       if (!confirm('정말로 이 친구를 삭제하시겠습니까?')) {
+           return;
+       }
+       
+       $.ajax({
+           url: '/friend/delete',
+           type: 'POST',
+           data: { friendUserName: friendUserName },
+           success: function(response) {
+               alert(response.message);
+               if (response.success) {
+                   loadFriendData();
+               }
+           },
+           error: function() {
+               alert('친구 삭제 중 오류가 발생했습니다.');
+           }
+       });
+   }
+
+   // 게임 초대 수락
+   function acceptGameInvite(inviteNo) {
+       $.ajax({
+           url: '/friend/invite/respond',
+           type: 'POST',
+           data: { 
+               inviteNo: inviteNo,
+               status: 'ACCEPTED'
+           },
+           success: function(response) {
+               alert(response.message);
+               if (response.success) {
+                   loadFriendData();
+                   // 게임방으로 이동하는 로직 추가 가능
+               }
+           },
+           error: function() {
+               alert('게임 초대 수락 중 오류가 발생했습니다.');
+           }
+       });
+   }
+
+   // 게임 초대 거절
+   function rejectGameInvite(inviteNo) {
+       $.ajax({
+           url: '/friend/invite/respond',
+           type: 'POST',
+           data: { 
+               inviteNo: inviteNo,
+               status: 'REJECTED'
+           },
+           success: function(response) {
+               alert(response.message);
+               if (response.success) {
+                   loadFriendData();
+               }
+           },
+           error: function() {
+               alert('게임 초대 거절 중 오류가 발생했습니다.');
+           }
+       });
+   }
+
+   // 쪽지 보내기 (미구현)
+   function sendMessage(userName) {
+       alert('쪽지 기능은 준비 중입니다.');
+   }
+
+   // 게임 초대하기 (미구현)
+   function inviteToGame(userName) {
+       alert('게임 초대 기능은 준비 중입니다.');
+   }
+</script>
 </body>
 </html>

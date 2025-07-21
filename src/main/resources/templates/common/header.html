@@ -69,11 +69,12 @@
         justify-content:center; align-items:center; z-index:9999;">
 
         <div style="background:#fff; padding:20px; border-radius:10px; width:280px; text-align:center;">
-            <h3 style="margin-top:0;">⚙ 설정</h3>
+            <h3 style="margin-top:0; color:black;" >⚙ 설정</h3>
 
             <label>
                 <input type="checkbox" id="modal-toggle-border"
                        th:checked="${session.borderEnabled == 'Y'}"> 테두리 보기
+                       	<button id="resetProfileBtn">기본 프로필로 설정</button>
             </label>
 
             <div style="margin-top: 15px;">
@@ -128,17 +129,76 @@
     });
     </script>
 
-	<!-- 상단 메뉴 -->
-	<div class="top-bar">
-		<a href="/">게임찾기</a> 
-		<a th:href="@{/room/createRoom}">게임생성</a> 
-		<a href="/">랭크게임</a>
-		<a th:href="@{/artshop}">아트샵</a>
-		<a th:href="@{/board/lounge}">라운지</a>
-		<a th:href="@{/message/inbox}">쪽지함</a>
-		<a th:href="@{/friend/list}">친구목록</a>
-		<a th:href="@{/notice/list}">공지사항</a>
-		<a th:href="@{/introduce/list}">게임소개</a>
-	</div>
 
+
+<div class="top-nav">
+  <ul class="menu">
+	
+
+
+    <!-- 게임 -->
+    <li class="menu-item">
+      <a href="/">게임찾기</a>
+    </li>
+
+    <!-- 라운지 -->
+    <li class="menu-item">
+      <a th:href="@{/board/lounge}">라운지</a>
+    </li>
+
+    <!-- 커뮤니티 (클릭 불가) -->
+    <li class="menu-item">
+      <span class="disabled-link">커뮤니티</span>
+    </li>
+
+    <!-- 상점 (클릭 불가) -->
+    <li class="menu-item">
+      <span class="disabled-link">상점</span>
+    </li>
+
+  </ul>
+
+  <!-- 전체 하위 메뉴 드롭다운 -->
+  <div class="all-submenus">
+    <div class="menu-group">
+      <!-- 게임 하위 메뉴 -->
+      <div class="menu-column">
+        <a th:href="@{/room/createRoom}">게임 생성</a>
+        <a href="/">랭크게임</a>
+      </div>
+      <!-- 라운지 하위 메뉴 -->
+      <div class="menu-column">
+        <a th:href="@{/board/gallery}">갤러리</a>
+        <a th:href="@{/board/video}">하이라이트 영상</a>
+      </div>
+      <!-- 커뮤니티 하위 메뉴 -->
+      <div class="menu-column">
+      	<a th:href="@{/friend/list}">친구목록</a>
+        <a th:href="@{/message/inbox}">쪽지함</a>
+        <a th:href="@{/notice/list}">공지사항</a>
+      </div>
+      <!-- 상점 하위 메뉴 -->
+      <div class="menu-column">
+        <a th:href="@{/artshop}">아트샵</a>
+        <a th:href="@{/itemshop}">아이템상점</a>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+document.getElementById("resetProfileBtn").addEventListener("click", function () {
+    if (confirm("기본 프로필로 변경할까요?")) {
+        fetch("/mypage/reset-profile", {
+            method: "POST"
+        }).then(response => {
+            if (response.ok) {
+                alert("기본 프로필로 변경되었습니다.");
+                location.reload(); // 새로고침으로 즉시 반영
+            } else {
+                alert("변경 실패");
+            }
+        });
+    }
+});
+</script>

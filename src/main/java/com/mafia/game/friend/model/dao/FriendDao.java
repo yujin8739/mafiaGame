@@ -132,4 +132,15 @@ public class FriendDao {
         params.put("userName", userName);
         return sqlSession.update("friendMapper.respondGameInvite", params);
     }
+
+    public boolean checkExistingRelation(SqlSessionTemplate sqlSession, String userName1, String userName2) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("userName1", userName1);
+        params.put("userName2", userName2);
+        
+        Integer count = sqlSession.selectOne("friendMapper.checkExistingRelation", params);
+        return count != null && count > 0;
+    }
+    
+   
 }

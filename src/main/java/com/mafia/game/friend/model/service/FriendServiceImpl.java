@@ -62,6 +62,7 @@ public class FriendServiceImpl implements FriendService {
     public int sendFriendRequest(FriendRelation friendRequest) {
         return friendDao.sendFriendRequest(sqlSession, friendRequest);
     }
+
     
     /**
      * 친구 요청 수락
@@ -118,6 +119,7 @@ public class FriendServiceImpl implements FriendService {
     /**
      * 게임 초대 보내기
      */
+    
     @Override
     public int sendGameInvite(GameInvite gameInvite) {
         return friendDao.sendGameInvite(sqlSession, gameInvite);
@@ -129,5 +131,12 @@ public class FriendServiceImpl implements FriendService {
     @Override
     public int respondGameInvite(int inviteNo, String status, String userName) {
         return friendDao.respondGameInvite(sqlSession, inviteNo, status, userName);
+    }
+    /**
+     * 기존 친구 관계/요청 여부 체크
+     */
+    @Override
+    public boolean checkExistingRelation(String userName1, String userName2) {
+        return friendDao.checkExistingRelation(sqlSession, userName1, userName2);
     }
 }
