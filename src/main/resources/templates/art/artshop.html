@@ -10,43 +10,11 @@
   
   <link rel="stylesheet" th:href="@{/css/common/header.css}" />
   <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-<style>
-  .sold-out-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* 반투명 검정 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-  }
-    .card-img-top {
-    width: 100%;
-    aspect-ratio: 4 / 3; /* 가로:세로 비율 유지 */
-    object-fit: cover;
-    transition: 0.3s ease;
-    display: block;
-  }
-
-  .sold-out-text {
-    font-size: 36px;
-    font-weight: bold;
-    color: white;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-  }
-
-  /* 이미지 살짝 흐리게 */
-  .sold-out-img {
-    filter: grayscale(70%) brightness(0.6);
-  }
-</style>
+  <link rel="stylesheet" th:href="@{/css/shop/artshop.css}" />
 </head>
 <body>
   <!-- Header 부분 -->
-  <div th:replace="common/header :: header"></div>
+  <div th:replace="~{common/header :: header}"></div>
 
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">

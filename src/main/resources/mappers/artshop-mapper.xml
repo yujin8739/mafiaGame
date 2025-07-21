@@ -66,5 +66,11 @@
     FROM USER_INFO
     WHERE USERNAME = #{userName}
   </select>
+  <update id="resetProfileImage" parameterType="string">
+    UPDATE USER_INFO
+    SET PROFILEIMAGE = NULL
+    WHERE USERNAME = #{userName}
+	</update>
+  
 
 </mapper>

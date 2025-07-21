@@ -65,9 +65,10 @@ public class ShopDao {
         return sqlSession.selectOne("artshopMapper.getProfileImage", userName);
     }
 
-
-
-
+    public int resetProfileImage(SqlSession sqlSession, String userName) {
+        return sqlSession.update("artshopMapper.resetProfileImage", userName);
+    }
+    
     
     
     

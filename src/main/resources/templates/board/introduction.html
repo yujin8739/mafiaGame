@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>게임소개</title>
+	<link href="https://webfontworld.github.io/gmarket/GmarketSans.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
@@ -16,6 +19,17 @@
     <div th:replace="common/header :: header"></div>
 
     <div class="intro-wrapper container text-center">
+	    <div class="intro-title-highlight">
+	        “마피아, 시민, 그리고 제 3의 세력”
+	    </div>
+	    
+    	<div class="game-intro-text">
+	        숨 막히는 추리와 반전의 연속, 마피아 게임의 세계!<br>
+	        각자 주어진 역할 속에서 진실과 거짓이 뒤엉킵니다.<br>
+			상대를 속이고, 의심하고, 믿음을 깨뜨리는 심리전의 끝!<br>
+	        마피아, 시민, 제3세력… 누가 이 밤의 주인이 될 것인가?
+	    </div>
+    	
         <!-- 팀 선택 영역 -->
 		<div id="team-select-wrapper">
 		    <div th:replace="introduceFragment/team :: team"></div>

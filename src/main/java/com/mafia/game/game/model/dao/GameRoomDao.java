@@ -120,4 +120,8 @@ public class GameRoomDao {
 	public void updateStop(SqlSessionTemplate sqlSession, int roomNo) {
 		sqlSession.update("gameRoomMapper.updateStop",roomNo);
 	}
+
+	public void deleteAllGameRooms(SqlSessionTemplate sqlSession) {
+		sqlSession.delete("gameRoomMapper.deleteAllGameRooms");
+	}
 }
