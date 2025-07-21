@@ -5,6 +5,7 @@ import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -66,17 +67,24 @@ public class BoardController {
 	@Value("${file.deletedVideo.path}")
 	private String deletedVideoPath;
 	
+	@Value("${file.deletedGalleryImage.path}")
+	private String deletedGalleryPath;
+	
 	/*=======================================라운지============================================*/
 	
 	@GetMapping("lounge") // 라운지 - 일반 게시판
-	public String loungeBoardList(@RequestParam(defaultValue = "1") int currentPage, String type, String condition,
+	public String loungeBoardList(@RequestParam(defaultValue = "1") int currentPage, String typeName, String condition,
 			String keyword, Model model) {
 		
 
 		HashMap<String, String> filterMap = new HashMap<>(); // 필터링을 위한 상태값,조건값,키워드 맵
-		filterMap.put("type", type);
+		filterMap.put("typeName", typeName);
 		filterMap.put("condition", condition);
 		filterMap.put("keyword", keyword);
+		filterMap.put("typeClass", null);
+		if(typeName != null && !"".equals(typeName) && !"자유".equals(typeName) && !"플레이".equals(typeName)) {
+			filterMap.put("typeClass", "3");
+		}
 
 		int listCount = service.listCount(filterMap); // 가져올 게시글 개수
 
@@ -127,7 +135,7 @@ public class BoardController {
 								 , MultipartFile uploadFile
 								 , HttpSession session
 								 , RedirectAttributes redirectAttributes
-								 , @RequestParam(defaultValue="0") int jobTypeNo) {
+								 , String jobTypeName) {
 		
 		BoardFile file = null; //저장될 첨부파일 1개 담을 변수 미리 선언
 		
@@ -138,12 +146,19 @@ public class BoardController {
 						    .originName(uploadFile.getOriginalFilename())
 						    .changeName(changeName)
 						    .type("image")
+						    .fileLevel(1)
 						    .build();
 			
 		}
 		
-		if(board.getTypeNo() == 0) {
-			board.setTypeNo(jobTypeNo);
+		String typeName = board.getTypeName();
+		if(typeName.equals("직업")) {
+			board.setTypeName(jobTypeName);
+			board.setTypeClass(3);
+		}else if(typeName.equals("자유")) {
+			board.setTypeClass(1);
+		}else if(typeName.equals("플레이")){
+			board.setTypeClass(2);
 		}
 		//두가지 경우 존재
 		//1)첨부 파일 1개 있을시, file != null
@@ -243,7 +258,7 @@ public class BoardController {
 	}
 	
 	@PostMapping("/lounge/update")
-	public String updateLoungeBoard(Board board, MultipartFile uploadFile, boolean deleteFile, RedirectAttributes redirectAttributes) {
+	public String updateLoungeBoard(Board board, String jobTypeName, MultipartFile uploadFile, boolean deleteFile, RedirectAttributes redirectAttributes) {
 		
 		BoardFile file = null;
 		
@@ -255,10 +270,19 @@ public class BoardController {
 		         			.changeName(changeName)
 		         			.type("image")
 		         			.boardNo(board.getBoardNo())
+		         			.fileLevel(1)
 		         			.build();
 			
 		}
-		
+		String typeName = board.getTypeName();
+		if(typeName.equals("직업")) {
+			board.setTypeName(jobTypeName);
+			board.setTypeClass(3);
+		}else if(typeName.equals("자유")) {
+			board.setTypeClass(1);
+		}else if(typeName.equals("플레이")){
+			board.setTypeClass(2);
+		}
 		int result = service.updateLoungeBoard(board,file,deleteFile);
 		
 		if(result > 0) { //게시글 및 파일 변경 완료
@@ -369,13 +393,198 @@ public class BoardController {
 	/*=======================================갤러리============================================*/
 	
 	@GetMapping("/gallery")
-	public String galleryBoardList() {
+	public String galleryBoardList(@RequestParam(defaultValue = "1") int currentPage,
+								   @RequestParam(defaultValue = "갤러리") String typeName,
+								   String condition,
+								   String keyword,
+								   Model model) {
+		
+		HashMap<String, String> filterMap = new HashMap<>(); // 필터링을 위한 상태값,조건값,키워드 맵
+		filterMap.put("typeName", typeName);
+		filterMap.put("condition", condition);
+		filterMap.put("keyword", keyword);
+
+		int listCount = service.listCount(filterMap); // 가져올 게시글 개수
+
+		int pageLimit = 10;
+		int boardLimit = 12;
+
+		PageInfo pi = Pagination.getPageInfo(listCount, currentPage, pageLimit, boardLimit); // 페이징 처리를 위한 정보
+
+		ArrayList<Board> boardList = service.boardList(filterMap, pi); // 가져올 게시글 목록
+		ArrayList<Board> topBoardList = service.topLikedList(filterMap);//가져올 top5 게시글 목록
+		
+		
+		boardList = enrichBoardInfo(boardList);
+		topBoardList = enrichBoardInfo(topBoardList);
+		
+		
+		model.addAttribute("topBoardList", topBoardList);
+		model.addAttribute("boardList", boardList);
+		model.addAttribute("pi", pi);
+		model.addAttribute("filterMap", filterMap);
 		return "board/gallery";
 	}
 	
 	@GetMapping("/gallery/upload")
 	public String glleryUploadForm() {
 		return "board/galleryUploadForm";
+	}
+	
+	@PostMapping("/gallery/upload")
+	public String uploadGallery(Board board, MultipartFile[] uploadFiles, RedirectAttributes redirectAttributes) {
+		
+		ArrayList<BoardFile> boardFiles = new ArrayList<>();
+		int fl = 1;
+		for(MultipartFile f : uploadFiles) {
+			String changeName = getChangedFileName(f);
+			BoardFile bf = BoardFile.builder()
+								    .originName(f.getOriginalFilename())
+								    .changeName(changeName)
+								    .type("image")
+								    .fileLevel(fl++)
+								    .build();
+			boardFiles.add(bf);
+		}
+		
+		try {
+			int result = service.uploadGalleryBoard(board, boardFiles);
+			
+			if(result > 0) {
+				
+				int i = 0;
+				for(BoardFile bf : boardFiles) {
+					saveImage(galleryImagePath, uploadFiles[i], bf.getChangeName());
+					i++;
+				}
+				redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 등록되었습니다");
+			}else {
+				redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			redirectAttributes.addFlashAttribute("msg", "서버 오류로 게시글 등록에 실패하였습니다");
+		}
+		
+		return "redirect:/board/gallery";
+		
+	}
+	
+	@GetMapping("/gallery/detail/{boardNo}")
+	public String galleryDetail(@PathVariable int boardNo, Model model, RedirectAttributes redirectAttributes) {
+		
+		
+		int result = service.increaseCount(boardNo);
+		
+		if(result > 0) {
+			Board board = service.loungeBoardDetail(boardNo);
+			board = BadgeSetUtil.setBadgeUrl(board);
+			model.addAttribute("board", board);
+			
+			return "board/galleryDetail";
+		}else {
+			redirectAttributes.addFlashAttribute("msg", "게시글 조회에 실패하였습니다");
+			return "board/gallery";
+		}
+		
+	}
+	
+	@GetMapping("/gallery/update/{boardNo}")
+	public String galleryUpdateForm(@PathVariable int boardNo, Model model) {
+		
+		
+		Board board = service.loungeBoardDetail(boardNo);
+		
+		model.addAttribute("board", board);
+		
+		return "board/galleryUpdateForm";
+	}
+	
+	@PostMapping("/gallery/update")
+	public String updateGallery(Board board,int[] remainFileList, MultipartFile[] newFiles, String deletedFileList
+							   ,RedirectAttributes redirectAttributes) {
+		
+		//새로운 이미지들 저장하기 위한 로직
+		ArrayList<BoardFile> boardFiles = new ArrayList<>();
+		for(MultipartFile f : newFiles) {
+			String changeName = getChangedFileName(f);
+			BoardFile bf = BoardFile.builder()
+								    .originName(f.getOriginalFilename())
+								    .changeName(changeName)
+								    .type("image")
+								    .build();
+			boardFiles.add(bf);
+		}
+		
+		
+		
+		try {
+			int result = service.updateGalleryBoard(board, remainFileList, boardFiles, deletedFileList);
+			
+			if(result > 0) {
+				int i = 0;
+				for(BoardFile bf : boardFiles) {
+					saveImage(galleryImagePath, newFiles[i], bf.getChangeName());
+					i++;
+				}
+				if (deletedFileList != null && !deletedFileList.isEmpty()) {
+					ArrayList<String> deletedFileNames = service.selectFileNames(deletedFileList);
+					for(String deletedFileName : deletedFileNames) {
+						if(!deleteFile(galleryImagePath, deletedGalleryPath, deletedFileName)) {
+							redirectAttributes.addFlashAttribute("msg", "파일 수정 중 오류가 발생하였습니다.");
+							return "redirect:/board/gallery";
+						};
+					}
+				}
+				redirectAttributes.addFlashAttribute("msg", "게시글이 정상적으로 수정되었습니다.");
+				
+			}else {
+				redirectAttributes.addFlashAttribute("msg", "게시글 수정에 실패하였습니다.");
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+			redirectAttributes.addFlashAttribute("msg", "서버 오류로 게시글 수정에 실패하였습니다.");
+		}
+		
+		return "redirect:/board/gallery";
+		
+	}
+	
+	@PostMapping("/gallery/delete/{boardNo}")
+	public String deleteGallery(@PathVariable int boardNo, RedirectAttributes redirectAttributes) {
+		Board board = service.loungeBoardDetail(boardNo);
+		
+		int result = service.deleteBoard(board);//삭제할 게시글 정보 보내기
+		
+		if(result > 0) { //BOARD 테이블에서 삭제 완료
+			
+			for(BoardFile file : board.getFileList()) {
+				if(!deleteFile(galleryImagePath, deletedGalleryPath, file.getChangeName())) {
+					redirectAttributes.addFlashAttribute("msg", "파일 삭제 중 오류가 발생하였습니다.");
+					return "redirect:/board/gallery";
+				};
+			}
+		
+			
+			ArrayList<Reply> replyList = board.getReplyList();
+			for(Reply reply : replyList) {
+				if(reply.getFileNo() != 0) {
+					if(deleteFile(replyImagePath,deletedReplyImagePath,reply.getChangeName())) {
+						log.debug("댓글 파일 삭제 완료");
+					}else {
+						redirectAttributes.addFlashAttribute("msg","댓글 첨부파일 삭제 중 오류가 발생하였습니다.");
+						return "redirect:/board/gallery";
+					}
+				}
+			}
+			
+			redirectAttributes.addFlashAttribute("msg","게시글이 정상적으로 삭제되었습니다.");
+			
+			return "redirect:/board/gallery";
+		}else {
+			redirectAttributes.addFlashAttribute("msg","게시글 삭제에 실패하였습니다.");
+			return "redirect:/board/gallery";
+		}
 	}
 	
 	
@@ -385,12 +594,12 @@ public class BoardController {
 	
 	@GetMapping("/video")
 	public String videoBoardList(@RequestParam(defaultValue = "1") int currentPage,
-								 @RequestParam(defaultValue = "video") String type,
+								 @RequestParam(defaultValue = "영상") String typeName,
 								 String condition,
 								 String keyword,
 								 Model model) {
 		HashMap<String, String> filterMap = new HashMap<>(); // 필터링을 위한 상태값,조건값,키워드 맵
-		filterMap.put("type", type);
+		filterMap.put("typeName", typeName);
 		filterMap.put("condition", condition);
 		filterMap.put("keyword", keyword);
 

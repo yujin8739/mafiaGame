@@ -156,11 +156,11 @@
 	
 	    <div class="form-group">
 	      <label for="category">카테고리</label>
-	      <select name="typeNo" id="category" required>
+	      <select name="typeName" id="category" required>
 	        <option value="">-- 선택하세요 --</option>
-	        <option value="1">자유</option>
-	        <option value="2">플레이</option>
-	        <option value="0">직업</option>
+	        <option value="자유">자유</option>
+	        <option value="플레이">플레이</option>
+	        <option value="직업">직업</option>
 	      </select>
 	    </div>
 	
@@ -231,13 +231,20 @@
 	  });
 	
 	  const rolesByTeam = {
-	    mafia: [{ text: "마피아", value: 3 }],
+	    mafia: [{ text: "마피아", value: "마피아" }],
 	    citizen: [
-	      { text: "경찰", value: 4 },
-	      { text: "의사", value: 5 },
-	      { text: "영매사", value: 6 }
+	      { text: "경찰", value: "경찰" },
+	      { text: "의사", value: "의사" },
+	      { text: "정치인", value: "정치인" },
+	      { text: "연인", value: "연인" },
+	      { text: "군인", value: "군인" },
+	      { text: "예언자", value: "예언자" },
+	      { text: "영매사", value: "영매사" },
 	    ],
-	    third: [{ text: "훼방꾼", value: 7 }]
+	    third: [
+    	  { text: "훼방꾼", value: "훼방꾼" },
+   		  { text: "도굴꾼", value: "도굴꾼" }
+	    ]
 	  };
 	
 	  $(function () {
@@ -248,16 +255,14 @@
 	    $("#category").on("change", function () {
 	      const categoryVal = $(this).val();
 	
-	      if (categoryVal === "0") {
+	      if (categoryVal === "직업") {
 	        $("#team-role-section").show();
 	        // name 속성 동적으로 추가
-	        $team.attr("name", "teamTypeNo");
-	        $role.attr("name", "jobTypeNo");
+	        $role.attr("name", "jobTypeName");
 	      } else {
 	        $("#team-role-section").hide();
 	        $("#role-group").hide();
 	        // name 속성 제거 (submit 안되도록)
-	        $team.removeAttr("name");
 	        $role.removeAttr("name");
 	      }
 	    });
@@ -287,7 +292,7 @@
 	    $("#loungeBoardForm").submit(function (e) {
 	      const category = $("#category").val();
 	
-	      if (category === "0") {
+	      if (category === "직업") {
 	        if (!$team.val()) {
 	          alert("팀을 선택해주세요.");
 	          $team.focus();

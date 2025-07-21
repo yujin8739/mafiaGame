@@ -14,7 +14,6 @@ public class Board { //일반 게시글, 사진 게시글, 동영상 게시글
 	
 	private int boardNo;//	BOARDNO	NUMBER(11,0)
 	private String userName;//	USERNAME	VARCHAR2(255 BYTE)
-	private int typeNo;//	TYPENO	NUMBER
 	private String title;//	TITLE	VARCHAR2(255 BYTE)
 	private String detail;//	DETAIL	CLOB
 	private String status;//	STATUS	VARCHAR2(1 BYTE)
@@ -22,10 +21,10 @@ public class Board { //일반 게시글, 사진 게시글, 동영상 게시글
 	private int viewCount;//	VIEWCOUNT	NUMBER
 	private int likeCount;//	LIKECOUNT	NUMBER
 	private int dislikeCount;//	DISLIKECOUNT	NUMBER
-	
-	
 	private String typeName; // 게시판 타입 db명
-	private String displayName; //사용자에게 보여지는 게시판 타입명
+	private int typeClass; // 게시판 분류용클래스 : 자유:1/플레이:2/직업:3/갤러리:4/비디오:5
+	
+	
 	private String nickName;
 	private String changeName;
 	private int rankPoint; //글 작성자 랭크포인트

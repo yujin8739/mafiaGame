@@ -45,6 +45,12 @@ public interface BoardService {
 
 	BoardFile videoDetail(int boardNo);
 
+	int uploadGalleryBoard(Board board, ArrayList<BoardFile> boardFiles);
+
+	int updateGalleryBoard(Board board, int[] remainFileList, ArrayList<BoardFile> boardFiles, String deletedFileList);
+
+	ArrayList<String> selectFileNames(String deletedFileList);
+
 
 
 

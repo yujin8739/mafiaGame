@@ -149,7 +149,8 @@
 	
 	<div class="card-body">
     <form th:action="@{/board/video/upload}" method="post" enctype="multipart/form-data">
-    	<input type="hidden" name="typeNo" value="9">
+    	<input type="hidden" name="typeName" value="영상">
+    	<input type="hidden" name="typeClass" value="5">
       <div class="form-group">
         <label for="title">제목</label>
         <input type="text" class="form-control" id="title" name="title" required placeholder="영상 제목을 입력하세요" />
