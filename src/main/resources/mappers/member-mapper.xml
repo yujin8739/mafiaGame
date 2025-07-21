@@ -69,14 +69,20 @@
 	    AND STATUS = 'Y'
 	</delete>
 
-    <select id="getUserNickList" resultType="string" parameterType="list">
-        SELECT NICKNAME
-        FROM USER_INFO
-        WHERE USERNAME IN
-        <foreach item="userName" collection="list" open="(" separator="," close=")">
-            #{userName}
-        </foreach>
-    </select>
+	<select id="getUserNickList" resultType="string" parameterType="list">
+	    SELECT NICKNAME
+	    FROM USER_INFO
+	    WHERE USERNAME IN
+	    <foreach item="userName" collection="list" open="(" separator="," close=")">
+	        #{userName}
+	    </foreach>
+	    ORDER BY CASE USERNAME
+	        <foreach item="userName" collection="list" index="idx">
+	            WHEN #{userName} THEN ${idx}
+	        </foreach>
+	    END
+	</select>
+
 
 	
 </mapper>

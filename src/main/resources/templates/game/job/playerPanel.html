@@ -23,7 +23,8 @@
 			}
 		
 			function setUserName(userDeathList, userNickList, container) {
-			    
+			    console.log(userDeathList);
+			    console.log(userNickList);
 			    userNickList.forEach((name, index) => {
 			        const div = document.createElement('div');
 			        div.className = 'slot';
@@ -72,7 +73,7 @@
 					setAlive();
 		            setStart();
 		            roomReload();
-					if(job === "mafia"){
+					if(job === 'mafia'){
 						sendBtn.disabled = false;
 						sendBtn.classList.remove('disabled-btn');
 						chatInput.disabled = false;
@@ -90,7 +91,7 @@
 								};
 							}
 						});
-					} else if (job === "doctor") {
+					} else if (job === 'doctor') {
 						sendBtn.disabled = false;
 						sendBtn.classList.remove('disabled-btn');
 						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
@@ -105,7 +106,7 @@
 								HealTo(userNickList[index],index);
 							};
 						});			        
-					} else if (job==="police") {
+					} else if (job==='police') {     
 						sendBtn.disabled = false;
 						sendBtn.classList.remove('disabled-btn');
 						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";

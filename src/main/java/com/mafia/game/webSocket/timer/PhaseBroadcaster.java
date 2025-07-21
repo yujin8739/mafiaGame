@@ -7,7 +7,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.vo.Message;
-import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.webSocket.server.GameRoomManager;
 
 import java.util.Date;
@@ -21,12 +20,12 @@ public class PhaseBroadcaster {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final List<WebSocketSession> sessions;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final GameRoomManager gameRoomManager;
+    private final int roomNo;
 
-    private int phaseIndex = 0;
+    private int phaseIndex = -1;
     private final String[] phases = { "NIGHT", "DAY", "VOTE" };
-    private final int[] durations = { 60, 60, 30 }; // 초 단위
-    private int roomNo;
-    private GameRoomManager gameRoomManager;
+    private final int[] durations = { 60, 60, 30 };
 
     public PhaseBroadcaster(List<WebSocketSession> sessions, int roomNo, GameRoomManager gameRoomManager) {
         this.sessions = sessions;
@@ -35,71 +34,86 @@ public class PhaseBroadcaster {
     }
 
     public void startPhases() {
-        schedulePhase();
+        executePhaseTransition();
     }
 
-    private void schedulePhase() {
-        int currentDuration = durations[phaseIndex];
-        String currentPhase = phases[phaseIndex];
+    private void executePhaseTransition() {
+        if (phaseIndex != -1) {
+            String previousPhase = phases[phaseIndex];
+
+            // ⭐️⭐️⭐️⭐️⭐️ 여기가 핵심 수정 부분입니다 ⭐️⭐️⭐️⭐️⭐️
+            // 'DAY'가 아닌 'NIGHT'가 끝났을 때 마피아 킬을 처리하도록 수정했습니다.
+            if ("NIGHT".equals(previousPhase)) {
+                gameRoomManager.mafiaKill(roomNo);
+            } else if ("VOTE".equals(previousPhase)) {
+                gameRoomManager.voteKill(roomNo);
+            }
+        }
+
         String winner = gameRoomManager.checkWinner(roomNo);
-    	if (winner.equals("MAFIA_WIN") || winner.equals("CITIZEN_WIN") || winner.equals("NEUTRALITY_WIN")) {
-    		currentPhase = winner;
-    		currentDuration = 0;
-    		broadcastPhase(currentPhase, currentDuration);
-    		gameRoomManager.updateStop(roomNo);
-    	} else {
-    		broadcastPhase(currentPhase, currentDuration);
-    		scheduler.schedule(() -> {
-    			phaseIndex = (phaseIndex + 1) % phases.length;
-    			schedulePhase();
-    		}, currentDuration, TimeUnit.SECONDS);
-    	}
-    	
+
+        if (!"CONTINUE".equals(winner)) {
+            endGameAndNotify(winner);
+            return;
+        } else {
+            phaseIndex = (phaseIndex + 1) % phases.length;
+            String nextPhase = phases[phaseIndex];
+            int nextDuration = durations[phaseIndex];
+
+            broadcastPhaseInfo(nextPhase, nextDuration);
+            scheduler.schedule(this::executePhaseTransition, nextDuration, TimeUnit.SECONDS);
+        }
     }
 
-    private void broadcastPhase(String phase, int duration) {
+    private void endGameAndNotify(String winner) {
         try {
-            String message = mapper.writeValueAsString(
-                new PhaseMessage(phase, duration)
-            );
-            try {
-            	if(duration == 0 && 
-            	(phase.equals("MAFIA_WIN") 
-            	|| phase.equals("CITIZEN_WIN") 
-            	|| phase.equals("NEUTRALITY_WIN"))) {
-            		Message msg = new Message(roomNo, UUID.randomUUID().toString(), phase, "게임이 종료되었습니다.", "시스템", new Date());
-            		
-            		gameRoomManager.sendMessage(msg);
-                    Map<String, Object> payload = new HashMap<>();
-                    payload.put("userName", msg.getUserName()); // nickName
-                    payload.put("msg", msg.getMsg());     // 메시지 본문
-                    payload.put("type", msg.getType());
+            Message msg = new Message(roomNo, UUID.randomUUID().toString(), winner, "게임이 종료되었습니다.", "시스템", new Date());
 
-                    message = mapper.writeValueAsString(payload);
-            	} else {
-	            	if(phase.equals("DAY")) {
-	            		gameRoomManager.mafiaKill(roomNo);
-	            	} else if (phase.equals("NIGHT")) {
-	            		gameRoomManager.voteKill(roomNo);
-	            	}
-            	}
-            } catch (Exception dbEx) {
-                System.err.println("[DB 오류] broadcastPhase 중 DB 접근 실패: " + dbEx.getMessage());
-                dbEx.printStackTrace();
-            }
-            for (WebSocketSession session : sessions) {
-                if (session.isOpen()) {
-                    session.sendMessage(new TextMessage(message));
-                }
-            }
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("userName", msg.getUserName());
+            payload.put("msg", msg.getMsg());
+            payload.put("type", winner);
+
+            String finalMessage = mapper.writeValueAsString(payload);
+            broadcast(finalMessage);
+
+            gameRoomManager.updateStop(roomNo);
+            stop();
 
         } catch (Exception e) {
+            System.err.println("게임 종료 메시지 전송 중 오류 발생: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    private void broadcastPhaseInfo(String phase, int duration) {
+        try {
+            PhaseMessage phaseMessage = new PhaseMessage(phase, duration);
+            String message = mapper.writeValueAsString(phaseMessage);
+            broadcast(message);
+        } catch (Exception e) {
+            System.err.println("페이즈 정보 브로드캐스팅 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void broadcast(String message) {
+        TextMessage textMessage = new TextMessage(message);
+        sessions.stream()
+                .filter(WebSocketSession::isOpen)
+                .forEach(session -> {
+                    try {
+                        session.sendMessage(textMessage);
+                    } catch (Exception e) {
+                        System.err.println("세션 " + session.getId() + "에 메시지 전송 실패: " + e.getMessage());
+                    }
+                });
+    }
+
     public void stop() {
-        scheduler.shutdownNow();
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
+        }
     }
 
     private static class PhaseMessage {
