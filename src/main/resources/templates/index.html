@@ -27,7 +27,8 @@
 		</div>
     	<div th:replace="~{chat/homeChat :: homeChat}"></div>
     	
-    	<div th:replace="~{friend/friendSidebar :: friendSidebarFragment}"></div>
+    	<!-- 주석 해놔야 문제없이작성 가능 문제 해경 후 작성하기 내일 사이드바 해결하자
+    	 <div th:replace="~{friend/friendSidebar :: friendSidebarFragment}"></div> -->
     </div>
     <div th:replace="~{common/footer :: footer}"></div>
     
@@ -64,7 +65,7 @@
 			}
 		});
 		
-		// 친구목록 메뉴 클릭 시 사이드바 열기
+		/* // 친구목록 메뉴 클릭 시 사이드바 열기
         const friendLink=document.querySelector('.top-nav a[href="/friend/list"]');
         if(friendLink){
             friendLink.addEventListener('click',function(e){
@@ -73,7 +74,7 @@
                     openFriendSidebar();
                 }
             });
-        }
+        } */
 	});
 	
 	function connect() {
