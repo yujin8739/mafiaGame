@@ -60,9 +60,34 @@
 	color: #f0f0f0;
 }
 	
-	  .form-group label {
-	    color: #ccc;
-	  }
+	  .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: block;
+      color: #f5f5f5;
+    }
+
+    select,
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      height: 48px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #2a2a2a;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    input::placeholder {
+      color: #aaa;
+    }
 	
 	  .form-control, .custom-file-input {
 	    background-color: #2c2c2c;
@@ -132,9 +157,39 @@
     <div class="card">
       <div class="card-header">게시글 수정</div>
       <div class="card-body">
-        <form th:action="@{/board/lounge/update}" method="post" enctype="multipart/form-data">
+        <form th:action="@{/board/lounge/update}" method="post" enctype="multipart/form-data" id="loungeUpdateForm">
           <input type="hidden" name="boardNo" th:value="${board.boardNo}" />
           <input type="hidden" name="detail" id="detailInput" />
+          
+          <div class="form-group">
+	      <label for="category">카테고리</label>
+	      <select name="typeName" id="category" required>
+	        <option value="">-- 선택하세요 --</option>
+	        <option value="자유">자유</option>
+	        <option value="플레이">플레이</option>
+	        <option value="직업">직업</option>
+	      </select>
+	    </div>
+	
+	    <!-- 팀 및 직업 선택 영역 -->
+	    <div id="team-role-section" style="display:none;">
+	      <div class="form-group">
+	        <label for="team">팀 선택</label>
+	        <select id="team-select" style="width: 100%; height: 48px; border-radius: 6px; border: 1px solid #555; background-color: #2a2a2a; color: #fff;">
+	          <option value="">-- 팀 선택 --</option>
+	          <option value="mafia">팀 마피아</option>
+	          <option value="citizen">팀 시민</option>
+	          <option value="third">팀 제3세력</option>
+	        </select>
+	      </div>
+	
+	      <div class="form-group" id="role-group" style="display:none;">
+	        <label for="typeNo">직업 선택</label>
+	        <select id="role-select" style="width: 100%; height: 48px; border-radius: 6px; border: 1px solid #555; background-color: #2a2a2a; color: #fff;">
+	          <!-- JS로 채움 -->
+	        </select>
+	      </div>
+	    </div>
 
           <div class="form-group">
             <label for="title">제목</label>
@@ -178,7 +233,7 @@
     const quill = new Quill('#editor', {
       theme: 'snow'
     });
-
+    
     // DB에서 받아온 HTML 내용 디코딩해서 넣기
     const rawHtml = /*[[${board.detail}]]*/ '';
     const decodedHtml = decodeHtmlEntities(rawHtml);
@@ -191,9 +246,9 @@
     }
 
     // 전송 전에 입력값을 숨은 input에 저장
-    document.querySelector('form').addEventListener('submit', function () {
+   document.querySelector('form').addEventListener('submit', function () {
       document.getElementById('detailInput').value = quill.root.innerHTML;
-    });
+    }); 
     
     document.getElementById('deleteFileBtn')?.addEventListener('click', function () {
         // 현재 파일 정보 숨김
@@ -211,6 +266,135 @@
 	        document.querySelector('form').appendChild(deleteInput);
         }
       });
+    
+    const rolesByTeam = {
+    	    mafia: [{ text: "마피아", value: "마피아" }],
+    	    citizen: [
+    	      { text: "경찰", value: "경찰" },
+    	      { text: "의사", value: "의사" },
+    	      { text: "정치인", value: "정치인" },
+    	      { text: "연인", value: "연인" },
+    	      { text: "군인", value: "군인" },
+    	      { text: "예언자", value: "예언자" },
+    	      { text: "영매사", value: "영매사" },
+    	    ],
+    	    third: [
+        	  { text: "훼방꾼", value: "훼방꾼" },
+       		  { text: "도굴꾼", value: "도굴꾼" }
+    	    ]
+    	  };
+    	
+    	  $(function () {
+    	    const $team = $("#team-select");
+    	    const $role = $("#role-select");
+    	
+    	    // 카테고리 변경 감지
+    	    $("#category").on("change", function () {
+    	      const categoryVal = $(this).val();
+    	
+    	      if (categoryVal === "직업") {
+    	        $("#team-role-section").show();
+    	        // name 속성 동적으로 추가
+    	        $role.attr("name", "jobTypeName");
+    	      } else {
+    	        $("#team-role-section").hide();
+    	        $("#role-group").hide();
+    	        // name 속성 제거 (submit 안되도록)
+    	        $role.removeAttr("name");
+    	      }
+    	    });
+    	
+    	    // 팀 선택 시 직업 옵션 설정
+    	    $team.on("change", function () {
+    	      const selectedTeam = $(this).val();
+    	
+    	      if (!rolesByTeam[selectedTeam]) {
+    	        $("#role-group").hide();
+    	        $role.empty();
+    	        return;
+    	      }
+    	
+    	      $role.empty();
+    	      $.each(rolesByTeam[selectedTeam], function (index, role) {
+    	        $role.append($("<option>", {
+    	          value: role.value,
+    	          text: role.text
+    	        }));
+    	      });
+    	
+    	      $("#role-group").show();
+    	    });
+    	
+    	    // 최종 submit 유효성 체크
+    	    $("#loungeUpdateForm").submit(function (e) {
+    	      const category = $("#category").val();
+    	
+    	      if (category === "직업") {
+    	        if (!$team.val()) {
+    	          alert("팀을 선택해주세요.");
+    	          $team.focus();
+    	          e.preventDefault();
+    	          return;
+    	        }
+    	
+    	        if (!$role.val()) {
+    	          alert("직업을 선택해주세요.");
+    	          $role.focus();
+    	          e.preventDefault();
+    	          return;
+    	        }
+    	      }
+    	    });
+    	  });
+    	  
+    	  
+    	  $(function () {
+    		    const typeName = /*[[${board.typeName}]]*/ '';
+    		    
+    		    const roleToTeamMap = {
+    		      "마피아": "mafia",
+    		      "경찰": "citizen",
+    		      "의사": "citizen",
+    		      "정치인": "citizen",
+    		      "연인": "citizen",
+    		      "군인": "citizen",
+    		      "예언자": "citizen",
+    		      "영매사": "citizen",
+    		      "훼방꾼": "third",
+    		      "도굴꾼": "third"
+    		    };
+
+    		    // 카테고리 초기값 설정
+    		    const isJob = typeName in roleToTeamMap;
+
+    		    if (isJob) {
+    		      // 1. 상위 카테고리 select 박스에서 "직업" 선택
+    		      $("#category").val("직업");
+    		      
+    		      // 2. 팀-직업 선택 영역 보이기
+    		      $("#team-role-section").show();
+    		      
+    		      // 3. 역할 select에 name 부여
+    		      $("#role-select").attr("name", "jobTypeName");
+
+    		      const teamKey = roleToTeamMap[typeName];
+    		      $("#team-select").val(teamKey).trigger("change");
+
+    		      // 4. 직업 select에서 해당 직업 선택 (role-select는 change 이벤트 후 렌더됨)
+    		      setTimeout(() => {
+    		        $("#role-select").val(typeName);
+    		        $("#role-group").show(); // 보장
+    		      }, 50);
+
+    		    } else {
+    		      // 자유, 플레이 등의 카테고리라면 단순 설정
+    		      $("#category").val(typeName);
+    		      $("#team-role-section").hide();
+    		      $("#role-select").removeAttr("name");
+    		    }
+    		  });
+    
+   
   </script>
 </body>
 </html>

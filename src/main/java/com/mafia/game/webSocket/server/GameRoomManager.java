@@ -263,9 +263,10 @@ public class GameRoomManager {
     	    
     		if(room.getCount() == null || jobCounts.size()<1) {
     			// 일반 모드일때 
-    			if (totalPlayers == 3) {
-	    	        mafiaCount = 2; citizenCount = 1; neutralCount = 0;
-	    	    } else if (totalPlayers == 6) {
+//    			if (totalPlayers == 3) {
+//	    	        mafiaCount = 1; citizenCount = 2; neutralCount = 0;
+//	    	    } else 
+	    	    	if (totalPlayers == 6) {
 	    	        mafiaCount = 2; citizenCount = 4; neutralCount = 0;
 	    	    } else if (totalPlayers == 7) {
 	    	        mafiaCount = 2; citizenCount = 5; neutralCount = 0;
@@ -439,17 +440,22 @@ public class GameRoomManager {
 
 				// 의사 치료 적중 실패시에만 동작
 				if (!isHealSuccess) {
+					Message msg = new Message(roomNo, UUID.randomUUID().toString(), "EVENT"
+							,chatService.selectEvent(6, memberService.getMemberByUserName(killedUser).getNickName()),
+							"시스템",new Date());
+					
+					sendMessage(msg);
+					
 					ObjectMapper mapper = new ObjectMapper();
 					Map<String, Object> payload = new HashMap<>();
 
-					payload.put("userName", "시스템"); // nickName
-					payload.put("msg",
-							chatService.selectEvent(6, memberService.getMemberByUserName(killedUser).getNickName())); // 메시지
-																														// 본문
+					payload.put("userName", msg.getUserName()); // nickName
+					payload.put("msg", msg.getMsg()); // 메시지																								// 본문
 					payload.put("type", "EVENT");
 					gameRoomService.updateJob(roomNo, updatedJobJson);
 
 					String json = mapper.writeValueAsString(payload);
+					
 
 					for (WebSocketSession s : getSessions(roomNo)) {
 						executor.submit(()->{
@@ -507,13 +513,19 @@ public class GameRoomManager {
 				gameRoomService.updateJob(roomNo, updatedJobJson);
 			}
 
-			String targetName = memberService.getMemberByUserName(mostKilldUser).getNickName();
-
+			String targetName = memberService.getMemberByUserName(mostKilldUser).getNickName();	
+			
+			Message msg = new Message(roomNo, UUID.randomUUID().toString(), "EVENT"
+					,chatService.selectEvent(9, targetName),
+					"시스템",new Date());
+			sendMessage(msg);
+			
+			
 			ObjectMapper mapper = new ObjectMapper();
-
 			Map<String, Object> payload = new HashMap<>();
-			payload.put("userName", "시스템"); // nickName
-			payload.put("msg", chatService.selectEvent(9, targetName)); // 메시지 본문
+
+			payload.put("userName", msg.getUserName()); // nickName
+			payload.put("msg", msg.getMsg()); // 메시지																								// 본문
 			payload.put("type", "EVENT");
 
 			String json = mapper.writeValueAsString(payload);
@@ -533,52 +545,70 @@ public class GameRoomManager {
 		}
 	}
 
+	
 	public String checkWinner(int roomNo) {
-		Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
-		String jobJson = (String) result.get("JOB");
-		ObjectMapper mapper = new ObjectMapper();
+	    Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+	    String userListJson = clobToString((Clob) result.get("USERLIST")); // 유저 목록 JSON 가져오기
+	    String jobJson = (String) result.get("JOB");               // 직업 목록 JSON 가져오기
+	    ObjectMapper mapper = new ObjectMapper();
 
-		try {
-			if (jobJson == null) {
-				return "NO_GAME_DATA";
-			}
+	    try {
+	        // 유저 목록이나 직업 정보가 하나라도 없으면 게임 시작 전으로 간주
+	        if (userListJson == null || jobJson == null || userListJson.isEmpty() || jobJson.isEmpty()) {
+	            // 아직 게임 데이터가 완전히 준비되지 않음
+	            return "CONTINUE"; 
+	        }
 
-			// JSON → List<Integer>
-			List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {
-			});
+	        // JSON을 List로 변환
+	        List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+	        List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
 
-			// MyBatis 호출
-			List<Job> jobDetails = gameRoomService.getJobDetails(jobList);
+	        // MyBatis를 통해 실제 Job 객체 정보를 가져옵니다. (이 부분은 기존과 동일)
+	        // 참고: jobList가 비어있으면 jobDetails도 비어있게 됩니다.
+	        List<Job> jobDetails = gameRoomService.getJobDetails(jobList);
 
-			// 카운트
-			int mafiaCount = 0;
-			int citizenCount = 0;
-			int neutralityCount = 0;
+	        // 방어 코드: 유저 수와 직업 수가 일치하는지 확인합니다.
+	        // 수가 다르거나, 유저가 없다면 아직 승패를 판정할 단계가 아님
+	        if (userList.isEmpty() || userList.size() != jobDetails.size()) {
+	            return "CONTINUE"; // 직업 배정이 완료되지 않았으므로 게임 계속 진행
+	        }
 
-			for (Job job : jobDetails) {
-				if (job.getJobClass() == 1) {
-					mafiaCount++;
-				} else if (job.getJobClass() == 2) {
-					citizenCount++;
-				} else if (job.getJobClass() == 3) {
-					neutralityCount++;
-				}
-			}
+	        // --- 이 검사를 통과: 모든 유저에게 직업이 정상적으로 배정된 상태 ---
 
-			// 승리 조건 체크
-			if (mafiaCount > (citizenCount + neutralityCount)) {
-				return "MAFIA_WIN";
-			} else if (mafiaCount == 0 && neutralityCount == 0) {
-				return "CITIZEN_WIN";
-			} else if (mafiaCount == 0 && citizenCount == 0) {
-				return "NEUTRALITY_WIN";
-			}
+	        // 카운트
+	        int mafiaCount = 0;
+	        int citizenCount = 0;
+	        int neutralityCount = 0;
 
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+	        for (Job job : jobDetails) {
+	            // 생존 여부를 확인하는 로직이 필요할 수 있습니다.
+	            // 예: if (job.isAlive()) { ... }
+	            if (job.getJobClass() == 1) { // 마피아팀
+	                mafiaCount++;
+	            } else if (job.getJobClass() == 2) { // 시민팀
+	                citizenCount++;
+	            } else if (job.getJobClass() == 3) { // 중립팀
+	                neutralityCount++;
+	            }
+	        }
 
-		return "CONTINUE";
+	        // 승리 조건 체크
+	        if (mafiaCount >= (citizenCount + neutralityCount)) {
+	            return "MAFIA_WIN";
+	        } else if (mafiaCount == 0 && neutralityCount == 0) {
+	            return "CITIZEN_WIN";
+	        } else if (mafiaCount == 0 && citizenCount == 0) {
+	            return "NEUTRALITY_WIN";
+	        }
+
+	    } catch (JsonProcessingException e) {
+	        e.printStackTrace();
+	        // JSON 파싱 중 에러가 발생해도 게임이 멈추지 않도록 CONTINUE 반환
+	        return "CONTINUE";
+	    }
+
+	    // 어떤 승리 조건에도 해당하지 않으면 게임 계속
+	    return "CONTINUE";
 	}
 
 	public void updateDayNo(int roomNo) {

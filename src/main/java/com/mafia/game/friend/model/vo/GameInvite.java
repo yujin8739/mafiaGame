@@ -20,4 +20,10 @@ public class GameInvite {
     private String senderNickName;      // 초대한 사용자의 닉네임
     private String receiverNickName;    // 초대받은 사용자의 닉네임
     private String roomName;            // 방 이름
+    
+    private String hostUserName;        // 방장 사용자명
+    private String userList;            // 참여자 목록 (JSON)
+    private String isGaming;            // 게임 중 여부 (Y/N)
+    private int headCount;              // 방 정원
+    private int currentUserCount;       // 현재 참여자 수
 }

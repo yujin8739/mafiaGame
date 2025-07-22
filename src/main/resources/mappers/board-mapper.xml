@@ -11,17 +11,16 @@
 	<select id="listCount" resultType="_int">
 		SELECT COUNT(*)
 		FROM BOARD B
-		JOIN BOARD_TYPE T USING(TYPENO)
 		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
 		<choose>
-			<when test="type == null || type ==''">
-				WHERE T.TYPENAME LIKE 'lounge%'
+			<when test="typeName == null || typeName ==''">
+				WHERE B.TYPECLASS IN (1,2,3)
 			</when>
-			<when test="type == 'lounge_job'">
-				WHERE T.TYPENAME LIKE 'lounge_job%'
+			<when test="typeName == '직업'">
+				WHERE B.TYPECLASS IN (3)
 			</when>
 			<otherwise>
-				WHERE T.TYPENAME LIKE #{type}
+				WHERE B.TYPENAME = #{typeName}
 			</otherwise>
 		</choose>
 		<if test="condition != ''">
@@ -66,10 +65,11 @@
 		    B.CREATEDATE,
 		    B.VIEWCOUNT,
 		    B.LIKECOUNT,
+		    B.TYPENAME,
+		    B.TYPECLASS,
 		    
 		    U.RANKPOINT,
 		    U.NICKNAME,
-		    T.DISPLAYNAME,
 		    
 		    F.CHANGENAME,
 		
@@ -79,8 +79,6 @@
 		FROM BOARD B
 		
 		JOIN USER_INFO U ON B.USERNAME = U.USERNAME
-		
-		JOIN BOARD_TYPE T ON B.TYPENO = T.TYPENO
 		
 		LEFT JOIN (
 		    SELECT BOARDNO, COUNT(*) AS REPLY_COUNT
@@ -93,19 +91,20 @@
 		    SELECT BOARDNO,CHANGENAME,COUNT(*) AS FILE_EXISTS
 		    FROM BOARD_FILE
 		    WHERE STATUS = 'Y'
+		    AND FILELEVEL = 1
 		    GROUP BY BOARDNO,CHANGENAME
 		  ) F ON B.BOARDNO = F.BOARDNO
 		
 		WHERE B.STATUS = 'Y'
 		<choose>
-			<when test="type == null || type ==''">
-				AND T.TYPENAME LIKE 'lounge%'
+			<when test="typeName == null || typeName ==''">
+				AND B.TYPECLASS IN (1,2,3)
 			</when>
-			<when test="type == 'lounge_job'">
-				AND T.TYPENAME LIKE 'lounge_job%'
+			<when test="typeName == '직업'">
+				AND B.TYPECLASS IN (3)
 			</when>
 			<otherwise>
-				AND T.TYPENAME LIKE #{type}
+				AND B.TYPENAME = #{typeName}
 			</otherwise>
 		</choose>
 		<if test="condition != ''">
@@ -137,10 +136,11 @@
 		    B.CREATEDATE,
 		    B.VIEWCOUNT,
 		    B.LIKECOUNT,
+		    B.TYPENAME,
+		    B.TYPECLASS,
 		    
 		    U.RANKPOINT,
 		    U.NICKNAME,
-		    T.DISPLAYNAME,
 		    
 		    F.CHANGENAME,
 		
@@ -151,7 +151,6 @@
 		
 		  JOIN USER_INFO U ON B.USERNAME = U.USERNAME
 		
-		  JOIN BOARD_TYPE T ON B.TYPENO = T.TYPENO
 		
 		  LEFT JOIN (
 		    SELECT BOARDNO, COUNT(*) AS REPLY_COUNT
@@ -164,19 +163,20 @@
 		    SELECT BOARDNO, CHANGENAME, COUNT(*) AS FILE_EXISTS
 		    FROM BOARD_FILE
 		    WHERE STATUS = 'Y'
+		    AND FILELEVEL = 1
 		    GROUP BY BOARDNO, CHANGENAME
 		  ) F ON B.BOARDNO = F.BOARDNO
 		
 		  WHERE B.STATUS = 'Y'
 		  <choose>
-			<when test="type == null || type ==''">
-				AND T.TYPENAME LIKE 'lounge%'
+			<when test="typeName == null || typeName ==''">
+				AND B.TYPECLASS IN (1,2,3)
 			</when>
-			<when test="type == 'lounge_job'">
-				AND T.TYPENAME LIKE 'lounge_job%'
+			<when test="typeName == '직업'">
+				AND B.TYPECLASS IN (3)
 			</when>
 			<otherwise>
-				AND T.TYPENAME LIKE #{type}
+				AND B.TYPENAME = #{typeName}
 			</otherwise>
 		</choose>
 		<if test="condition != ''">
@@ -211,7 +211,7 @@
 		<result property="boardNo" column="BOARDNO"/>
 		<result property="userName" column="USERNAME"/>
 		<result property="nickName" column="NICKNAME"/>
-		<result property="typeNo" column="TYPENO"/>
+		<result property="typeName" column="typeName"/>
 		<result property="title" column="TITLE"/>
 		<result property="detail" column="DETAIL"/>
 		<result property="status" column="STATUS"/>
@@ -249,7 +249,7 @@
 		      ,B.LIKECOUNT
 		      ,B.DISLIKECOUNT
 		      ,B.STATUS BOARD_STATUS
-		      ,T.DISPLAYNAME
+		      ,B.TYPENAME
 		      ,U.RANKPOINT
 		      ,F.FILENO AS BOARD_FILENO
 		      ,F.ORIGINNAME
@@ -259,9 +259,8 @@
               ,R.FILENO AS REPLY_FILENO
               ,FR.CHANGENAME AS REPLY_CHANGENAME
 		FROM BOARD B
-		JOIN BOARD_TYPE T USING(TYPENO)
 		JOIN USER_INFO U ON(B.USERNAME = U.USERNAME)
-		LEFT JOIN (SELECT FILENO,BOARDNO,STATUS,CHANGENAME,ORIGINNAME
+		LEFT JOIN (SELECT FILENO,BOARDNO,STATUS,CHANGENAME,ORIGINNAME,FILELEVEL
                    FROM BOARD_FILE
                    WHERE STATUS = 'Y') F ON(B.BOARDNO = F.BOARDNO)
 		LEFT JOIN (SELECT REPLYNO,BOARDNO,FILENO,STATUS
@@ -269,6 +268,7 @@
                    WHERE STATUS = 'Y') R ON(R.BOARDNO = B.BOARDNO)
 		LEFT JOIN BOARD_FILE FR ON(R.FILENO = FR.FILENO)
 		WHERE B.BOARDNO = #{boardNo}
+		ORDER BY F.FILELEVEL
 	</select>
 	
 	<select id="getBoardNo" resultType="_int">
@@ -279,13 +279,15 @@
 	<insert id="writeLoungeBoard"> <!-- 라운지 게시글 등록 -->
 		INSERT INTO BOARD(BOARDNO
 						 ,USERNAME
-						 ,TYPENO
+						 ,TYPENAME
+						 ,TYPECLASS
 						 ,TITLE
 						 ,DETAIL
 						 )
 					     VALUES(#{boardNo}
 				   			   ,#{userName}
-					   		   ,#{typeNo}
+					   		   ,#{typeName}
+					   		   ,#{typeClass}
 					   		   ,#{title}
 					   		   ,#{detail}
 					   		    )
@@ -296,12 +298,14 @@
 							  ,BOARDNO
 							  ,TYPE
 							  ,ORIGINNAME
-							  ,CHANGENAME)
+							  ,CHANGENAME
+							  ,FILELEVEL)
 					VALUES(SEQ_FNO.NEXTVAL
 						   ,#{boardNo}
 						   ,#{type}
 						   ,#{originName}
-						   ,#{changeName})
+						   ,#{changeName}
+						   ,#{fileLevel})
 							  
 	</insert>
 	
@@ -326,6 +330,8 @@
 		UPDATE BOARD
 		SET TITLE = #{title}
 		   ,DETAIL = #{detail}
+		   ,TYPENAME = #{typeName}
+		   ,TYPECLASS = #{typeClass}
 		WHERE BOARDNO = #{boardNo}
 	</update>
 	
@@ -542,7 +548,24 @@
 		AND STATUS = 'Y'
 	</select>
 	
+	<update id="updateFileLevel">
+		UPDATE BOARD_FILE
+		SET FILELEVEL = #{fileLevel}
+		WHERE FILENO = #{fileNo}
+	</update>
 	
+	<update id="deleteBoardFile">
+		UPDATE BOARD_FILE
+		SET STATUS = 'N'
+		WHERE FILENO = #{fileNo}
+	</update>
+	
+	
+	<select id="selectFileName" resultType="string">
+		SELECT CHANGENAME
+		FROM BOARD_FILE
+		WHERE FILENO = #{deletedId}
+	</select>
 	
 	
 	

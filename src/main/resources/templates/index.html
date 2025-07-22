@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/chat/homeChat.css}" />
     <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
     <link rel="stylesheet" th:href="@{/css/index.css}" />
+    <link rel="stylesheet" th:href="@{/css/friend/friendList.css}" />
     <link rel="icon" href="/favicon.ico">
 <!--     <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" /> -->
 	<link rel="stylesheet" th:href="@{/css/chat/roomList.css}" />
@@ -25,6 +26,9 @@
 		  <div th:replace="~{chat/roomList :: roomListFragment}"></div>
 		</div>
     	<div th:replace="~{chat/homeChat :: homeChat}"></div>
+    	
+    	<!-- 주석 해놔야 문제없이작성 가능 문제 해경 후 작성하기 내일 사이드바 해결하자
+    	 <div th:replace="~{friend/friendSidebar :: friendSidebarFragment}"></div> -->
     </div>
     <div th:replace="~{common/footer :: footer}"></div>
     
@@ -60,6 +64,17 @@
 				send();
 			}
 		});
+		
+		/* // 친구목록 메뉴 클릭 시 사이드바 열기
+        const friendLink=document.querySelector('.top-nav a[href="/friend/list"]');
+        if(friendLink){
+            friendLink.addEventListener('click',function(e){
+                e.preventDefault();
+                if(typeof openFriendSidebar==='function'){
+                    openFriendSidebar();
+                }
+            });
+        } */
 	});
 	
 	function connect() {

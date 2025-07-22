@@ -139,4 +139,29 @@ public class FriendServiceImpl implements FriendService {
     public boolean checkExistingRelation(String userName1, String userName2) {
         return friendDao.checkExistingRelation(sqlSession, userName1, userName2);
     }
+    
+    /**
+     * 친구 여부 확인
+     */
+    @Override
+    public boolean checkFriendship(String userName1, String userName2) {
+        return friendDao.checkFriendship(sqlSession, userName1, userName2);
+    }
+    
+    /**
+     * 기존 게임 초대 여부 확인 (중복 초대 방지)
+     */
+    @Override
+    public boolean checkExistingGameInvite(String receiverName, int roomNo) {
+        return friendDao.checkExistingGameInvite(sqlSession, receiverName, roomNo);
+    }
+    
+    /**
+     * 게임방 검증 (방 상태, 인원, 권한을 한번에 체크)
+     */
+    @Override
+    public String validateGameRoom(int roomNo, String senderUserName) {
+        return friendDao.validateGameRoom(sqlSession, roomNo, senderUserName);
+    }
+    
 }
