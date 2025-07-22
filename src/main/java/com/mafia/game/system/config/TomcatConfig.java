@@ -19,6 +19,8 @@ public class TomcatConfig {
         connector.setPort(80);
         connector.setSecure(false);
         connector.setRedirectPort(443);
+        
+        connector.setMaxPartCount(20);//  Multipart/form-data Part 개수 제한때문에 늘렸습니다 by 이수한
         return connector;
     }
 }

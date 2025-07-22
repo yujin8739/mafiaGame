@@ -50,7 +50,7 @@ public class PhaseBroadcaster {
             }
         }
 
-        String winner = gameRoomManager.checkWinner(roomNo);
+        String winner = gameRoomManager.checkWinner(roomNo,phaseIndex);
 
         if (!"CONTINUE".equals(winner)) {
             endGameAndNotify(winner);

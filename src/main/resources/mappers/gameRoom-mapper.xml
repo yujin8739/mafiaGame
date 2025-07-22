@@ -67,7 +67,8 @@
 	    UPDATE GAME_ROOM
 	    SET READYUSER = '[]',
 	    	ISGAMING = 'Y',
-	    	JOB = #{updatedJob}  
+	    	JOB = #{updatedJob},  
+	    	STARTJOB = #{updatedJob}   
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
@@ -99,7 +100,7 @@
     </select>
     
     <select id="getRoomJob" resultType="map" parameterType="int">
-	    SELECT USERLIST, JOB
+	    SELECT USERLIST, JOB, STARTJOB
 	    FROM GAME_ROOM
 	    WHERE ROOMNO = #{roomNo}
 	</select>
