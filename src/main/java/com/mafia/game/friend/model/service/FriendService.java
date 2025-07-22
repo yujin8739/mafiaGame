@@ -64,5 +64,21 @@ public interface FriendService {
      */
     int respondGameInvite(int inviteNo, String status, String userName);
     
+    /**
+     * 친구 여부 확인
+     */
+    boolean checkFriendship(String userName1, String userName2);
+    
+    /**
+     * 기존 게임 초대 여부 확인 (중복 초대 방지)
+     */
+    boolean checkExistingGameInvite(String receiverName, int roomNo);
+    
+    /**
+     * 게임방 검증 (방 상태, 인원, 권한을 한번에 체크)
+     * @return null이면 정상, 문자열이면 오류 메시지
+     */
+    String validateGameRoom(int roomNo, String senderUserName);
+    
 
 }

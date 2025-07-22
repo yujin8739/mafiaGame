@@ -28,18 +28,23 @@
     </resultMap>
 
     <!-- GameInvite ResultMap -->
-    <resultMap type="GameInvite" id="gameInviteResultMap">
-        <result property="inviteNo" column="INVITENO"/>
-        <result property="senderName" column="SENDERNAME"/>
-        <result property="receiverName" column="RECEIVERNAME"/>
-        <result property="roomNo" column="ROOMNO"/>
-        <result property="inviteStatus" column="INVITESTATUS"/>
-        <result property="createDate" column="CREATEDATE"/>
-        <result property="responseDate" column="RESPONSEDATE"/>
-        <result property="senderNickName" column="SENDER_NICKNAME"/>
-        <result property="receiverNickName" column="RECEIVER_NICKNAME"/>
-        <result property="roomName" column="ROOM_NAME"/>
-    </resultMap>
+	<resultMap type="GameInvite" id="gameInviteResultMap">
+	  <result property="inviteNo" column="INVITENO"/>
+	  <result property="senderName" column="SENDERNAME"/>
+	  <result property="receiverName" column="RECEIVERNAME"/>
+	  <result property="roomNo" column="ROOMNO"/>
+	  <result property="inviteStatus" column="INVITESTATUS"/>
+	  <result property="createDate" column="CREATEDATE"/>
+	  <result property="responseDate" column="RESPONSEDATE"/>
+	  <result property="senderNickName" column="SENDER_NICKNAME"/>
+	  <result property="receiverNickName" column="RECEIVER_NICKNAME"/>
+	  <result property="roomName" column="ROOM_NAME"/>
+	  <result property="hostUserName" column="HOST_USERNAME"/>
+	  <result property="userList" column="USER_LIST"/>
+	  <result property="isGaming" column="IS_GAMING"/>
+	  <result property="headCount" column="HEAD_COUNT"/>
+	  <result property="currentUserCount" column="CURRENT_USER_COUNT"/>
+	</resultMap>
 
     <!-- 친구 목록 조회 -->
     <select id="getFriendList" parameterType="String" resultMap="friendListResultMap">
@@ -91,7 +96,13 @@
             gi.RESPONSEDATE,
             u1.NICKNAME AS SENDER_NICKNAME,
             u2.NICKNAME AS RECEIVER_NICKNAME,
-            gr.ROOMNAME AS ROOM_NAME
+            gr.ROOMNAME AS ROOM_NAME,
+            gr.MASTER AS HOST_USERNAME,
+            gr.USERLIST AS USER_LIST,
+            gr.ISGAMING AS IS_GAMING,
+            gr.HEADCOUNT AS HEAD_COUNT,
+            gr.COUNT AS CURRENT_USER_COUNT
+            
         FROM GAME_INVITE gi
         LEFT JOIN USER_INFO u1 ON gi.SENDERNAME = u1.USERNAME
         LEFT JOIN USER_INFO u2 ON gi.RECEIVERNAME = u2.USERNAME
@@ -137,17 +148,20 @@
     </update>
 
     <!-- 친구 요청 정보 조회 (ID로) -->
-    <select id="getFriendRequestById" parameterType="_int" resultMap="friendRelationResultMap">
-        SELECT 
-            RELATIONNO,
-            REQUESTERNAME,
-            RECEIVERNAME,
-            RECEIVERSTATUS,
-            REQUESTDATE,
-            RESPONSEDATE
-        FROM FRIEND_RELATION
-        WHERE RELATIONNO = #{relationNo}
-    </select>
+	<select id="getFriendRequestById" parameterType="_int" resultMap="friendRelationResultMap">
+		fr.RELATIONNO,
+		fr.REQUESTERNAME,
+		fr.RECEIVERNAME,
+		fr.RECEIVERSTATUS,
+		fr.REQUESTDATE,
+		fr.RESPONSEDATE,
+		u1.NICKNAME AS REQUESTER_NICKNAME,
+		u2.NICKNAME AS RECEIVER_NICKNAME
+		FROM FRIEND_RELATION fr
+		LEFT JOIN USER_INFO u1 ON fr.REQUESTERNAME = u1.USERNAME
+		LEFT JOIN USER_INFO u2 ON fr.RECEIVERNAME = u2.USERNAME
+		WHERE fr.RELATIONNO = #{relationNo}
+	</select>
 
     <!-- 친구 목록에 추가 -->
     <insert id="addFriendToList" parameterType="FriendList">
@@ -214,7 +228,41 @@
           AND RECEIVERNAME = #{userName}
           AND INVITESTATUS = 'PENDING'
     </update>
-	
+    
+    <!-- 친구 여부 확인 -->
+    <select id="checkFriendship" parameterType="map" resultType="_int">
+        SELECT COUNT(*)
+        FROM FRIEND_LIST 
+        WHERE ((USERNAME = #{userName1} AND FRIENDUSERNAME = #{userName2})
+           OR (USERNAME = #{userName2} AND FRIENDUSERNAME = #{userName1}))
+          AND STATUS = 'ACCEPTED'
+    </select>
+
+    <!-- 기존 게임 초대 여부 확인 (중복 초대 방지) -->
+    <select id="checkExistingGameInvite" parameterType="map" resultType="_int">
+        SELECT COUNT(*)
+        FROM GAME_INVITE
+        WHERE RECEIVERNAME = #{receiverName}
+          AND ROOMNO = #{roomNo}
+          AND INVITESTATUS = 'PENDING'
+    </select>
+
+    <!-- 게임방 검증 (한번에 모든 검증 처리) -->
+    <select id="validateGameRoom" parameterType="map" resultType="String">
+        SELECT 
+            CASE 
+                WHEN COUNT(*) = 0 THEN '존재하지 않는 게임방입니다.'
+                WHEN MAX(CASE WHEN ISGAMING = 'Y' THEN 1 ELSE 0 END) = 1 THEN '이미 게임이 시작된 방입니다.'
+                WHEN MAX(TO_NUMBER(NULLIF(COUNT, ''))) >= MAX(HEADCOUNT) THEN '방이 가득 찼습니다.'
+                WHEN MAX(CASE WHEN (MASTER = #{senderUserName} OR USERLIST LIKE '%"' || #{senderUserName} || '"%') THEN 1 ELSE 0 END) = 0 
+                     THEN '이 방에 초대할 권한이 없습니다.'
+                ELSE NULL
+            END AS validation_message
+        FROM GAME_ROOM
+        WHERE ROOMNO = #{roomNo}
+    </select>
+    
+    
 	<!-- 기존 친구 관계/요청 여부 체크 -->
 	<select id="checkExistingRelation" parameterType="map" resultType="_int">
 	    SELECT COUNT(*)
@@ -232,5 +280,4 @@
 	           OR (USERNAME = #{userName2} AND FRIENDUSERNAME = #{userName1} AND STATUS = 'ACCEPTED')
 	    )
 	</select>
-	
 </mapper>

@@ -466,9 +466,53 @@
        alert('쪽지 기능은 준비 중입니다.');
    }
 
-   // 게임 초대하기 (미구현)
+   // 게임 초대하기
    function inviteToGame(userName) {
-       alert('게임 초대 기능은 준비 중입니다.');
+		
+	   //방번호 입력
+       const roomNo = prompt(`${userName}님을 게임에 초대하기\n\n초대할 게임방 번호를 입력하세요:`);
+       
+       if (!roomNo) {
+           return; // 취소
+       }
+       
+       if (isNaN(roomNo) || roomNo <= 0) {
+           alert('올바른 방번호를 입력해주세요.');
+           return;
+       }
+       
+       // 확인 메시지
+       if (!confirm(`${userName}님을 ${roomNo}번 방에 초대하시겠습니까?`)) {
+           return;
+       }
+       
+       // 버튼 비활성화 (중복 클릭 방지)
+       const inviteButtons = $('button[onclick*="inviteToGame"]');
+       inviteButtons.prop('disabled', true).text('초대중...');
+       
+       $.ajax({
+           url: '/friend/invite',
+           type: 'POST',
+           data: { 
+               inviteUserName: userName,
+               roomNo: parseInt(roomNo)
+           },
+           success: function(response) {
+               if (response.success) {
+                   alert('✅ ' + response.message);
+               } else {
+                   alert('❌ ' + response.message);
+               }
+           },
+           error: function(xhr, status, error) {
+               console.error('게임 초대 오류:', error);
+               alert('❌ 게임 초대 중 오류가 발생했습니다.');
+           },
+           complete: function() {
+               // 버튼 상태 복원
+               inviteButtons.prop('disabled', false).text('초대');
+           }
+       });
    }
 </script>
 </body>

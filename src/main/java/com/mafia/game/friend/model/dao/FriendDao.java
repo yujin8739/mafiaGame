@@ -142,5 +142,40 @@ public class FriendDao {
         return count != null && count > 0;
     }
     
+    /**
+     * 친구 여부 확인
+     */
+    public boolean checkFriendship(SqlSessionTemplate sqlSession, String userName1, String userName2) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("userName1", userName1);
+        params.put("userName2", userName2);
+        
+        Integer count = sqlSession.selectOne("friendMapper.checkFriendship", params);
+        return count != null && count > 0;
+    }
+    
+    /**
+     * 기존 게임 초대 여부 확인 (중복 초대 방지)
+     */
+    public boolean checkExistingGameInvite(SqlSessionTemplate sqlSession, String receiverName, int roomNo) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("receiverName", receiverName);
+        params.put("roomNo", roomNo);
+        
+        Integer count = sqlSession.selectOne("friendMapper.checkExistingGameInvite", params);
+        return count != null && count > 0;
+    }
+    
+    /**
+     * 게임방 검증 (방 상태, 인원, 권한을 한번에 체크)
+     */
+    public String validateGameRoom(SqlSessionTemplate sqlSession, int roomNo, String senderUserName) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("roomNo", roomNo);
+        params.put("senderUserName", senderUserName);
+        
+        return sqlSession.selectOne("friendMapper.validateGameRoom", params);
+    }
+    
    
 }
