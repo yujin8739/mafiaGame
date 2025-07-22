@@ -136,7 +136,7 @@
   </style>
 </head>
 <body>
-  <div th:replace="common/header :: header"></div>
+  <div th:replace="~{common/header :: header}"></div>
 
   <div class="upload-wrapper">
   	<div class="card">
@@ -185,7 +185,7 @@
     </div>
   </div>
 
-  <div th:replace="common/footer :: footer"></div>
+  <div th:replace="~{common/footer :: footer}"></div>
   
   <script>
   // Quill 에디터 초기화
