@@ -1,5 +1,6 @@
 package com.mafia.game.system.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -7,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class TomcatConfig {
+	
     @Bean
     public WebServerFactoryCustomizer<TomcatServletWebServerFactory> servletContainer() {
         return factory -> factory.addAdditionalTomcatConnectors(createHttpConnector());
@@ -19,6 +21,8 @@ public class TomcatConfig {
         connector.setPort(80);
         connector.setSecure(false);
         connector.setRedirectPort(443);
+        
+        connector.setMaxPartCount(20);//  Multipart/form-data Part 개수 제한때문에 늘렸습니다 by 이수한
         return connector;
     }
 }
