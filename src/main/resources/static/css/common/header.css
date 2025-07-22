@@ -3,7 +3,9 @@ body {
   background-size: cover;        /* ✅ 화면에 꽉 차게 확대/축소 */
   background-repeat: no-repeat;  /* ✅ 반복 없이 한 번만 */
   background-position: center;   /* ✅ 가운데 정렬 */
-  height: 100vh;                 /* ✅ 높이 100% (전체 화면) */
+  min-width: 1300px;  /* 최소 가로 폭 고정 */
+  min-height: 1000px; /* 최소 높이 고정 */
+  overflow-x: auto;   /* 가로 스크롤 허용 */               /* ✅ 높이 100% (전체 화면) */
   margin: 0;                     /* ✅ 브라우저 기본 여백 제거 */
   background-attachment: fixed;
 }
