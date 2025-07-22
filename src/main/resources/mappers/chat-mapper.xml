@@ -15,16 +15,18 @@
 
     <select id="selectMessagesByRoom" parameterType="int" resultType="Message">
         SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} 
-        AND (TYPE = 'chat' OR TYPE = 'event' OR TYPE = 'ready' 
-        OR TYPE = 'unReady' OR TYPE = 'enter' OR TYPE = 'leave') 
+        AND (TYPE = 'chat' OR TYPE = 'EVENT' OR TYPE = 'ready' 
+        OR TYPE = 'unReady' OR TYPE = 'enter' OR TYPE = 'leave' 
+        OR TYPE = 'MAFIA_WIN' OR TYPE = 'CITIZEN_WIN' OR TYPE = 'NEUTRALITY_WIN') 
         ORDER BY CHATDATE DESC
     </select>  
     
     <select id="selectTypeMessagesByRoom" resultType="Message">
         SELECT * FROM MESSAGE WHERE ROOMNO = #{roomNo} AND 
         (TYPE = #{type} OR TYPE = 'chat' 
-        OR TYPE = 'event' OR TYPE = 'ready' 
-        OR TYPE = 'unReady' OR TYPE = 'enter' OR TYPE = 'leave') 
+        OR TYPE = 'EVENT' OR TYPE = 'ready' 
+        OR TYPE = 'unReady' OR TYPE = 'enter' OR TYPE = 'leave'
+        OR TYPE = 'MAFIA_WIN' OR TYPE = 'CITIZEN_WIN' OR TYPE = 'NEUTRALITY_WIN') 
         ORDER BY CHATDATE DESC
     </select>
     

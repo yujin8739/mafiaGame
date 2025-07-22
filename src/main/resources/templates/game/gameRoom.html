@@ -75,7 +75,8 @@
 		const phoneModal = document.getElementById("phoneModal");
 		const toggleBtn = document.getElementById("togglePhoneModalBtn");
 		const closeBtn = phoneModal.querySelector("#closePhoneModalBtn");
-
+		const chatInput = document.getElementById('chat');
+		
         //블록검색용
         let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
         const pageSize = 30; // 한 블록에 몇 개의 메시지를 가져올지
@@ -87,6 +88,10 @@
         var job = 'none';
         let jobObj;
         var isNight = false;
+        let timerId = null;
+        
+        //알림 줄지 확인용(시간부족으로 이런식으로 만듬)
+        let isStart = false;
 
         /* (요청: remoteStream 삭제하지 말고 유지) */
         const remoteStream = new MediaStream(); // (현재 사용 X / DEPRECATED 용도)
@@ -301,7 +306,6 @@
             if (!sent) safeSend(msg);
         }
         document.getElementById('sendBtn').addEventListener('click', () => {
-            const chatInput = document.getElementById('chat');
             const val = chatInput.value.trim();
             if (val.length > 0) {
                 sendChatMessage(val);
@@ -373,6 +377,7 @@
                 case 'CITIZEN_WIN':
                 case 'NEUTRALITY_WIN':
                     setStop();
+                    addEtcMsg(msgData);
                     break;
                 default:
                     displayChatMessage(msgData);
@@ -438,18 +443,35 @@
                     jobObj = myJob;
                     job = myJob.jobName;
                     chatLoad(job);
-                    if (isStart) {
+                    if (!isStart) {
                         alert("당신의 직업은 " + myJob.jobVisible + "입니다.");
+                        isStart = true;
                     }
                     console.log();
                 }
             })
         }
-        function setStop() {
+/*         function setStop() {
             isGaming = false;
             roomReload();
+            
+            
             enableGameUI();
         }
+         */
+		function setStop() {
+			isStart = false;
+			isGaming = false;
+			jobObj = null;
+			job = 'none';
+			roomReload();
+			
+			sendBtn.disabled = false; 
+			sendBtn.classList.remove('disabled-btn'); 
+
+			chatInput.disabled = false; 
+			chatInput.placeholder = "메시지를 입력하세요"; 
+		}
         function roomReload() {
             $.ajax({
                 url: '/room/reloadRoom',
@@ -472,10 +494,12 @@
             });
         }
         function userLoad(room) {
+        	console.log(room.userList);
             $.ajax({
                 url: '/room/userNickList',
                 data: { userList: room.userList },
                 success: function (userNickList) {
+                	console.log(userNickList)
                     setUserNick(userNickList);
                     $.ajax({
                         url: '/room/userDeathList',
@@ -937,6 +961,12 @@
                 }
             });
         }
+        
+		chatArea.addEventListener("scroll", function () {
+			if (chatArea.scrollTop === 0 && !isLastPage && !isLoading) {
+		        chatLoad();
+		    }
+		});
 
         //직업동작		
         function setAlive() {
@@ -952,33 +982,39 @@
             });
         }
 
-        function voteKill(targetName) {
-            $.ajax({
-                url: "/room/voteResult",
-                method: "GET",
-                data: {
-                    roomNo: roomNo,
-                    dayNo: dayNo,
-                    targetName: targetName,
-                },
-                success: function (kill) {
-                    if (!kill) return;
+		function voteKill(targetName) {
+		    $.ajax({
+		        url: "/room/voteResult",
+		        method: "GET",
+		        data: {
+		            roomNo: roomNo,
+		            dayNo: dayNo,
+		            targetName: targetName,
+		        },
+		        success: function (kill) {
+		            if (!kill) return;
 
-                    let killList = [];
-                    try {
-                        killList = JSON.parse(kill);
-                        const total = document.querySelectorAll(".slot").length;
-                        const current = killList.length;
-                        document.getElementById("killCount").innerText = "투표: " + current + " / " + total;
-                    } catch (e) {
-                        console.error("투표 리스트 파싱 실패", e);
-                    }
-                },
-                error: function () {
-                    alert("투표 요청 중 오류가 발생했습니다.");
-                }
-            });
-        }
+		            let killList = [];
+		            try {
+		                console.log(kill);
+
+		                // kill.vote가 JSON 문자열이므로 이 부분만 parse
+		                if (kill.vote) {
+		                    killList = JSON.parse(kill.vote);
+		                }
+
+		                const total = document.querySelectorAll(".slot").length;
+		                const current = killList.length;
+		                document.getElementById("killCount").innerText = "투표: " + current + " / " + total;
+		            } catch (e) {
+		                console.error("투표 리스트 파싱 실패", e);
+		            }
+		        },
+		        error: function () {
+		            alert("투표 요청 중 오류가 발생했습니다.");
+		        }
+		    });
+		}
 
         function mafiaKill(targetName) {
             $.ajax({
@@ -1029,6 +1065,22 @@
                 }
             });
         }
+        
+		function startTimer(phase, seconds) {
+			remainTime = seconds;
+			if(timerId) clearInterval(timerId);
+			
+			hasKilld = false;
+					  
+			timerId = setInterval(() => {
+				if(remainTime <= 0) {
+					clearInterval(timerId);
+					return;
+				}
+				remainTime--;
+				updateTimerUI(phase, remainTime);
+			}, 1000);
+		}
     </script>
 </body>
 
