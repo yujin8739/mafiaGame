@@ -187,38 +187,53 @@
   </div>
   
   <div style="position: fixed; top: 10px; left: 10px; z-index: 9999; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px;">
-      <audio id="bgm-audio" src="/music/test1.mp3" loop></audio>
+      <audio id="bgm-audio" src="/music/test1.mp3" th:src="@{/music/test1.mp3}" loop></audio>
       <button id="play-btn">▶️ 재생</button>
       <button id="pause-btn">⏸️ 정지</button>
   </div>
 
-	<script>
-	window.onload = () => {
-	    const audio = document.getElementById('bgm-audio');
-	    const playBtn = document.getElementById('play-btn');
-	    const pauseBtn = document.getElementById('pause-btn');
-	
-	    const bgmState = localStorage.getItem('bgmState');
-	
-	    if (bgmState === 'playing') {
-	        audio.play().catch(() => {
-	            console.log("자동 재생이 차단되었습니다. 사용자가 직접 재생해야 합니다.");
-	        });
-	    }
-	
-	    playBtn.onclick = () => {
-	        audio.play();
-	        console.log("오디오 재생됨");
-	        localStorage.setItem('bgmState', 'playing');
-	    };
-	
-	    pauseBtn.onclick = () => {
-	        audio.pause();
-	        console.log("오디오 정지됨");
-	        localStorage.setItem('bgmState', 'paused');
-	    };
-	};
-	</script>
+  <script>
+    window.onload = () => {
+      const audio = document.getElementById('bgm-audio');
+      const playBtn = document.getElementById('play-btn');
+      const pauseBtn = document.getElementById('pause-btn');
+
+      const bgmState = localStorage.getItem('bgmState');
+      const savedTime = parseFloat(localStorage.getItem('bgmTime')) || 0;
+
+      // 저장된 재생 위치 복원
+      audio.currentTime = savedTime;
+
+      if (bgmState === 'playing') {
+        audio.play().catch(() => {
+          console.log("자동 재생이 차단되었습니다. 사용자가 직접 재생해야 합니다.");
+        });
+      }
+
+      playBtn.onclick = () => {
+        audio.play();
+        localStorage.setItem('bgmState', 'playing');
+      };
+
+      pauseBtn.onclick = () => {
+        audio.pause();
+        localStorage.setItem('bgmState', 'paused');
+      };
+
+      // 재생 중일 때 재생 위치 저장 (0.5초마다)
+      setInterval(() => {
+        if (!audio.paused) {
+          localStorage.setItem('bgmTime', audio.currentTime);
+        }
+      }, 500);
+    };
+
+    // 페이지를 떠날 때도 재생 위치 저장
+    window.onbeforeunload = () => {
+      const audio = document.getElementById('bgm-audio');
+      localStorage.setItem('bgmTime', audio.currentTime);
+    };
+  </script>
 </div>
 
 <script>

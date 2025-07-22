@@ -35,6 +35,6 @@
 }
 
 .role-item.selected .role-name {
-    color: white;
+    color: black;
     font-weight: bold;
 }
