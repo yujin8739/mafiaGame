@@ -54,7 +54,7 @@
 	<select id="selectAllRooms" resultType="GameRoom">
 	    SELECT ROOMNO, ROOMNAME, USERLIST, HEADCOUNT, PASSWORD, TYPE
 	    FROM GAME_ROOM
-	    ORDER BY ROOMNO
+	    ORDER BY ROOMNO DESC
 	</select>
 	
 	<update id="updateReadyList">
