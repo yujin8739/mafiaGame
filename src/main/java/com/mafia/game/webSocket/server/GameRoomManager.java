@@ -197,7 +197,7 @@ public class GameRoomManager {
 			return;
 
 		List<String> users = parseJsonList(room.getUserList());
-		if (!users.contains(userName)) {
+		if (!users.contains(userName)) { 
 			users.add(userName);
 			try {
 				gameRoomService.updateUserList(roomNo, mapper.writeValueAsString(users));
@@ -425,8 +425,18 @@ public class GameRoomManager {
 				boolean isHealSuccess = false;
 				String updatedJobJson = null;
 				int index = userList.indexOf(killedUser);
+				int targetJob = jobList.get(index);
+				if(targetJob == 5) {// 연인 대신 죽어주기 기능
+					index = jobList.indexOf(6);
+				} else if(targetJob == 6) {
+					index = jobList.indexOf(5);
+				}
 				if (index != -1 && index < jobList.size()) {
-					jobList.set(index, 0);
+					if(targetJob == 9) { //군인인 경우 사용후로 변경
+						jobList.set(index, 1009);
+					} else {
+						jobList.set(index, 0);
+					}
 					updatedJobJson = objectMapper.writeValueAsString(jobList);
 
 					// 의사가 힐할 대상이 죽는지 확인
@@ -507,7 +517,8 @@ public class GameRoomManager {
 			});
 
 			int index = userList.indexOf(mostKilldUser);
-			if (index != -1 && index < jobList.size()) {
+			//정치인은 투표로 죽지 않음
+			if (index != -1 && index < jobList.size() && jobList.get(index) != 4) {
 				jobList.set(index, 0);
 				String updatedJobJson = objectMapper.writeValueAsString(jobList);
 				gameRoomService.updateJob(roomNo, updatedJobJson);
@@ -546,19 +557,25 @@ public class GameRoomManager {
 	}
 
 	
-	public String checkWinner(int roomNo) {
+	public String checkWinner(int roomNo, int phaseIndex) {
 	    Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
 	    String userListJson = clobToString((Clob) result.get("USERLIST")); // 유저 목록 JSON 가져오기
 	    String jobJson = (String) result.get("JOB");               // 직업 목록 JSON 가져오기
+	    String startJobJson = (String) result.get("STARTJOB");               // 시작 직업 목록 JSON 가져오기
 	    ObjectMapper mapper = new ObjectMapper();
 
 	    try {
 	        // 유저 목록이나 직업 정보가 하나라도 없으면 게임 시작 전으로 간주
 	        if (userListJson == null || jobJson == null || userListJson.isEmpty() || jobJson.isEmpty()) {
 	            // 아직 게임 데이터가 완전히 준비되지 않음
-	            return "CONTINUE"; 
+	            return "CONTINUE";
 	        }
 
+	        //만일 훼방꾼이 첫날 이전에 죽으면 중립 승리
+	        if(startJobJson.contains("7") && !jobJson.contains("7") && phaseIndex <= 1) {
+	        	return "NEUTRALITY_WIN";
+	        }
+	        
 	        // JSON을 List로 변환
 	        List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
 	        List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
@@ -585,7 +602,7 @@ public class GameRoomManager {
 	            // 예: if (job.isAlive()) { ... }
 	            if (job.getJobClass() == 1) { // 마피아팀
 	                mafiaCount++;
-	            } else if (job.getJobClass() == 2) { // 시민팀
+	            } else if (job.getJobClass() == 2 || job.getJobClass() == 4) { // 시민팀
 	                citizenCount++;
 	            } else if (job.getJobClass() == 3) { // 중립팀
 	                neutralityCount++;
