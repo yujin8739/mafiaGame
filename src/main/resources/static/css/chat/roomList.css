@@ -224,19 +224,29 @@
 .no-rooms {
     text-align: center !important;
     padding: 60px 20px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    min-width: 100% !important;
 }
 
 .empty-message {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
     gap: 15px;
     color: #888;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 .empty-message div {
     font-size: 16px;
-    color: #ccc;
+    color: black;
+    text-align: center !important;
 }
 
 /* 모달 스타일 */
