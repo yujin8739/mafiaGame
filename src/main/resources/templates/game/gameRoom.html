@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/index.css}" />
     <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
     <link rel="stylesheet" th:href="@{/css/game/phoneModal.css}" />
-    <title>GOD Father 0805 마피아 게임룸</title>
+    <title>우주하마피아 게임룸</title>
     <style>
         #voiceRemoteContainer audio {
             display: block;
@@ -76,6 +76,7 @@
 		const toggleBtn = document.getElementById("togglePhoneModalBtn");
 		const closeBtn = phoneModal.querySelector("#closePhoneModalBtn");
 		const chatInput = document.getElementById('chat');
+		const hackBtn = document.getElementById("hackBtn");
 		
         //블록검색용
         let currentPage = 1; // 현재 몇 번째 블록을 보고 있는지
@@ -373,9 +374,21 @@
                 case 'phase':
                     setTimer(msgData.phase, msgData.remaining);
                     break;
-                case 'MAFIA_WIN':
+                case 'HACK': 
+                	loadHintList(roomNo);
+                	addEtcMsg(msgData);
+                	break;
+                case 'MAFIA_WIN': 
+                	msgData.msg = '마피아의 승리! 게임이 종료되었습니다.';
+                	setStop();
+                    addEtcMsg(msgData);
                 case 'CITIZEN_WIN':
+                	msgData.msg = '시민의 승리! 게임이 종료되었습니다.';
+                	//jobObj.
+                	setStop();
+                    addEtcMsg(msgData);
                 case 'NEUTRALITY_WIN':
+                	msgData.msg = '중립의 승리! 게임이 종료되었습니다.';
                     setStop();
                     addEtcMsg(msgData);
                     break;
@@ -446,6 +459,10 @@
                     if (!isStart) {
                         alert("당신의 직업은 " + myJob.jobVisible + "입니다.");
                         isStart = true;
+                        if(job==="hacker") {
+                        	//직업이 해커면 보여주기   
+                        	hackBtn.style.display = "inline-block";
+                        }
                     }
                     console.log();
                 }
@@ -981,7 +998,8 @@
                 }
             });
         }
-
+        
+        //직업동작
 		function voteKill(targetName) {
 		    $.ajax({
 		        url: "/room/voteResult",
@@ -1027,7 +1045,7 @@
                 },
                 success: function (kill) { },
                 error: function () {
-                    alert("투표 요청 중 오류가 발생했습니다.");
+                    alert("요청 중 오류가 발생했습니다.");
                 }
             });
         }
@@ -1043,7 +1061,7 @@
                 },
                 success: function (kill) { },
                 error: function () {
-                    alert("투표 요청 중 오류가 발생했습니다.");
+                    alert("요청 중 오류가 발생했습니다.");
                 }
             });
         }
@@ -1061,9 +1079,14 @@
                     alert(targetName + "의 직업은 " + result.jobVisible + "입니다.");
                 },
                 error: function () {
-                    alert("투표 요청 중 오류가 발생했습니다.");
+                    alert("요청 중 오류가 발생했습니다.");
                 }
             });
+        }
+        
+        function hackHint() {
+        	const msg = { type: 'HACK', userName: '해커', msg: '해커가 sns힌트를 바꾸었습니다', roomNo: roomNo };
+        	safeSend({ type, userName: nickName, msg, roomNo });
         }
         
 		function startTimer(phase, seconds) {
@@ -1080,6 +1103,46 @@
 				remainTime--;
 				updateTimerUI(phase, remainTime);
 			}, 1000);
+		}
+		
+		function spyCheck(targetName) {
+            $.ajax({
+                url: "/room/spyCheck",
+                method: "GET",
+                data: {
+                    roomNo: roomNo,
+                    dayNo: dayNo,
+                    targetName: targetName,
+                },
+                success: function (result) {
+                    if(result){
+                    	alert("마피아와 연결되어 마피아가 되었습니다.");
+                    } else {
+                    	alert(target+"님은 마피아가 아닙니다.");
+                    }
+                },
+                error: function () {
+                    alert("요청 중 오류가 발생했습니다.");
+                }
+            });
+        }
+		
+		function robberJob(targetName) {
+			$.ajax({
+                url: "/room/robberJob",
+                method: "GET",
+                data: {
+                    roomNo: roomNo,
+                    dayNo: dayNo,
+                    targetName: targetName,
+                },
+                success: function (result) {
+                    alert(targetName+"님의 직업은 "+result+"");
+                },
+                error: function () {
+                    alert("요청 중 오류가 발생했습니다.");
+                }
+            });
 		}
     </script>
 </body>

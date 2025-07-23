@@ -121,6 +121,38 @@
 								policeTo(userNickList[index],index);
 							};
 						});	
+					} else if (job==='hacker') {
+						sendBtn.disabled = false;
+						sendBtn.classList.remove('disabled-btn');
+						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+											        
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot, index) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+							
+							img.style.cursor = 'pointer';
+							img.onclick = () => {
+								hackTo(userNickList[index],index);
+							};
+						});	
+					} else if (job == 'robber' && dayNo >= 1){
+						sendBtn.disabled = false;
+						sendBtn.classList.remove('disabled-btn');
+						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+											        
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot, index) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+							
+							if(img.src === '/images/사망이미지.png'){
+								img.style.cursor = 'pointer';
+								img.onclick = () => {
+									robberTo(userNickList[index],index);
+								};
+							}
+						});	
 					} else {
 						sendBtn.disabled = true;
 						chatInput.disabled = true;
@@ -267,6 +299,38 @@
 			        userNameList = [];
 			    }
 				
+			}
+			
+			function spyTo(targetNic, inedex) {
+				if (hasKilld) {
+			        alert("이미 한명을 조사하셨습니다.");
+			        return;
+			    }
+				if (!confirm(`${targetNick}를 조사 하시겠습니까??`)) return;
+				try {
+			        userNameList = JSON.parse(room.userList);
+			        spyCheck(userNameList[index]);
+			    	hasKilld = true;
+			    } catch (e) {
+			        console.error("userNameList 파싱 실패", e);
+			        userNameList = [];
+			    }
+			}
+			
+			function robberTo(targetNic, inedex) {
+				if (hasKilld) {
+			        alert("이미 직업을 훔쳤습니다.");
+			        return;
+			    }
+				if (!confirm(`${targetNick}의 직업을 도굴하시겠습니까??`)) return;
+				try {
+			        userNameList = JSON.parse(room.userList);
+			        robberJob(userNameList[index]);
+			    	hasKilld = true;
+			    } catch (e) {
+			        console.error("userNameList 파싱 실패", e);
+			        userNameList = [];
+			    }
 			}
 		/*]]>*/
 	</script>

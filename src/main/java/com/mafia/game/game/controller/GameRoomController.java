@@ -182,7 +182,6 @@ public class GameRoomController {
     	    						 @RequestParam int size,
     	    						 @RequestParam String job) {
     	String type = "chat";
-    	System.out.println("직업========================"+job);
     	switch(job) {
     		case "ghost":case "mafiaGhost":case "spiritualists": type = "death"; break;
     		case "mafia": type = "mafia"; break;
@@ -248,8 +247,6 @@ public class GameRoomController {
         ObjectMapper mapper = new ObjectMapper();
         try {
         	if(userListJson != null &&jobJson != null) {
-        		System.out.println(">> userListJson: " + userListJson);
-        		 System.out.println(">> jobJson: " + jobJson);
 	        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
 				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
 				
@@ -311,8 +308,6 @@ public class GameRoomController {
         		return null;
         	} 
         	
-        	System.out.println(">> userListJson: " + userListJson);
-        	System.out.println(">> jobJson: " + jobJson);
         	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
         	List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
         		
@@ -322,6 +317,83 @@ public class GameRoomController {
 			e.printStackTrace();
 		}
         return gameRoomService.getJobDetail(targetJob);
+    }
+    
+    @GetMapping("/spyCheck")
+    @ResponseBody
+    public boolean spyCheck(@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName, HttpSession session) {
+    	Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+        String userListJson = clobToString((Clob) result.get("USERLIST"));
+        String jobJson = (String) result.get("JOB");
+        int targetJob = 0;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+        	if(userListJson == null || jobJson == null) {
+        		return false;
+        	} 
+        	
+        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+        	List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+        		
+        	int index = userList.indexOf(targetName);
+        	targetJob = jobList.get(index);
+        	if(targetJob == 1 || targetJob == 99999) {
+        		// 현재 로그인한 사용자 정보
+        		Member loginUser = (Member) session.getAttribute("loginUser");
+        		
+        		int myIndex = userList.indexOf(loginUser.getUserName());
+        		
+        		String updatedJobJson = null;
+				if (myIndex != -1 && myIndex < jobList.size()) {
+					jobList.set(myIndex, 1);
+					updatedJobJson = mapper.writeValueAsString(jobList);
+					gameRoomService.updateJob(roomNo, updatedJobJson);
+				}
+        		return true;
+        	} else {
+        		return false;
+        	}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+        return false;
+    }
+    
+    @GetMapping("/robberJob")
+    @ResponseBody
+    public Job robberJob(@RequestParam int roomNo, @RequestParam String targetName, HttpSession session) {
+    	Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+        String userListJson = clobToString((Clob) result.get("USERLIST"));
+        String jobJson = (String) result.get("STARTJOB");
+        int targetJob = 0;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+        	if(userListJson == null || jobJson == null) {
+        		return gameRoomService.getJobDetail(8);
+        	} 
+        	
+        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+        	List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+        		
+        	int index = userList.indexOf(targetName);
+        	targetJob = jobList.get(index);
+        	
+        	// 현재 로그인한 사용자 정보
+        	Member loginUser = (Member) session.getAttribute("loginUser");
+        		
+        	int myIndex = userList.indexOf(loginUser.getUserName());
+        		
+        	String updatedJobJson = null;
+			if (myIndex != -1 && myIndex < jobList.size()) {
+				jobList.set(myIndex, targetJob);
+				updatedJobJson = mapper.writeValueAsString(jobList);
+				gameRoomService.updateJob(roomNo, updatedJobJson);
+				return gameRoomService.getJobDetail(targetJob);
+			}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+        return gameRoomService.getJobDetail(8);
     }
     
     @GetMapping("/mafiaKillResult")
