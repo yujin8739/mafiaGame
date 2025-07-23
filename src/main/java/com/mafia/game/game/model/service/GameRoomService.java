@@ -50,4 +50,25 @@ public interface GameRoomService {
 	void updateStop(int roomNo);
 
 	void deleteAllGameRooms();
+	
+	/**
+	 * 페이징된 방 목록 조회
+	 */
+	List<GameRoom> getRoomsPaged(int offset, int limit);
+	
+	/**
+	 * 전체 방 개수 조회
+	 */
+	int getTotalRoomCount();
+	
+	/**
+	 * 필터링된 방 목록 조회 (검색 + 페이징)
+	 */
+	List<GameRoom> searchRooms(Map<String, Object> searchParams);
+	
+	/**
+	 * 필터링된 방 개수 조회
+	 */
+	int getFilteredRoomCount(Map<String, Object> searchParams);
+	
 }

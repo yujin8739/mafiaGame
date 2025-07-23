@@ -1,3 +1,13 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임방 목록</title>
+    <!-- 단일 CSS 파일만 로드 -->
+    <link rel="stylesheet" href="/css/roomList.css">
+</head>
+<body>
 
 <div th:fragment="roomListFragment" style="flex: 2;">
     <div class="game-room-list-container">
@@ -6,8 +16,47 @@
             <h2>게임방 목록</h2>
         </div>
 
+        <!-- 검색/필터 영역 (오른쪽 정렬로 수정) -->
+        <div class="filter-section">
+            <div class="filter-left">
+                <span class="total-rooms">총 <span id="totalCount">0</span>개의 방</span>
+            </div>
+            <div class="filter-right">
+                <!-- 방 종류 필터 -->
+                <select id="typeFilter" class="filter-select">
+                    <option value="전체">전체 종류</option>
+                    <option value="일반">일반</option>
+                    <option value="친선">친선</option>
+                </select>
+                
+                <!-- 방 상태 필터 -->
+                <select id="statusFilter" class="filter-select">
+                    <option value="전체">전체 상태</option>
+                    <option value="대기중">대기중</option>
+                    <option value="게임중">게임중</option>
+                </select>
+                
+                <!-- 페이지 크기 선택 -->
+                <select id="pageSizeSelect" class="filter-select">
+                    <option value="5">5개씩</option>
+                    <option value="10" selected>10개씩</option> 
+                    <option value="15">15개씩</option>
+                </select>
+                
+                <!-- 검색어 입력 -->
+                <input type="text" id="searchKeyword" class="search-input" placeholder="방 제목 검색">
+                <button id="searchBtn" class="search-btn">검색</button>
+            </div>
+        </div>
+
         <!-- 게임방 목록 테이블 -->
         <div class="room-table-section">
+            <!--  로딩 표시 -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <span>방 목록을 불러오는 중...</span>
+            </div>
+            
             <table class="room-table">
                 <thead>
                     <tr>
@@ -19,8 +68,7 @@
                         <th>입장</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- 방이 있을 때 -->
+                <tbody id="roomTableBody">
                     <tr th:each="room : ${rooms}">
                         <td th:text="${room.roomNo}">1</td>
                         <td class="room-title">
@@ -28,25 +76,24 @@
                             <span th:if="${room.password != null and !#strings.isEmpty(room.password)}" class="lock-icon">🔒</span>
                         </td>
                         <td class="room-count">
-						    <span class="current-count" th:text="${room.currentUserCount}">0</span>						 
-						    <span class="max-count" th:text="${room.headCount}">12</span>
-						</td>
+                            <span class="current-count" th:text="${room.currentUserCount}">0</span>/<span class="max-count" th:text="${room.headCount}">12</span>
+                        </td>
                         <td>
                             <span class="room-type" th:text="${room.type}" 
-                                  th:classappend="${room.type == '랭크' ? ' rank' : (room.type == '친선' ? ' friendly' : ' normal')}">일반</span>
+                                  th:classappend="${room.type == '친선' ? ' friendly' : ' normal'}">일반</span>
                         </td>
                         <td>
                             <span class="room-status waiting">대기중</span>
                         </td>
-						<td>
-							<button class="enter-btn"
-							        th:attr="data-roomno=${room.roomNo}, data-password=${room.password}">
-							    입장
-							</button>
-						</td>
+                        <td>
+                            <button class="enter-btn"
+                                    th:attr="data-roomno=${room.roomNo}, data-password=${room.password}">
+                                입장
+                            </button>
+                        </td>
                     </tr>
                     
-                    <!-- 방이 없을 때 -->
+                    <!-- 빈 방 메시지 -->
                     <tr th:if="${rooms == null or #lists.isEmpty(rooms)}">
                         <td colspan="6" class="no-rooms">
                             <div class="empty-message">
@@ -57,95 +104,322 @@
                 </tbody>
             </table>
         </div>
-    </div>
-
-
-<!-- 비밀번호 입력 모달 -->
-<div id="passwordModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>비밀번호 입력</h3>
-            <span class="close" onclick="closePasswordModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p>이 방은 비밀번호가 설정되어 있습니다.</p>
-            <input type="password" id="roomPassword" placeholder="비밀번호를 입력하세요">
-            <div id="passwordError" class="error-message" style="display: none;">
-                비밀번호가 올바르지 않습니다.
+        
+        <!--  페이징 네비게이션 (가운데 정렬) -->
+        <div class="pagination-section">
+            <div class="pagination-container">
+                <button id="prevBtn" class="page-btn">이전</button>
+                <div id="pageNumbers" class="page-numbers">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+                <button id="nextBtn" class="page-btn">다음</button>
             </div>
         </div>
-        <div class="modal-buttons">
-            <button class="enter-btn-bypass" onclick="confirmEnterRoom()">입장</button>
-            <button class="cancel-btn" onclick="closePasswordModal()">취소</button>
+    </div>
+
+    <!-- 비밀번호 모달 -->
+    <div id="passwordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>비밀번호 입력</h3>
+                <span class="close" onclick="closePasswordModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>이 방은 비밀번호가 설정되어 있습니다.</p>
+                <input type="password" id="roomPassword" placeholder="비밀번호를 입력하세요">
+                <div id="passwordError" class="error-message" style="display: none;">
+                    비밀번호가 올바르지 않습니다.
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="enter-btn-bypass" onclick="confirmEnterRoom()">입장</button>
+                <button class="cancel-btn" onclick="closePasswordModal()">취소</button>
+            </div>
         </div>
     </div>
+
+    <script>
+        const DynamicRoomManager = {
+            // 설정값
+            currentPage: 1,
+            currentSize: 10,
+            refreshInterval: null,
+            isDynamicMode: false,
+            
+            // 초기화
+            init() {
+                // 기존 데이터가 있으면 총 개수 표시
+                this.updateInitialCount();               
+                // 이벤트 리스너 설정
+                this.setupEventListeners();              
+                // 첫 로드는 동적으로 하지 않음
+                console.log('Dynamic Room Manager 초기화 완료');
+            },
+            
+            //  초기 방 개수 설정
+            updateInitialCount() {
+                const existingRows = document.querySelectorAll('#roomTableBody tr');
+                const totalCount = existingRows.length;
+                document.getElementById('totalCount').textContent = totalCount;
+            },
+            
+            // 이벤트 리스너 설정
+            setupEventListeners() {
+                // 필터 변경 시
+                document.getElementById('typeFilter').addEventListener('change', () => {
+                    this.enableDynamicMode();
+                });
+                
+                document.getElementById('statusFilter').addEventListener('change', () => {
+                    this.enableDynamicMode();
+                });
+                
+                document.getElementById('pageSizeSelect').addEventListener('change', () => {
+                    this.currentSize = parseInt(document.getElementById('pageSizeSelect').value);
+                    this.loadRoomList();
+                    this.enableDynamicMode();
+                });
+                
+                // 검색 버튼
+                document.getElementById('searchBtn').addEventListener('click', () => {
+                    this.enableDynamicMode();
+                });
+                
+                // 검색어 엔터키
+                document.getElementById('searchKeyword').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.enableDynamicMode();
+                    }
+                });
+                
+                // 페이징 버튼
+                document.getElementById('prevBtn').addEventListener('click', () => {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.loadRoomList();
+                    }
+                });
+                
+                document.getElementById('nextBtn').addEventListener('click', () => {
+                    this.currentPage++;
+                    this.loadRoomList();
+                });
+                
+                //  기존 입장 버튼들에 이벤트 재설정 (충돌 방지)
+                this.setupExistingEnterButtons();
+            },
+            
+            // 동적 모드 활성화
+            enableDynamicMode() {
+                if (!this.isDynamicMode) {
+                    this.isDynamicMode = true;
+                    console.log('동적 모드 활성화');
+                }
+                this.currentPage = 1;
+                this.loadRoomList();
+                this.startAutoRefresh();
+            },
+            
+            // 기존 입장 버튼 이벤트 설정 (기존 함수 재사용)
+            setupExistingEnterButtons() {
+                document.querySelectorAll('.enter-btn').forEach(btn => {
+                    // 기존 onclick 제거하고 새로 설정
+                    btn.removeAttribute('onclick');
+                    btn.addEventListener('click', () => {
+                        const roomNo = btn.dataset.roomno;
+                        const password = btn.dataset.password || '';
+                        enterRoom(roomNo, password);
+                    });
+                });
+            },
+            
+            // 방 목록 로드
+            loadRoomList() {
+                this.showLoading();
+                
+                const type = document.getElementById('typeFilter').value;
+                const status = document.getElementById('statusFilter').value;
+                const keyword = document.getElementById('searchKeyword').value;
+                
+                const params = new URLSearchParams({
+                    page: this.currentPage,
+                    size: this.currentSize,
+                    type: type,
+                    status: status,
+                    keyword: keyword
+                });
+                
+                fetch(`/room/api/search?${params}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.hideLoading();
+                        this.displayRooms(data.rooms);
+                        this.updatePagination(data);
+                        this.updateTotalCount(data.totalRooms);
+                    })
+                    .catch(error => {
+                        this.hideLoading();
+                        console.error('방 목록 로드 실패:', error);
+                        alert('방 목록을 불러오는데 실패했습니다.');
+                    });
+            },
+            
+            // 방 목록 표시
+            displayRooms(rooms) {
+                const tbody = document.getElementById('roomTableBody');
+                tbody.innerHTML = '';
+                
+                if (rooms.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="no-rooms">
+                                <div class="empty-message">
+                                    <div>조건에 맞는 게임방이 없습니다.</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                rooms.forEach(room => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${room.roomNo}</td>
+                        <td class="room-title">
+                            <span>${room.roomName}</span>
+                            ${room.password && room.password.trim() ? '<span class="lock-icon">🔒</span>' : ''}
+                        </td>
+                        <td class="room-count">
+                            <span class="current-count">${room.currentUserCount}</span>/<span class="max-count">${room.headCount}</span>
+                        </td>
+                        <td>
+                            <span class="room-type ${this.getRoomTypeClass(room.type)}">${room.type}</span>
+                        </td>
+                        <td>
+                            <span class="room-status ${this.getStatusClass(room.isGaming)}">${room.isGaming}</span>
+                        </td>
+                        <td>
+                            <button class="enter-btn" onclick="enterRoom(${room.roomNo}, '${room.password || ''}')">
+                                입장
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            },
+            
+            // 페이징 업데이트
+            updatePagination(data) {
+                const { currentPage: page, totalPages } = data;
+                
+                document.getElementById('prevBtn').disabled = page <= 1;
+                document.getElementById('nextBtn').disabled = page >= totalPages;
+                
+                const pageNumbers = document.getElementById('pageNumbers');
+                pageNumbers.innerHTML = '';
+                
+                const startPage = Math.max(1, page - 2);
+                const endPage = Math.min(totalPages, page + 2);
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.className = `page-number ${i === page ? 'active' : ''}`;
+                    pageBtn.onclick = () => {
+                        this.currentPage = i;
+                        this.loadRoomList();
+                    };
+                    pageNumbers.appendChild(pageBtn);
+                }
+            },
+            
+            //  총 개수 업데이트
+            updateTotalCount(total) {
+                document.getElementById('totalCount').textContent = total;
+            },
+            
+            //  로딩 표시/숨김
+            showLoading() {
+                document.getElementById('loadingSpinner').style.display = 'flex';
+            },
+            
+            hideLoading() {
+                document.getElementById('loadingSpinner').style.display = 'none';
+            },
+            
+            //  자동 새로고침
+            startAutoRefresh() {
+                if (this.refreshInterval) {
+                    clearInterval(this.refreshInterval);
+                }
+                this.refreshInterval = setInterval(() => {
+                    if (this.isDynamicMode) {
+                        this.loadRoomList();
+                    }
+                }, 30000);
+            },
+            
+            //  헬퍼 함수들
+            getRoomTypeClass(type) {
+                switch(type) {
+                    case '일반': return 'normal';
+                    case '친선': return 'friendly';
+                    default: return 'normal';
+                }
+            },
+            
+            getStatusClass(status) {
+                return status === '게임중' ? 'playing' : 'waiting';
+            }
+        };
+        
+        //  페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            DynamicRoomManager.init();
+        });
+               
+        let selectedRoomNo = null; // 기존 변수 유지
+        
+        function enterRoom(roomNo, password) {
+            selectedRoomNo = roomNo;
+            
+            if (password && password.trim() !== '') {
+                document.getElementById('passwordModal').style.display = 'flex';
+                document.getElementById('roomPassword').focus();
+            } else {
+                window.location.href = '/room/' + roomNo + "/00000";
+            }
+        }
+        
+        function confirmEnterRoom() {
+            const inputPassword = document.getElementById('roomPassword').value;
+            
+            if (!inputPassword) {
+                document.getElementById('passwordError').textContent = '비밀번호를 입력해주세요.';
+                document.getElementById('passwordError').style.display = 'block';
+                return;
+            }
+            
+            window.location.href = '/room/' + selectedRoomNo + '/' + encodeURIComponent(inputPassword);
+        }
+        
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+            document.getElementById('roomPassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            selectedRoomNo = null;
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('passwordModal');
+            if (event.target === modal) {
+                closePasswordModal();
+            }
+        }
+    </script>
 </div>
 
-<script>
-	let selectedRoomNo = null;
-
-	document.querySelectorAll('.enter-btn').forEach(btn => {
-		btn.addEventListener('click', () => {
-		    const roomNo = btn.dataset.roomno;
-		    const password = btn.dataset.password || '';
-		    enterRoom(roomNo, password);
-		});
-	});
-	
-	// 방 입장 함수
-	function enterRoom(roomNo, password) {
-	    selectedRoomNo = roomNo;
-	    
-	    if (password && password.trim() !== '') {
-	        // 비밀번호가 있는 방
-	        document.getElementById('passwordModal').style.display = 'flex';
-	        document.getElementById('roomPassword').focus();
-	    } else {
-	        // 비밀번호가 없는 방
-	    	window.location.href = '/room/' + roomNo + "/00000";
-	    }
-	}
-	
-	// 비밀번호 확인 후 입장
-	function confirmEnterRoom() {
-	    const inputPassword = document.getElementById('roomPassword').value;
-	    
-	    if (!inputPassword) {
-	        document.getElementById('passwordError').textContent = '비밀번호를 입력해주세요.';
-	        document.getElementById('passwordError').style.display = 'block';
-	        return;
-	    }
-	    
-	    // 서버로 이동 (비밀번호 검증은 서버에서)
-	    window.location.href = '/room/' + selectedRoomNo + '/' + encodeURIComponent(inputPassword);
-	}
-	
-	// 모달 닫기
-	function closePasswordModal() {
-	    document.getElementById('passwordModal').style.display = 'none';
-	    document.getElementById('roomPassword').value = '';
-	    document.getElementById('passwordError').style.display = 'none';
-	    selectedRoomNo = null;
-	}
-	
-	// 모달 외부 클릭 시 닫기
-	window.onclick = function(event) {
-	    const modal = document.getElementById('passwordModal');
-	    if (event.target === modal) {
-	        closePasswordModal();
-	    }
-	}
-	
-	// 엔터키로 비밀번호 입력
-	document.addEventListener('DOMContentLoaded', function() {
-	    const passwordInput = document.getElementById('roomPassword');
-	    if (passwordInput) {
-	        passwordInput.addEventListener('keypress', function(e) {
-	            if (e.key === 'Enter') {
-	                confirmEnterRoom();
-	            }
-	        });
-	    }
-	});
-</script>
-</div>
+</body>
+</html>

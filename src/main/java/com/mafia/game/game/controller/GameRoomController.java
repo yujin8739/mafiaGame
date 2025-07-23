@@ -116,12 +116,150 @@ public class GameRoomController {
                     userCount = 0;
                 }
             }
-            room.setCurrentUserCount(userCount); // ← 🎯 setSetCurrentUserCount에서 변경
+            room.setCurrentUserCount(userCount);
         }
         
         model.addAttribute("rooms", rooms);
         return "chat/roomList";
     }
+    
+    /**
+     * 페이징된 방 목록을 JSON으로 반환하는 API (DB에서 직접 페이징 처리)
+     * @param page 페이지 번호 (기본값: 1)
+     * @param size 페이지 크기 (기본값: 5)
+     * @return JSON 형태의 방 목록과 페이징 정보
+     */
+    @GetMapping("/api/list")
+    @ResponseBody
+    public Map<String, Object> getRoomListAPI(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        // 1. 전체 방 개수 조회
+        int totalRooms = gameRoomService.getTotalRoomCount();
+        
+        // 2. 페이징 계산
+        int totalPages = (int) Math.ceil((double) totalRooms / size);
+        int offset = (page - 1) * size;
+        
+        // 3. 페이징된 방 목록 조회 (DB에서 직접 처리)
+        List<GameRoom> rooms = gameRoomService.getRoomsPaged(offset, size);
+        
+        // 4. 각 방의 현재 인원수 계산 및 상태 설정
+        for (GameRoom room : rooms) {
+            int userCount = calculateUserCount(room.getUserList());
+            room.setCurrentUserCount(userCount);
+            
+            // 게임 상태 설정 (대기중/게임중)
+            if (room.getIsGaming() != null && room.getIsGaming().equals("Y")) {
+                room.setIsGaming("게임중");
+            } else {
+                room.setIsGaming("대기중");
+            }
+        }
+        
+        // 5. 결과 반환
+        Map<String, Object> result = new HashMap<>();
+        result.put("rooms", rooms);
+        result.put("currentPage", page);
+        result.put("totalPages", totalPages);
+        result.put("totalRooms", totalRooms);
+        result.put("pageSize", size);
+        
+        return result;
+    }
+
+    /**
+     * 검색/필터링 방목록 조회
+     */
+    @GetMapping("/api/search")
+    @ResponseBody
+    public Map<String, Object> searchRoomsAPI(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "전체") String type,
+            @RequestParam(defaultValue = "전체") String status,
+            @RequestParam(defaultValue = "") String keyword) {
+               
+        Map<String, Object> searchParams = new HashMap<>();
+        
+        // 방 종류 변환
+        if (!"전체".equals(type)) {
+            searchParams.put("type", type); // "일반", "친선" 그대로 사용
+        }
+        
+        // 방 상태 변환 
+        if (!"전체".equals(status)) {
+            if ("게임중".equals(status)) {
+                searchParams.put("isGaming", "Y");
+            } else if ("대기중".equals(status)) {
+                searchParams.put("isGaming", "N");
+            }
+        }
+        
+        // 검색어 처리
+        if (!keyword.trim().isEmpty()) {
+            searchParams.put("keyword", keyword.trim());
+        }
+        
+        // 2. 페이징 계산
+        int offset = (page - 1) * size;
+        searchParams.put("offset", offset);
+        searchParams.put("limit", size);
+        
+        // 3. 필터링된 방 개수 조회
+        int totalRooms = gameRoomService.getFilteredRoomCount(searchParams);
+        int totalPages = (int) Math.ceil((double) totalRooms / size);
+        
+        // 4. 필터링된 방 목록 조회
+        List<GameRoom> rooms = gameRoomService.searchRooms(searchParams);
+        
+        // 5. 각 방의 현재 인원수 계산 및 상태를 다시 한글로 변환
+        for (GameRoom room : rooms) {
+            int userCount = calculateUserCount(room.getUserList());
+            room.setCurrentUserCount(userCount);
+            
+            // DB 값을 사용자 친화적인 한글로 변환
+            if (room.getIsGaming() != null && room.getIsGaming().equals("Y")) {
+                room.setIsGaming("게임중");
+            } else {
+                room.setIsGaming("대기중");
+            }
+        }
+        
+        // 6. 결과 반환
+        Map<String, Object> result = new HashMap<>();
+        result.put("rooms", rooms);
+        result.put("currentPage", page);
+        result.put("totalPages", totalPages);
+        result.put("totalRooms", totalRooms);
+        result.put("pageSize", size);
+        result.put("filters", Map.of(
+            "type", type,           // 원본 한글 값
+            "status", status,       // 원본 한글 값 
+            "keyword", keyword      // 원본 검색어
+        ));
+        
+        return result;
+    }
+
+    /**
+     * 유저 리스트 JSON에서 실제 인원수를 계산하는 헬퍼 메소드
+     */
+    private int calculateUserCount(String userListJson) {
+        if (userListJson == null || userListJson.isEmpty() || userListJson.equals("[]")) {
+            return 0;
+        }
+        
+        try {
+            List<String> users = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {});
+            return users.size();
+        } catch (Exception e) {
+            System.err.println("JSON 파싱 실패: " + userListJson);
+            return 0;
+        }
+    }
+
     
     @GetMapping("/{roomNo}/{password}")
     public String enterRoom(@PathVariable int roomNo, 
@@ -259,7 +397,6 @@ public class GameRoomController {
         	}
 			
 		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
