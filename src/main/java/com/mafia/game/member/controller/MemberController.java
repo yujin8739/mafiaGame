@@ -44,7 +44,7 @@ public class MemberController {
         Member member = ms.getMemberByUserName(loginUser.getUserName());
         model.addAttribute("member", member);
 //        model.addAttribute("myItems", myItems);
-        return "member/mypage";
+        return "member/myPage";
     }
 	
 	@PostMapping("/update")

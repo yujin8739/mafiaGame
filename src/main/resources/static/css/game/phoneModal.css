@@ -205,3 +205,14 @@
   background-color: var(--sky-500, #1e90ff);
   transform: scale(1.05);
 }
+
+#hackBtn {
+	display: none;
+	background-color: var(--sky-400, #5fb8ff);
+	font-size: 1.2em;
+  	color: #fff;
+  	border: none;
+  	border-radius: 8px;
+  	cursor: pointer;
+  	transition: background-color 0.15s ease, transform 0.15s ease;
+}

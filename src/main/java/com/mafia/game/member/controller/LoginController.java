@@ -92,7 +92,7 @@ public class LoginController {
         TokenInfo info = new TokenInfo(token, Instant.now().toEpochMilli(), request.getRemoteAddr());
         tokenStore.put(email + "$" + userName + mailUUID, info);
         
-    	String verifyUrl = "http://localhost/login/verify?token="+token;
+    	String verifyUrl = "http://god-daddy.com/login/verify?token="+token;
     	
     	String mailText = "<!DOCTYPE html>" +
                 "<html><body>" +
