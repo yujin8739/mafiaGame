@@ -378,9 +378,17 @@
                 	loadHintList(roomNo);
                 	addEtcMsg(msgData);
                 	break;
-                case 'MAFIA_WIN':
+                case 'MAFIA_WIN': 
+                	msgData.msg = '마피아의 승리! 게임이 종료되었습니다.';
+                	setStop();
+                    addEtcMsg(msgData);
                 case 'CITIZEN_WIN':
+                	msgData.msg = '시민의 승리! 게임이 종료되었습니다.';
+                	//jobObj.
+                	setStop();
+                    addEtcMsg(msgData);
                 case 'NEUTRALITY_WIN':
+                	msgData.msg = '중립의 승리! 게임이 종료되었습니다.';
                     setStop();
                     addEtcMsg(msgData);
                     break;
