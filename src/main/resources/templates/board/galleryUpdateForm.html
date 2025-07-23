@@ -140,7 +140,7 @@
         <input type="hidden" name="detail" id="detailInput" />
         <input type="hidden" name="userName" th:value="${board.userName}" />
         <input type="hidden" name="typeName" value="갤러리" />
-          <input type="hidden" name="typeClass" value="4" />
+        <input type="hidden" name="typeClass" value="4" />
 
         <div class="form-group">
           <label for="title">제목</label>
@@ -168,7 +168,7 @@
 
         <!-- 새 이미지 업로드 -->
         <div class="form-group">
-          <label for="newFiles">새 이미지 추가</label>
+          <label for="newFiles">새 이미지 추가(기존 이미지까지 합쳐 최대 5장)</label>
           <input type="file" class="form-control-file" id="newFiles" name="newFiles" multiple accept="image/*" />
            <div id="newFileNameList" class="mt-2 text-muted small"></div> <!-- 파일명 출력 -->
         </div>
@@ -224,6 +224,10 @@
       alert('최소한 한 장 이상의 이미지를 포함해야 합니다.');
       e.preventDefault();
       return false;
+    }else if(remainImages + newImages > 5){
+    	alert('사진은 최대 5개까지만 업로드할 수 있습니다.');
+        e.preventDefault();
+        return false;
     }
 
     $('#detailInput').val(quill.root.innerHTML);

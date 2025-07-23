@@ -29,3 +29,7 @@ h4 {
   font-weight: 600;
   color: #fff;
 }
+
+.wrapper span {
+	color: white;
+}

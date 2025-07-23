@@ -5,7 +5,6 @@ import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -434,20 +433,24 @@ public class BoardController {
 	@PostMapping("/gallery/upload")
 	public String uploadGallery(Board board, MultipartFile[] uploadFiles, RedirectAttributes redirectAttributes) {
 		
-		ArrayList<BoardFile> boardFiles = new ArrayList<>();
-		int fl = 1;
-		for(MultipartFile f : uploadFiles) {
-			String changeName = getChangedFileName(f);
-			BoardFile bf = BoardFile.builder()
-								    .originName(f.getOriginalFilename())
-								    .changeName(changeName)
-								    .type("image")
-								    .fileLevel(fl++)
-								    .build();
+		try {
+			
+			if(uploadFiles.length > 5) {
+				throw new IllegalArgumentException();
+			}
+			ArrayList<BoardFile> boardFiles = new ArrayList<>();
+			int fl = 1;
+			for(MultipartFile f : uploadFiles) {
+				String changeName = getChangedFileName(f);
+				BoardFile bf = BoardFile.builder()
+									    .originName(f.getOriginalFilename())
+									    .changeName(changeName)
+									    .type("image")
+									    .fileLevel(fl++)
+									    .build();
 			boardFiles.add(bf);
 		}
 		
-		try {
 			int result = service.uploadGalleryBoard(board, boardFiles);
 			
 			if(result > 0) {
@@ -461,6 +464,10 @@ public class BoardController {
 			}else {
 				redirectAttributes.addFlashAttribute("msg", "게시글 등록에 실패하였습니다.");
 			}
+		}catch(IllegalArgumentException e) {
+			e.printStackTrace();
+			redirectAttributes.addFlashAttribute("msg", "사진은 최대 5개까지만 업로드할 수 있습니다." );
+			return "redirect:/board/gallery/upload/";
 		}catch(Exception e){
 			e.printStackTrace();
 			redirectAttributes.addFlashAttribute("msg", "서버 오류로 게시글 등록에 실패하였습니다");
@@ -504,21 +511,27 @@ public class BoardController {
 	public String updateGallery(Board board,int[] remainFileList, MultipartFile[] newFiles, String deletedFileList
 							   ,RedirectAttributes redirectAttributes) {
 		
-		//새로운 이미지들 저장하기 위한 로직
-		ArrayList<BoardFile> boardFiles = new ArrayList<>();
-		for(MultipartFile f : newFiles) {
-			String changeName = getChangedFileName(f);
-			BoardFile bf = BoardFile.builder()
-								    .originName(f.getOriginalFilename())
-								    .changeName(changeName)
-								    .type("image")
-								    .build();
-			boardFiles.add(bf);
-		}
-		
 		
 		
 		try {
+			
+			if(remainFileList.length + newFiles.length > 5) {
+				throw new IllegalArgumentException();
+			}
+			//새로운 이미지들 저장하기 위한 로직
+			ArrayList<BoardFile> boardFiles = new ArrayList<>();
+			for(MultipartFile f : newFiles) {
+				String changeName = getChangedFileName(f);
+				BoardFile bf = BoardFile.builder()
+									    .originName(f.getOriginalFilename())
+									    .changeName(changeName)
+									    .type("image")
+									    .build();
+				boardFiles.add(bf);
+			}
+		
+		
+		
 			int result = service.updateGalleryBoard(board, remainFileList, boardFiles, deletedFileList);
 			
 			if(result > 0) {
@@ -541,10 +554,17 @@ public class BoardController {
 			}else {
 				redirectAttributes.addFlashAttribute("msg", "게시글 수정에 실패하였습니다.");
 			}
+		}catch(IllegalArgumentException e) {
+			e.printStackTrace();
+			redirectAttributes.addFlashAttribute("msg", "사진은 최대 5개까지만 업로드할 수 있습니다." );
+			
+			return "redirect:/board/gallery/update/" + board.getBoardNo();
 		}catch(Exception e) {
 			e.printStackTrace();
 			redirectAttributes.addFlashAttribute("msg", "서버 오류로 게시글 수정에 실패하였습니다.");
 		}
+		
+		
 		
 		return "redirect:/board/gallery";
 		
