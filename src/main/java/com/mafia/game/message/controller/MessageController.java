@@ -448,7 +448,7 @@ public class MessageController {
 
 
     /**
-     * 안읽은 쪽지 개수 조회 (AJAX)
+     * 안읽은 쪽지 개수 조회
      */
     @GetMapping("/unreadCount")
     @ResponseBody
