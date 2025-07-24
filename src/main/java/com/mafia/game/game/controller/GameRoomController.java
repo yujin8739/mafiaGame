@@ -231,7 +231,7 @@ public class GameRoomController {
     
     @GetMapping("/getJob")
     @ResponseBody
-    public Job getJob(@RequestParam int roomNo, HttpSession session,
+    public Map<String, Job> getJob(@RequestParam int roomNo, HttpSession session,
     				RedirectAttributes redirectAttributes) {
         Member loginUser = (Member) session.getAttribute("loginUser");
         if (loginUser == null) {
@@ -243,17 +243,22 @@ public class GameRoomController {
         Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
         String userListJson = clobToString((Clob) result.get("USERLIST"));
         String jobJson = (String) result.get("JOB");
+        String startJobJson = (String) result.get("STARTJOB");
 
         ObjectMapper mapper = new ObjectMapper();
         try {
         	if(userListJson != null &&jobJson != null) {
 	        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
 				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+				List<Integer> startList = mapper.readValue(startJobJson,  new TypeReference<List<Integer>>() {});
 				
 				int index = userList.indexOf(userName);
 				int myJob = jobList.get(index);
-								
-				return gameRoomService.getJobDetail(myJob);
+				int myStartJob = startList.get(index);
+				HashMap <String, Object> resultMap = new HashMap<>();
+				
+				resultMap.put("myJob", gameRoomService.getJobDetail(myJob));
+				resultMap.put("myStartJob", gameRoomService.getJobDetail(myStartJob));
         	} else {
         		return null;
         	}
