@@ -124,4 +124,36 @@ public class GameRoomDao {
 	public void deleteAllGameRooms(SqlSessionTemplate sqlSession) {
 		sqlSession.delete("gameRoomMapper.deleteAllGameRooms");
 	}
+	
+    /**
+     * 페이징된 방 목록 조회
+     */
+    public List<GameRoom> selectRoomsPaged(SqlSessionTemplate sqlSession, int offset, int limit) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("offset", offset);
+        param.put("limit", limit);
+        return sqlSession.selectList("gameRoomMapper.selectRoomsPaged", param);
+    }
+    
+    /**
+     * 전체 방 개수 조회
+     */
+    public int selectTotalRoomCount(SqlSessionTemplate sqlSession) {
+        return sqlSession.selectOne("gameRoomMapper.selectTotalRoomCount");
+    }
+    
+    /**
+     * 필터링된 방 목록 조회 (검색 + 페이징)
+     */
+    public List<GameRoom> selectRoomsFiltered(SqlSessionTemplate sqlSession, Map<String, Object> searchParams) {
+        return sqlSession.selectList("gameRoomMapper.selectRoomsFiltered", searchParams);
+    }
+    
+    /**
+     * 필터링된 방 개수 조회
+     */
+    public int selectFilteredRoomCount(SqlSessionTemplate sqlSession, Map<String, Object> searchParams) {
+        return sqlSession.selectOne("gameRoomMapper.selectFilteredRoomCount", searchParams);
+    }
+	
 }
