@@ -3,12 +3,14 @@ package com.mafia.game.game.model.vo;
 import java.sql.Date;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class GameResult {
 	private int resultNo;//	RESULTNO	NUMBER
 	private String userName;//	USERNAME	VARCHAR2(255 BYTE)
