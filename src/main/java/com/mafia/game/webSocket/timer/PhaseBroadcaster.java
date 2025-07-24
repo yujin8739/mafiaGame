@@ -77,9 +77,6 @@ public class PhaseBroadcaster {
             String finalMessage = mapper.writeValueAsString(payload);
             broadcast(finalMessage);
             
-            //*전적 저장을 위한 메소드 by 이수한
-            gameRoomManager.saveGameResult(roomNo,winner);
-            
             gameRoomManager.updateStop(roomNo);
             
             stop();
