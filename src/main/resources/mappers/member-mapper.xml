@@ -83,6 +83,10 @@
 	    END
 	</select>
 
-
+	<select id="adminLoginDo" resultType="Member" resultMap="memberResultMap">
+		SELECT USERNAME, NICKNAME, PASSWORD, EMAIL, STATUS, PHONE, PROFILEIMAGE
+		FROM USER_INFO 
+		WHERE USERNAME = #{userName} AND ISADMIN = 'Y'
+	</select>
 	
 </mapper>

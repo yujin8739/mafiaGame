@@ -76,6 +76,11 @@ public class MemberServiceImpl implements MemberService {
 	public List<String> getUserNickList(String userList) {
 		return dao.getUserNickList(sqlSession, userList);
 	}
+
+	@Override
+	public Member adminLoginDo(String username) {
+		return dao.adminLoginDo(sqlSession, username);
+	}
 	
 	
 }
