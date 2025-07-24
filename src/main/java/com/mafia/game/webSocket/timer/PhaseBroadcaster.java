@@ -76,8 +76,9 @@ public class PhaseBroadcaster {
 
             String finalMessage = mapper.writeValueAsString(payload);
             broadcast(finalMessage);
-
+            
             gameRoomManager.updateStop(roomNo);
+            
             stop();
 
         } catch (Exception e) {
