@@ -452,9 +452,10 @@
             $.ajax({
                 url: '/room/getJob',
                 data: { roomNo: roomNo },
-                success: function (myJob) {
-                    jobObj = myJob;
-                    job = myJob.jobName;
+                success: function (result) {
+                    jobObj = result.get("myJob");
+                    job = jobObj.jobName;
+                    startJob = jobObj.get("myStartJob");
                     chatLoad(job);
                     if (!isStart) {
                         alert("당신의 직업은 " + myJob.jobVisible + "입니다.");
