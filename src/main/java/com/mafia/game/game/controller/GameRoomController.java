@@ -393,10 +393,11 @@ public class GameRoomController {
 				int index = userList.indexOf(userName);
 				int myJob = jobList.get(index);
 				int myStartJob = startList.get(index);
-				HashMap <String, Object> resultMap = new HashMap<>();
+				Map<String, Job> resultMap = new HashMap<>();
 				
 				resultMap.put("myJob", gameRoomService.getJobDetail(myJob));
 				resultMap.put("myStartJob", gameRoomService.getJobDetail(myStartJob));
+				return resultMap;
         	} else {
         		return null;
         	}
