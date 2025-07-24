@@ -131,4 +131,25 @@ public class GameRoomServiceImpl implements GameRoomService {
 	public void deleteAllGameRooms() {
 		gameRoomDao.deleteAllGameRooms(sqlSession);
 	}
+	
+    @Override
+    public List<GameRoom> getRoomsPaged(int offset, int limit) {
+        return gameRoomDao.selectRoomsPaged(sqlSession, offset, limit);
+    }
+    
+    @Override
+    public int getTotalRoomCount() {
+        return gameRoomDao.selectTotalRoomCount(sqlSession);
+    }
+    
+    @Override
+    public List<GameRoom> searchRooms(Map<String, Object> searchParams) {
+        return gameRoomDao.selectRoomsFiltered(sqlSession, searchParams);
+    }
+    
+    @Override
+    public int getFilteredRoomCount(Map<String, Object> searchParams) {
+        return gameRoomDao.selectFilteredRoomCount(sqlSession, searchParams);
+    }
+	
 }
