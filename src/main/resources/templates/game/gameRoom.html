@@ -380,22 +380,44 @@
                 	break;
                 case 'MAFIA_WIN': 
                 	msgData.msg = '마피아의 승리! 게임이 종료되었습니다.';
-                	setStop();
+                	//setStop();
                     addEtcMsg(msgData);
                 case 'CITIZEN_WIN':
                 	msgData.msg = '시민의 승리! 게임이 종료되었습니다.';
                 	//jobObj.
-                	setStop();
+                	//setStop();
                     addEtcMsg(msgData);
                 case 'NEUTRALITY_WIN':
                 	msgData.msg = '중립의 승리! 게임이 종료되었습니다.';
-                    setStop();
+                    //setStop();
                     addEtcMsg(msgData);
                     break;
                 default:
                     displayChatMessage(msgData);
                     break;
             }
+            
+            $.ajax({
+            	url : "/room/saveGameResult",
+            	data : {
+            		userName : /*[[loginUser.userName]]*/ "",
+            		jobNo : jobObj.jobNo,
+            		type : msgData.type,
+            		startJobNo: startJob.jobNo
+            	},
+            	success : function(result){
+            		if(!(result > 0)){
+            			alert("전적 등록에 실패하였습니다.");
+            		}
+            		
+            	},
+            	error : function(){
+            		alert("서버 오류로 전적 등록에 실패하였습니다.");
+            	},
+            	complete : function(){
+            		setStop();
+            	}
+            });
         }
 
         function addEtcMsg(msgData) {

@@ -1,162 +1,149 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마이페이지 - GodFather 0805</title>
-    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
-    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-    <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
-    <link rel="icon" href="/favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이페이지 - GodFather 0805</title>
+  <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+  <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+  <link rel="stylesheet" th:href="@{/css/member/mypage.css}" />
+  <link rel="icon" href="/favicon.ico">
 </head>
 <body>
 
-    <div th:if="${msg}">
-	    <script th:inline="javascript">
-	        alert( /*[[${msg}]]*/ '회원 정보가 수정되었습니다.');
-	    </script>
-	</div>
-    <!-- 헤더 -->
-    <div th:replace="common/header :: header"></div>
-
-    <!-- 마이페이지 컨테이너 -->
-    <div class="mypage-container">
-        <h1 class="mypage-title">마이페이지</h1>
-		
-        <!-- 성공/에러 메시지 -->
-        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-
-        <!-- 프로필 정보 섹션 -->
-        <div class="profile-section">
-            <h3>프로필 정보</h3>
-            <div class="info-item">
-                <span class="info-label">사용자명:</span>
-                <span class="info-value" th:text="${member.userName}">username</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">닉네임:</span>
-                <span class="info-value" th:text="${member.nickName}">nickname</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">이메일:</span>
-                <span class="info-value" th:text="${member.email}">email@example.com</span>
-            </div>
-        </div>
-
-        <!-- CRUD 액션 버튼들 -->
-        <div class="action-buttons">
-            <button onclick="openEditModal()" class="mypage-btn primary">수정</button>
-            <button onclick="deleteAccount()" class="mypage-btn delete">회원탈퇴</button>
-            <a href="/report/myReports" class="mypage-btn primary">신고내역</a>
-            <a href="/mypage/myitems" class="mypage-btn item">내 아이템</a>
-            <a href="/" class="mypage-btn">닫기</a>
-        </div>
-    </div>
-
-    <!-- 프로필 수정 모달 -->
-    <div id="editModal" class="modal" style="display: none;" >
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>프로필 수정</h3>
-                <span class="close" onclick="closeEditModal()">&times;</span>
-            </div>
-            <form id="editForm" action="/mypage/update" method="POST" onsubmit="return validateForm()">
-                <div class="form-group">
-                    <label for="editUserName">사용자명 (변경불가)</label>
-                    <input type="text" id="editUserName" name="userName" th:value="${member.userName}" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="editNickName">닉네임</label>
-                    <input type="text" id="editNickName" name="nickName" th:value="${member.nickName}" required>
-                </div>
-                <div class="form-group">
-                    <label for="beforePassword">이전비밀번호</label>
-                    <input type="text" id="beforePassword" name="beforePassword" required>
-                </div>
-                <div class="form-group">
-                    <label for="editPassword">비밀번호</label>
-                    <input type="text" id="editPassword" name="password">
-                </div>
-                <div class="form-group">
-                    <label for="editPasswordCheck">비밀번호 확인</label>
-                    <input type="text" id="editPasswordCheck" name="passWordCheck">
-                </div>
-                <div class="form-group">
-                    <label for="editEmail">이메일</label>
-                    <input type="email" id="editEmail" name="email" th:value="${member.email}" required>
-                </div>
-                <div class="modal-buttons">
-                    <button type="submit" class="mypage-btn primary">저장</button>
-                    <button type="button" onclick="closeEditModal()" class="mypage-btn">취소</button>
-                </div>
-                <input type="hidden" id="hiddenPassword" name="hiddenPassword" th:value="${member.password}" required>
-               	<input type="hidden" id="beforeEmail" name="beforeEmail" th:value="${member.email}" required>
-            </form>
-        </div>
-      
-        
-    </div>
-    
-    
-
-<script th:inline="javascript">
-        
-        // 모달 열기
-        function openEditModal() {
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        // 모달 닫기
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        // 모달 외부 클릭 시 닫기
-        window.onclick = function(event) {
-            const modal = document.getElementById('editModal');
-            if (event.target === modal) {
-                closeEditModal();
-            }
-        }
-
-        // 회원탈퇴 확인
-        function deleteAccount() {
-            if (confirm('정말로 회원탈퇴를 하시겠습니까?\n탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
-                if (confirm('정말로 확실하신가요? 이 작업은 되돌릴 수 없습니다.')) {
-                    // 회원탈퇴 처리 - Thymeleaf URL 표현식 사용
-                    window.location.href = /*[[@{/mypage/delete}]]*/ '/mypage/delete';
-                }
-            }
-        }
-
-        // 페이지 로드 완료 시 실행
-        $(document).ready(function() {
-            // 성공/에러 메시지가 있으면 3초 후 자동으로 숨김
-            setTimeout(function() {
-                $('.alert').fadeOut('slow');
-            }, 3000);
-        });
-        
-        function validateForm() {
-            const password = document.getElementById("passWord").value;
-            const passwordCheck = document.getElementById("passWordCheck").value;
-            
-            if (password !== passwordCheck) {
-                alert("비밀번호가 일치하지 않습니다.");
-                return false; // 폼 제출 막기
-            }
-
-            return true; // 폼 제출 허용
-        }
-        
-
-        /*]]>*/
+  <div th:if="${msg}">
+    <script th:inline="javascript">
+      alert( /*[[${msg}]]*/ '회원 정보가 수정되었습니다.');
     </script>
+  </div>
+
+  <!-- 헤더 -->
+  <div th:replace="common/header :: header"></div>
+
+  <div class="mypage-layout">
+    <!-- 사이드바 -->
+    <div class="sidebar">
+      <h2>마이페이지</h2>
+      <ul class="sidebar-menu">
+        <li><a href="#" onclick="openEditModal()" class="sidebar-button">프로필 수정</a></li>
+        <li><a href="/report/myReports" class="sidebar-button">신고내역</a></li>
+        <li><a href="/mypage/myitems" class="sidebar-button">내 아이템</a></li>
+        <li><a href="#" onclick="deleteAccount()" class="sidebar-button">회원 탈퇴</a></li>
+        <li><a href="/score/scorepoint" class="sidebar-button">내 전적 방문</a></li>
+        <li><a href="/" class="sidebar-button">닫기</a></li>
+      </ul>
     </div>
 
-    <!-- 푸터 -->
-    <div th:replace="common/footer :: footer"></div>
+    <!-- 마이페이지 본문 -->
+    <div class="mypage-container">
+      <h1 class="mypage-title">마이페이지</h1>
 
+      <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+      <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+      <!-- 프로필 정보 -->
+      <div class="profile-section">
+        <h3>프로필 정보</h3>
+        <div class="info-item">
+          <span class="info-label">사용자명:</span>
+          <span class="info-value" th:text="${member.userName}">username</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">닉네임:</span>
+          <span class="info-value" th:text="${member.nickName}">nickname</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">이메일:</span>
+          <span class="info-value" th:text="${member.email}">email@example.com</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>프로필 수정</h3>
+        <span class="close" onclick="closeEditModal()">&times;</span>
+      </div>
+      <form id="editForm" action="/mypage/update" method="POST" onsubmit="return validateForm()">
+        <div class="form-group">
+          <label for="editUserName">사용자명 (변경불가)</label>
+          <input type="text" id="editUserName" name="userName" th:value="${member.userName}" readonly>
+        </div>
+        <div class="form-group">
+          <label for="editNickName">닉네임</label>
+          <input type="text" id="editNickName" name="nickName" th:value="${member.nickName}" required>
+        </div>
+        <div class="form-group">
+          <label for="beforePassword">이전비밀번호</label>
+          <input type="text" id="beforePassword" name="beforePassword" required>
+        </div>
+        <div class="form-group">
+          <label for="editPassword">비밀번호</label>
+          <input type="text" id="editPassword" name="password">
+        </div>
+        <div class="form-group">
+          <label for="editPasswordCheck">비밀번호 확인</label>
+          <input type="text" id="editPasswordCheck" name="passWordCheck">
+        </div>
+        <div class="form-group">
+          <label for="editEmail">이메일</label>
+          <input type="email" id="editEmail" name="email" th:value="${member.email}" required>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="mypage-btn primary">저장</button>
+          <button type="button" onclick="closeEditModal()" class="mypage-btn">취소</button>
+        </div>
+        <input type="hidden" id="hiddenPassword" name="hiddenPassword" th:value="${member.password}" required>
+        <input type="hidden" id="beforeEmail" name="beforeEmail" th:value="${member.email}" required>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    function openEditModal() {
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('editModal');
+      if (event.target === modal) {
+        closeEditModal();
+      }
+    }
+
+    function deleteAccount() {
+      if (confirm('정말로 회원탈퇴를 하시겠습니까?\n탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
+        if (confirm('정말로 확실하신가요? 이 작업은 되돌릴 수 없습니다.')) {
+          window.location.href = /*[[@{/mypage/delete}]]*/ '/mypage/delete';
+        }
+      }
+    }
+
+    $(document).ready(function() {
+      setTimeout(function() {
+        $('.alert').fadeOut('slow');
+      }, 3000);
+    });
+
+    function validateForm() {
+      const password = document.getElementById("editPassword").value;
+      const passwordCheck = document.getElementById("editPasswordCheck").value;
+      if (password !== passwordCheck) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return false;
+      }
+      return true;
+    }
+  </script>
+
+  <!-- 푸터 -->
+  <div th:replace="common/footer :: footer"></div>
 </body>
 </html>

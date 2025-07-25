@@ -4,8 +4,6 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.Clob;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +16,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,11 +26,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
+import com.mafia.game.game.model.service.GameRoomServiceImpl;
 import com.mafia.game.game.model.service.RoomHintService;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.game.model.vo.RoomHint;
-import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
@@ -46,6 +42,8 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/room")
 public class GameRoomController {
+
+    private final GameRoomServiceImpl gameRoomServiceImpl;
 
     @Autowired
     private GameRoomService gameRoomService;
@@ -59,7 +57,11 @@ public class GameRoomController {
 	@Autowired
 	private RoomHintService roomHintService;
     
-    private final ObjectMapper objectMapper = new ObjectMapper(); 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    GameRoomController(GameRoomServiceImpl gameRoomServiceImpl) {
+        this.gameRoomServiceImpl = gameRoomServiceImpl;
+    } 
 
     @GetMapping("/createRoom")
     public String createRoomForm() {
@@ -640,5 +642,50 @@ public class GameRoomController {
     		return null;
     	}
     }
+
+    @Controller
+    @RequestMapping("/score")
+    public class ScoreController {
+
+        @GetMapping("/scorepoint")
+        public String scorepoint() {
+            return "score/scorepoint"; // → templates/score/scorepoint.html 로 연결됨
+        }
+    }
+
+
+    
+    //전적 저장을 위한 메소드 추가 by 이수한
+    @GetMapping("/saveGameResult")
+    @ResponseBody
+    public int saveGameResult(String userName, int jobNo, String type, int startJobNo) {
+    	
+    	Map<String,Object> gameResultMap = new HashMap<>();
+    	
+    	gameResultMap.put("userName", userName);
+    	gameResultMap.put("jobNo", jobNo);
+    	
+    	Job finalJob = gameRoomService.getJobDetail(jobNo); //최종 직업 정보 가져오기
+    	
+    	int finalJobClass = finalJob.getJobClass(); //최종 직업 어느팀인지 알기 위해 jobClass 조회
+    	if(finalJobClass == 1) {
+    		gameResultMap.put("team","마피아팀");
+    	}else if(finalJobClass == 2 || finalJobClass == 4) {
+    		gameResultMap.put("team", "시민팀");
+    	}else if(finalJobClass == 3) {
+    		gameResultMap.put("team", "중립팀");
+    	}
+    	
+    	if("MAFIA_WIN".equals(type) && gameResultMap.get("team").equals("마피아팀")) {
+    		gameResultMap.put("teamResult", "승리");
+    	}else if("CITIZEN_WIN".equals(type) && gameResultMap.get("team").equals("시민팀")) {
+    		gameResultMap.put("teamResult", "승리");
+    	}else if("NEUTRALITY_WIN".equals(type) && gameResultMap.get("team").equals("중립팀")) {
+    		gameResultMap.put("teamResult", "승리");
+    	}
+    	
+    	return 0;
+    }
+    
 
 }

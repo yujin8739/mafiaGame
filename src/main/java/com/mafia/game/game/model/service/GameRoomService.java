@@ -1,5 +1,6 @@
 package com.mafia.game.game.model.service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,5 +71,7 @@ public interface GameRoomService {
 	 * 필터링된 방 개수 조회
 	 */
 	int getFilteredRoomCount(Map<String, Object> searchParams);
+	
+	
 	
 }

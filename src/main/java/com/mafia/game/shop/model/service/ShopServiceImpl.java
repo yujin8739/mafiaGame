@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.shop.model.dao.ShopDao;
 import com.mafia.game.shop.model.vo.Shop;
 
@@ -26,8 +27,8 @@ public class ShopServiceImpl implements ShopService {
     }
     
     @Override
-    public List<Shop> selectAllArtworks() {
-        return shopDao.selectAllArtworks(sqlSession);
+    public List<Shop> selectAllArtworks(PageInfo pi) {
+        return shopDao.selectAllArtworks(sqlSession, pi);
     }
     @Override
     public Shop selectArtworkById(int artId) {
@@ -74,6 +75,12 @@ public class ShopServiceImpl implements ShopService {
     public int resetProfileImage(String userName) {
         return shopDao.resetProfileImage(sqlSession, userName);
     }
+
+	@Override
+	public int getListCount() {
+		// TODO Auto-generated method stub
+		return shopDao.getListCount(sqlSession);
+	}
 
   
 }

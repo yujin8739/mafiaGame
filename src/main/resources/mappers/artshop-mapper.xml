@@ -71,6 +71,11 @@
     SET PROFILEIMAGE = NULL
     WHERE USERNAME = #{userName}
 	</update>
+	
+	<select id="getListCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM USER_ARTWORK
+	</select>
   
 
 </mapper>
