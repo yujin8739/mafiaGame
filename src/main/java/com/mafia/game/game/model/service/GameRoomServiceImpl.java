@@ -151,5 +151,6 @@ public class GameRoomServiceImpl implements GameRoomService {
     public int getFilteredRoomCount(Map<String, Object> searchParams) {
         return gameRoomDao.selectFilteredRoomCount(sqlSession, searchParams);
     }
+
 	
 }
