@@ -28,4 +28,6 @@ public interface MemberService {
 	int deleteMember(String userName);
 
 	List<String> getUserNickList(String userList);
+	
+	Member adminLoginDo(String username);
 }

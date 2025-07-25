@@ -10,12 +10,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.security.config.JwtUtil;
 
-@RequestMapping("/api")
+@RestController
+@RequestMapping("/api") 
 public class ApiController {
 	
 	@Autowired
@@ -28,15 +30,17 @@ public class ApiController {
 	private JwtUtil jwtUtil;
 	
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, Object>> loginMember2(@RequestBody Member m, Model model) {
+	public ResponseEntity<Map<String, Object>> loginMember(@RequestBody Member m, Model model) {
 
 		// 사용자정보,토큰,메시지등등 응답 데이터
 		Map<String, Object> response = new HashMap<>();
 
 		try {
 
-			Member loginUser =  mService.loginDo(m.getUserName());
+			Member loginUser =  mService.adminLoginDo(m.getUserName());
 
+			System.out.println(loginUser.toString());
+			System.out.println(m.toString());
 
 			if (loginUser != null && bcrypt.matches(m.getPassword(), loginUser.getPassword())) { // 성공시
 

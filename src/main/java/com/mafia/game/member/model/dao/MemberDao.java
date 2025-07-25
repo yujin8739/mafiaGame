@@ -72,6 +72,10 @@ public class MemberDao {
 		return sqlSession.selectList("memberMapper.getUserNickList",userIdList);
 	}
 
+	public Member adminLoginDo(SqlSessionTemplate sqlSession, String username) {
+		return sqlSession.selectOne("memberMapper.adminLoginDo",username);
+	}
+
 	
 	
 }
