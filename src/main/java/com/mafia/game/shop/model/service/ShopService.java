@@ -2,12 +2,13 @@ package com.mafia.game.shop.model.service;
 
 import java.util.List;
 
+import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.shop.model.vo.Shop;
 
 public interface ShopService {
     int insertArtwork(Shop shop);
     
-    List<Shop> selectAllArtworks();
+    List<Shop> selectAllArtworks(PageInfo pi);
     
     Shop selectArtworkById(int artId);
     
@@ -26,6 +27,8 @@ public interface ShopService {
     String getProfileImage(int userName);
 
     int resetProfileImage(String userName);
+
+	int getListCount();
 
 	
 

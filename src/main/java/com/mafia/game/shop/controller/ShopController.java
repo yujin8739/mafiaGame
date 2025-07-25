@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.mafia.game.common.model.vo.PageInfo;
+import com.mafia.game.common.template.Pagination;
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.shop.model.service.ShopService;
 import com.mafia.game.shop.model.vo.Shop;
@@ -39,9 +41,14 @@ public class ShopController {
 //        return "art/artshop";
 //    }
     @GetMapping("/artshop")
-    public String showArtShopPage(Model model) {
-        List<Shop> shopList = shopService.selectAllArtworks();
+    public String showArtShopPage(@RequestParam(defaultValue = "1")int currentPage,Model model) {
+    	int pageLimit= 10;
+    	int boardLimit= 6;
+    	int listCount =shopService.getListCount();
+    	PageInfo pi =Pagination.getPageInfo(listCount, currentPage, pageLimit, boardLimit);
+        List<Shop> shopList = shopService.selectAllArtworks(pi);
         model.addAttribute("shopList", shopList);
+        model.addAttribute("pi", pi);
         return "art/artshop";
     }
     
