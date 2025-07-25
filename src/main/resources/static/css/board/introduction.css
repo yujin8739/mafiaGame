@@ -38,6 +38,7 @@ body {
 .team-name {
     font-weight: bold;
     font-size: 1rem;
+    color: black;
 }
 
 /* 직업 리스트 영역 (하단) */
@@ -70,7 +71,7 @@ body {
 .job-name {
     margin-top: 5px;
     font-size: 0.9rem;
-    color: #ddd;
+    color: black;
 }
 
 /* 직업 설명 카드 영역 (중앙) */
@@ -166,4 +167,5 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    color: black;
 }

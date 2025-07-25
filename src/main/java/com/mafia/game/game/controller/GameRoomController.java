@@ -4,8 +4,6 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.Clob;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +16,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,11 +26,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.ChatService;
 import com.mafia.game.game.model.service.GameRoomService;
+import com.mafia.game.game.model.service.GameRoomServiceImpl;
 import com.mafia.game.game.model.service.RoomHintService;
 import com.mafia.game.game.model.vo.GameRoom;
+import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.game.model.vo.RoomHint;
-import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
@@ -46,6 +42,8 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/room")
 public class GameRoomController {
+
+    private final GameRoomServiceImpl gameRoomServiceImpl;
 
     @Autowired
     private GameRoomService gameRoomService;
@@ -59,7 +57,11 @@ public class GameRoomController {
 	@Autowired
 	private RoomHintService roomHintService;
     
-    private final ObjectMapper objectMapper = new ObjectMapper(); 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    GameRoomController(GameRoomServiceImpl gameRoomServiceImpl) {
+        this.gameRoomServiceImpl = gameRoomServiceImpl;
+    } 
 
     @GetMapping("/createRoom")
     public String createRoomForm() {
@@ -116,12 +118,150 @@ public class GameRoomController {
                     userCount = 0;
                 }
             }
-            room.setCurrentUserCount(userCount); // ← 🎯 setSetCurrentUserCount에서 변경
+            room.setCurrentUserCount(userCount);
         }
         
         model.addAttribute("rooms", rooms);
         return "chat/roomList";
     }
+    
+    /**
+     * 페이징된 방 목록을 JSON으로 반환하는 API (DB에서 직접 페이징 처리)
+     * @param page 페이지 번호 (기본값: 1)
+     * @param size 페이지 크기 (기본값: 5)
+     * @return JSON 형태의 방 목록과 페이징 정보
+     */
+    @GetMapping("/api/list")
+    @ResponseBody
+    public Map<String, Object> getRoomListAPI(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        // 1. 전체 방 개수 조회
+        int totalRooms = gameRoomService.getTotalRoomCount();
+        
+        // 2. 페이징 계산
+        int totalPages = (int) Math.ceil((double) totalRooms / size);
+        int offset = (page - 1) * size;
+        
+        // 3. 페이징된 방 목록 조회 (DB에서 직접 처리)
+        List<GameRoom> rooms = gameRoomService.getRoomsPaged(offset, size);
+        
+        // 4. 각 방의 현재 인원수 계산 및 상태 설정
+        for (GameRoom room : rooms) {
+            int userCount = calculateUserCount(room.getUserList());
+            room.setCurrentUserCount(userCount);
+            
+            // 게임 상태 설정 (대기중/게임중)
+            if (room.getIsGaming() != null && room.getIsGaming().equals("Y")) {
+                room.setIsGaming("게임중");
+            } else {
+                room.setIsGaming("대기중");
+            }
+        }
+        
+        // 5. 결과 반환
+        Map<String, Object> result = new HashMap<>();
+        result.put("rooms", rooms);
+        result.put("currentPage", page);
+        result.put("totalPages", totalPages);
+        result.put("totalRooms", totalRooms);
+        result.put("pageSize", size);
+        
+        return result;
+    }
+
+    /**
+     * 검색/필터링 방목록 조회
+     */
+    @GetMapping("/api/search")
+    @ResponseBody
+    public Map<String, Object> searchRoomsAPI(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "전체") String type,
+            @RequestParam(defaultValue = "전체") String status,
+            @RequestParam(defaultValue = "") String keyword) {
+               
+        Map<String, Object> searchParams = new HashMap<>();
+        
+        // 방 종류 변환
+        if (!"전체".equals(type)) {
+            searchParams.put("type", type); // "일반", "친선" 그대로 사용
+        }
+        
+        // 방 상태 변환 
+        if (!"전체".equals(status)) {
+            if ("게임중".equals(status)) {
+                searchParams.put("isGaming", "Y");
+            } else if ("대기중".equals(status)) {
+                searchParams.put("isGaming", "N");
+            }
+        }
+        
+        // 검색어 처리
+        if (!keyword.trim().isEmpty()) {
+            searchParams.put("keyword", keyword.trim());
+        }
+        
+        // 2. 페이징 계산
+        int offset = (page - 1) * size;
+        searchParams.put("offset", offset);
+        searchParams.put("limit", size);
+        
+        // 3. 필터링된 방 개수 조회
+        int totalRooms = gameRoomService.getFilteredRoomCount(searchParams);
+        int totalPages = (int) Math.ceil((double) totalRooms / size);
+        
+        // 4. 필터링된 방 목록 조회
+        List<GameRoom> rooms = gameRoomService.searchRooms(searchParams);
+        
+        // 5. 각 방의 현재 인원수 계산 및 상태를 다시 한글로 변환
+        for (GameRoom room : rooms) {
+            int userCount = calculateUserCount(room.getUserList());
+            room.setCurrentUserCount(userCount);
+            
+            // DB 값을 사용자 친화적인 한글로 변환
+            if (room.getIsGaming() != null && room.getIsGaming().equals("Y")) {
+                room.setIsGaming("게임중");
+            } else {
+                room.setIsGaming("대기중");
+            }
+        }
+        
+        // 6. 결과 반환
+        Map<String, Object> result = new HashMap<>();
+        result.put("rooms", rooms);
+        result.put("currentPage", page);
+        result.put("totalPages", totalPages);
+        result.put("totalRooms", totalRooms);
+        result.put("pageSize", size);
+        result.put("filters", Map.of(
+            "type", type,           // 원본 한글 값
+            "status", status,       // 원본 한글 값 
+            "keyword", keyword      // 원본 검색어
+        ));
+        
+        return result;
+    }
+
+    /**
+     * 유저 리스트 JSON에서 실제 인원수를 계산하는 헬퍼 메소드
+     */
+    private int calculateUserCount(String userListJson) {
+        if (userListJson == null || userListJson.isEmpty() || userListJson.equals("[]")) {
+            return 0;
+        }
+        
+        try {
+            List<String> users = objectMapper.readValue(userListJson, new TypeReference<List<String>>() {});
+            return users.size();
+        } catch (Exception e) {
+            System.err.println("JSON 파싱 실패: " + userListJson);
+            return 0;
+        }
+    }
+
     
     @GetMapping("/{roomNo}/{password}")
     public String enterRoom(@PathVariable int roomNo, 
@@ -182,7 +322,6 @@ public class GameRoomController {
     	    						 @RequestParam int size,
     	    						 @RequestParam String job) {
     	String type = "chat";
-    	System.out.println("직업========================"+job);
     	switch(job) {
     		case "ghost":case "mafiaGhost":case "spiritualists": type = "death"; break;
     		case "mafia": type = "mafia"; break;
@@ -232,7 +371,7 @@ public class GameRoomController {
     
     @GetMapping("/getJob")
     @ResponseBody
-    public Job getJob(@RequestParam int roomNo, HttpSession session,
+    public Map<String, Job> getJob(@RequestParam int roomNo, HttpSession session,
     				RedirectAttributes redirectAttributes) {
         Member loginUser = (Member) session.getAttribute("loginUser");
         if (loginUser == null) {
@@ -244,25 +383,28 @@ public class GameRoomController {
         Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
         String userListJson = clobToString((Clob) result.get("USERLIST"));
         String jobJson = (String) result.get("JOB");
+        String startJobJson = (String) result.get("STARTJOB");
 
         ObjectMapper mapper = new ObjectMapper();
         try {
         	if(userListJson != null &&jobJson != null) {
-        		System.out.println(">> userListJson: " + userListJson);
-        		 System.out.println(">> jobJson: " + jobJson);
 	        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
 				List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+				List<Integer> startList = mapper.readValue(startJobJson,  new TypeReference<List<Integer>>() {});
 				
 				int index = userList.indexOf(userName);
 				int myJob = jobList.get(index);
-								
-				return gameRoomService.getJobDetail(myJob);
+				int myStartJob = startList.get(index);
+				Map<String, Job> resultMap = new HashMap<>();
+				
+				resultMap.put("myJob", gameRoomService.getJobDetail(myJob));
+				resultMap.put("myStartJob", gameRoomService.getJobDetail(myStartJob));
+				return resultMap;
         	} else {
         		return null;
         	}
 			
 		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -311,8 +453,6 @@ public class GameRoomController {
         		return null;
         	} 
         	
-        	System.out.println(">> userListJson: " + userListJson);
-        	System.out.println(">> jobJson: " + jobJson);
         	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
         	List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
         		
@@ -322,6 +462,83 @@ public class GameRoomController {
 			e.printStackTrace();
 		}
         return gameRoomService.getJobDetail(targetJob);
+    }
+    
+    @GetMapping("/spyCheck")
+    @ResponseBody
+    public boolean spyCheck(@RequestParam int roomNo, @RequestParam int dayNo, @RequestParam String targetName, HttpSession session) {
+    	Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+        String userListJson = clobToString((Clob) result.get("USERLIST"));
+        String jobJson = (String) result.get("JOB");
+        int targetJob = 0;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+        	if(userListJson == null || jobJson == null) {
+        		return false;
+        	} 
+        	
+        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+        	List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+        		
+        	int index = userList.indexOf(targetName);
+        	targetJob = jobList.get(index);
+        	if(targetJob == 1 || targetJob == 99999) {
+        		// 현재 로그인한 사용자 정보
+        		Member loginUser = (Member) session.getAttribute("loginUser");
+        		
+        		int myIndex = userList.indexOf(loginUser.getUserName());
+        		
+        		String updatedJobJson = null;
+				if (myIndex != -1 && myIndex < jobList.size()) {
+					jobList.set(myIndex, 1);
+					updatedJobJson = mapper.writeValueAsString(jobList);
+					gameRoomService.updateJob(roomNo, updatedJobJson);
+				}
+        		return true;
+        	} else {
+        		return false;
+        	}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+        return false;
+    }
+    
+    @GetMapping("/robberJob")
+    @ResponseBody
+    public Job robberJob(@RequestParam int roomNo, @RequestParam String targetName, HttpSession session) {
+    	Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
+        String userListJson = clobToString((Clob) result.get("USERLIST"));
+        String jobJson = (String) result.get("STARTJOB");
+        int targetJob = 0;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+        	if(userListJson == null || jobJson == null) {
+        		return gameRoomService.getJobDetail(8);
+        	} 
+        	
+        	List<String> userList = mapper.readValue(userListJson, new TypeReference<List<String>>() {});
+        	List<Integer> jobList = mapper.readValue(jobJson, new TypeReference<List<Integer>>() {});
+        		
+        	int index = userList.indexOf(targetName);
+        	targetJob = jobList.get(index);
+        	
+        	// 현재 로그인한 사용자 정보
+        	Member loginUser = (Member) session.getAttribute("loginUser");
+        		
+        	int myIndex = userList.indexOf(loginUser.getUserName());
+        		
+        	String updatedJobJson = null;
+			if (myIndex != -1 && myIndex < jobList.size()) {
+				jobList.set(myIndex, targetJob);
+				updatedJobJson = mapper.writeValueAsString(jobList);
+				gameRoomService.updateJob(roomNo, updatedJobJson);
+				return gameRoomService.getJobDetail(targetJob);
+			}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+        return gameRoomService.getJobDetail(8);
     }
     
     @GetMapping("/mafiaKillResult")
@@ -425,6 +642,7 @@ public class GameRoomController {
     		return null;
     	}
     }
+
     @Controller
     @RequestMapping("/score")
     public class ScoreController {
@@ -434,5 +652,40 @@ public class GameRoomController {
             return "score/scorepoint"; // → templates/score/scorepoint.html 로 연결됨
         }
     }
+
+
+    
+    //전적 저장을 위한 메소드 추가 by 이수한
+    @GetMapping("/saveGameResult")
+    @ResponseBody
+    public int saveGameResult(String userName, int jobNo, String type, int startJobNo) {
+    	
+    	Map<String,Object> gameResultMap = new HashMap<>();
+    	
+    	gameResultMap.put("userName", userName);
+    	gameResultMap.put("jobNo", jobNo);
+    	
+    	Job finalJob = gameRoomService.getJobDetail(jobNo); //최종 직업 정보 가져오기
+    	
+    	int finalJobClass = finalJob.getJobClass(); //최종 직업 어느팀인지 알기 위해 jobClass 조회
+    	if(finalJobClass == 1) {
+    		gameResultMap.put("team","마피아팀");
+    	}else if(finalJobClass == 2 || finalJobClass == 4) {
+    		gameResultMap.put("team", "시민팀");
+    	}else if(finalJobClass == 3) {
+    		gameResultMap.put("team", "중립팀");
+    	}
+    	
+    	if("MAFIA_WIN".equals(type) && gameResultMap.get("team").equals("마피아팀")) {
+    		gameResultMap.put("teamResult", "승리");
+    	}else if("CITIZEN_WIN".equals(type) && gameResultMap.get("team").equals("시민팀")) {
+    		gameResultMap.put("teamResult", "승리");
+    	}else if("NEUTRALITY_WIN".equals(type) && gameResultMap.get("team").equals("중립팀")) {
+    		gameResultMap.put("teamResult", "승리");
+    	}
+    	
+    	return 0;
+    }
+    
 
 }

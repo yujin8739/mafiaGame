@@ -57,6 +57,71 @@
 	    ORDER BY ROOMNO DESC
 	</select>
 	
+		<!-- 페이징된 방 목록 조회 -->
+	<select id="selectRoomsPaged" resultType="GameRoom" parameterType="map">
+	    SELECT * FROM (
+	        SELECT ROWNUM AS RN, A.* FROM (
+	            SELECT ROOMNO, ROOMNAME, USERLIST, HEADCOUNT, PASSWORD, TYPE, ISGAMING
+	            FROM GAME_ROOM
+	            ORDER BY ROOMNO DESC
+	        ) A
+	        WHERE ROWNUM &lt;= #{offset} + #{limit}
+	    )
+	    WHERE RN > #{offset}
+	</select>
+	
+	<!-- 전체 방 개수 조회 -->
+	<select id="selectTotalRoomCount" resultType="int">
+	    SELECT COUNT(*)
+	    FROM GAME_ROOM
+	</select>
+	
+	<!-- 필터링된 방 목록 조회 (검색 + 페이징) -->
+	<select id="selectRoomsFiltered" resultType="GameRoom" parameterType="map">
+	    SELECT * FROM (
+	        SELECT ROWNUM AS RN, A.* FROM (
+	            SELECT ROOMNO, ROOMNAME, USERLIST, HEADCOUNT, PASSWORD, TYPE, ISGAMING
+	            FROM GAME_ROOM
+	            <where>
+	                <if test="type != null">
+	                    AND TYPE = #{type}
+	                </if>
+	                
+	                <if test="isGaming != null">
+	                    AND ISGAMING = #{isGaming}
+	                </if>
+	                
+	                <if test="keyword != null">
+	                    AND UPPER(ROOMNAME) LIKE UPPER('%' || #{keyword} || '%')
+	                </if>
+	            </where>
+	            ORDER BY ROOMNO DESC
+	        ) A
+	        WHERE ROWNUM &lt;= #{offset} + #{limit}
+	    )
+	    WHERE RN > #{offset}
+	</select>
+	
+	<!-- 필터링된 방 개수 조회 -->
+	<select id="selectFilteredRoomCount" resultType="int" parameterType="map">
+	    SELECT COUNT(*)
+	    FROM GAME_ROOM
+	    <where>
+	        <if test="type != null">
+	            AND TYPE = #{type}
+	        </if>
+	        
+	        <if test="isGaming != null">
+	            AND ISGAMING = #{isGaming}
+	        </if>
+	        
+	        <if test="keyword != null">
+	            AND UPPER(ROOMNAME) LIKE UPPER('%' || #{keyword} || '%')
+	        </if>
+	    </where>
+	</select>
+	
+	
 	<update id="updateReadyList">
 	    UPDATE GAME_ROOM
 	    SET READYUSER = #{userList}
@@ -67,7 +132,8 @@
 	    UPDATE GAME_ROOM
 	    SET READYUSER = '[]',
 	    	ISGAMING = 'Y',
-	    	JOB = #{updatedJob}  
+	    	JOB = #{updatedJob},  
+	    	STARTJOB = #{updatedJob}   
 	    WHERE ROOMNO = #{roomNo}
 	</update>
 	
@@ -99,7 +165,7 @@
     </select>
     
     <select id="getRoomJob" resultType="map" parameterType="int">
-	    SELECT USERLIST, JOB
+	    SELECT USERLIST, JOB, STARTJOB
 	    FROM GAME_ROOM
 	    WHERE ROOMNO = #{roomNo}
 	</select>
