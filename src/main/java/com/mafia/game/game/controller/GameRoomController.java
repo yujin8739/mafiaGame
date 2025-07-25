@@ -642,6 +642,18 @@ public class GameRoomController {
     		return null;
     	}
     }
+
+    @Controller
+    @RequestMapping("/score")
+    public class ScoreController {
+
+        @GetMapping("/scorepoint")
+        public String scorepoint() {
+            return "score/scorepoint"; // → templates/score/scorepoint.html 로 연결됨
+        }
+    }
+
+
     
     //전적 저장을 위한 메소드 추가 by 이수한
     @GetMapping("/saveGameResult")
@@ -675,4 +687,5 @@ public class GameRoomController {
     	return 0;
     }
     
+
 }

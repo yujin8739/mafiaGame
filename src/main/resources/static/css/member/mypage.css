@@ -1,20 +1,66 @@
+/* 공통 설정 */
 body {
     background-color: #0b0b0b;
     color: #f5f5f5;
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    min-height: 100vh;
+    min-height: 100px;
 }
 
-/* 마이페이지 컨테이너 */
-.mypage-container {
-    max-width: 800px;
-    margin: 50px auto;
+/* 전체 마이페이지 레이아웃 (사이드바 포함) */
+.mypage-layout {
+    display: flex;
+    justify-content: center;
+    gap: 30px; /* 사이 간격 */
     padding: 40px;
+}
+
+/* 사이드바 */
+.sidebar {
+    width: 240px;
     background-color: #1a1a1a;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
-    border: 1px solid #333;
+    padding: 20px;
+    border-radius: 20px; /* 카드처럼 둥글게 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.sidebar h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #ff3b3b;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-button {
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    background-color: #222;
+    border-radius: 8px;
+    color: #f5f5f5;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-button:hover {
+    background-color: #333;
+}
+
+/* 마이페이지 본문 컨테이너 */
+.mypage-container {
+    flex: 1;
+    padding: 30px;
+    background-color: #1a1a1a;
+    border-radius: 20px; /* 카드처럼 둥글게 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    color: #f5f5f5;
+    max-width: 900px;
 }
 
 /* 제목 */
@@ -69,7 +115,7 @@ body {
     text-align: right;
 }
 
-/* 버튼 스타일 - header.css의 auth-buttons 스타일과 동일 */
+/* 버튼 스타일 */
 .mypage-btn {
     padding: 8px 16px;
     background-color: transparent;
@@ -90,40 +136,23 @@ body {
     border-color: #cc2e2e;
 }
 
-.mypage-btn.primary {
-    background-color: #cc2e2e;
-    border-color: #cc2e2e;
-}
-
-.mypage-btn.primary:hover {
-    background-color: #cc2e2e;
-    border-color: #cc2e2e;
-    color: white;
-}
-.mypage-btn.item {
-    background-color: #cc2e2e;
-    border-color: #cc2e2e;
-    color: white;
-}
-.mypage-btn.item:hover {
-    background-color: #cc2e2e;
-    border-color: #cc2e2e;
-    color: white;
-}
-
+.mypage-btn.primary,
+.mypage-btn.item,
 .mypage-btn.delete {
     background-color: #cc2e2e;
     border-color: #cc2e2e;
     color: white;
 }
 
+.mypage-btn.primary:hover,
+.mypage-btn.item:hover,
 .mypage-btn.delete:hover {
     background-color: #cc2e2e;
     border-color: #cc2e2e;
     color: white;
 }
 
-/* 액션 버튼들 */
+/* 액션 버튼 영역 */
 .action-buttons {
     text-align: center;
     margin-top: 40px;
@@ -135,15 +164,15 @@ body {
     margin: 0 10px;
 }
 
-/* 모달 스타일 */
+/* 모달 */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -160,6 +189,7 @@ body {
     overflow-y: auto;
 }
 
+/* 모달 헤더 */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -187,7 +217,7 @@ body {
     color: #ff3b3b;
 }
 
-/* 폼 스타일 */
+/* 폼 */
 #editForm {
     padding: 30px;
 }
@@ -221,13 +251,13 @@ body {
     border-color: #ff3b3b;
 }
 
-.form-group input:readonly {
+.form-group input:read-only {
     background-color: #222;
     color: #999;
     cursor: not-allowed;
 }
 
-/* 모달 버튼들 */
+/* 모달 버튼 */
 .modal-buttons {
     display: flex;
     justify-content: center;
@@ -236,4 +266,3 @@ body {
     padding-top: 20px;
     border-top: 1px solid #333;
 }
-
