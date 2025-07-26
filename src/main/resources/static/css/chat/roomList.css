@@ -50,20 +50,21 @@
 
 /* ===== 필터 섹션 ===== */
 .filter-section {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     margin-bottom: 20px;
     padding: 15px;
     background-color: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e9ecef;
     flex-shrink: 0;
-    gap: 15px;
+    flex-direction: row !important;
 }
 
 .filter-left {
-    margin-right: auto;
+    display: flex;
+    align-items: center;
 }
 
 .total-rooms {
@@ -216,6 +217,7 @@
     overflow-y: visible; /* 스크롤 제거 */
     height: auto; /* 고정 제거 */
 }
+
 .room-table tbody tr {
     display: flex;
     width: 100%;
@@ -359,7 +361,7 @@
     font-size: 16px;
     color: black;
     text-align: center;
-
+}
 
 /* ===== 페이징 섹션 ===== */
 .pagination-section {
@@ -367,15 +369,16 @@
     padding: 20px 0;
     border-top: 1px solid #eee;
     flex-shrink: 0;
-    display: flex;
-    justify-content: center;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
     width: 100%;
 }
 
 .pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
     gap: 10px;
 }
 
@@ -589,9 +592,9 @@
     }
 
     .filter-section {
-        flex-direction: column;
+        flex-direction: column !important;
         gap: 15px;
-        align-items: stretch;
+        align-items: stretch !important;
     }
     
     .filter-left {
@@ -686,5 +689,4 @@
 
 .room-table tbody tr {
     animation: fadeIn 0.3s ease-out;
-}
 }
