@@ -149,18 +149,19 @@
 
     <!-- 친구 요청 정보 조회 (ID로) -->
 	<select id="getFriendRequestById" parameterType="_int" resultMap="friendRelationResultMap">
-		fr.RELATIONNO,
-		fr.REQUESTERNAME,
-		fr.RECEIVERNAME,
-		fr.RECEIVERSTATUS,
-		fr.REQUESTDATE,
-		fr.RESPONSEDATE,
-		u1.NICKNAME AS REQUESTER_NICKNAME,
-		u2.NICKNAME AS RECEIVER_NICKNAME
-		FROM FRIEND_RELATION fr
-		LEFT JOIN USER_INFO u1 ON fr.REQUESTERNAME = u1.USERNAME
-		LEFT JOIN USER_INFO u2 ON fr.RECEIVERNAME = u2.USERNAME
-		WHERE fr.RELATIONNO = #{relationNo}
+	    SELECT 
+	        fr.RELATIONNO,
+	        fr.REQUESTERNAME,
+	        fr.RECEIVERNAME,
+	        fr.RECEIVERSTATUS,
+	        fr.REQUESTDATE,
+	        fr.RESPONSEDATE,
+	        u1.NICKNAME AS REQUESTER_NICKNAME,
+	        u2.NICKNAME AS RECEIVER_NICKNAME
+	    FROM FRIEND_RELATION fr
+	    LEFT JOIN USER_INFO u1 ON fr.REQUESTERNAME = u1.USERNAME
+	    LEFT JOIN USER_INFO u2 ON fr.RECEIVERNAME = u2.USERNAME
+	    WHERE fr.RELATIONNO = #{relationNo}
 	</select>
 
     <!-- 친구 목록에 추가 -->

@@ -27,33 +27,6 @@ public class FriendController {
 	@Autowired
 	private FriendService friendService;
 
-	/**
-	 * 친구 목록 페이지
-	 */
-	@GetMapping("/list")
-	public String friendList(@SessionAttribute(name = "loginUser", required = false) Member loginUser, Model model) {
-
-		// 로그인 체크
-		if (loginUser == null) {
-			return "redirect:/login/view";
-		}
-
-		// 친구 목록 가져오기
-		ArrayList<FriendList> friendList = friendService.getFriendList(loginUser.getUserName());
-
-		// 받은 친구 요청 가져오기
-		ArrayList<FriendRelation> friendRequests = friendService.getPendingRequests(loginUser.getUserName());
-
-		// 받은 게임 초대 가져오기
-		ArrayList<GameInvite> gameInvites = friendService.getPendingGameInvites(loginUser.getUserName());
-
-		model.addAttribute("friendList", friendList);
-		model.addAttribute("friendRequests", friendRequests);
-		model.addAttribute("gameInvites", gameInvites);
-		model.addAttribute("currentUser", loginUser);
-
-		return "friend/friendList";
-	}
 
 	/**
 	 * 친구 검색하기 (모달용)
