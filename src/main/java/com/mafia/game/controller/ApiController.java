@@ -1,17 +1,23 @@
 package com.mafia.game.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mafia.game.game.model.service.GameRoomService;
+import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.security.config.JwtUtil;
@@ -22,6 +28,9 @@ public class ApiController {
 	
 	@Autowired
 	private MemberService mService;
+	
+	@Autowired 
+	private GameRoomService gService;
 	
 	@Autowired
 	private BCryptPasswordEncoder bcrypt;
@@ -70,6 +79,23 @@ public class ApiController {
 			return ResponseEntity.internalServerError().body(response);
 		}
 
+	}
+	
+	@GetMapping("/gameroom/list")
+	public ResponseEntity<Map<String, Object>> gameRoomList (@RequestParam int offset, @RequestParam int limit) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			List<GameRoom> gameRooms = gService.getRoomsPaged(offset, limit);
+			int totalCount = gService.getTotalRoomCount();
+			response.put("gameRooms", gameRooms);
+			response.put("totalCount", totalCount);
+			response.put("success", true);
+			response.put("message", "성공");
+		} catch (Exception e) {
+			response.put("error", e);
+			return ResponseEntity.badRequest().body(response);
+		}
+		return ResponseEntity.ok(response);
 	}
 	
 }
