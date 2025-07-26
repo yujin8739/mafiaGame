@@ -23,12 +23,12 @@
     	<!-- 왼쪽 영역 (예시) -->
 		<div class="game-room-content" style="flex: 2;">
 		<!-- 게입방 목록 -->	
-		  <div th:replace="~{chat/roomList :: roomListFragment}"></div>
+			<div th:replace="~{chat/roomList :: roomListFragment}"></div>
 		</div>
-    	<div th:replace="~{chat/homeChat :: homeChat}"></div>
-    	
-    	<!-- 주석 해놔야 문제없이작성 가능 문제 해경 후 작성하기 내일 사이드바 해결하자
-    	 <div th:replace="~{friend/friendSidebar :: friendSidebarFragment}"></div> -->
+		
+			<div th:replace="~{chat/homeChat :: homeChat}"></div>
+    	     	    	
+     	 	<div th:replace="~{friend/friendSidebar :: friendSidebarFragment}"></div>
     </div>
     <div th:replace="~{common/footer :: footer}"></div>
     
@@ -65,16 +65,6 @@
 			}
 		});
 		
-		/* // 친구목록 메뉴 클릭 시 사이드바 열기
-        const friendLink=document.querySelector('.top-nav a[href="/friend/list"]');
-        if(friendLink){
-            friendLink.addEventListener('click',function(e){
-                e.preventDefault();
-                if(typeof openFriendSidebar==='function'){
-                    openFriendSidebar();
-                }
-            });
-        } */
 	});
 	
 	function connect() {
