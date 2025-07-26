@@ -4,9 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.shop.model.vo.Shop;
 
 @Repository
@@ -18,8 +20,16 @@ public class ShopDao {
     
     
     
-    public List<Shop> selectAllArtworks(SqlSession session) {
-        return session.selectList("artshopMapper.selectAllArtworks");
+    public List<Shop> selectAllArtworks(SqlSession session, PageInfo pi) {
+    	
+    	//currentPage = 3 이라고 가정
+    	int limit = pi.getBoardLimit(); // 6개씩
+    	int offset = (pi.getCurrentPage()-1) * limit; //
+    	
+    	RowBounds rowBounds = new RowBounds(offset, limit);
+    	
+    	
+        return session.selectList("artshopMapper.selectAllArtworks", null , rowBounds);
     }
     
     public Shop selectArtworkById(SqlSession session, int artId) {
@@ -68,6 +78,13 @@ public class ShopDao {
     public int resetProfileImage(SqlSession sqlSession, String userName) {
         return sqlSession.update("artshopMapper.resetProfileImage", userName);
     }
+
+
+
+	public int getListCount(SqlSession sqlSession) {
+		// TODO Auto-generated method stub
+		return sqlSession.selectOne("artshopMapper.getListCount");
+	}
     
     
     

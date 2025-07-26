@@ -47,6 +47,14 @@
 	  </div>
 	</div>
   </div>
+  
+  
+  <!-- 페이지네이션 -->
+    <ul class="pagination justify-content-center" th:if="${pi.endPage != 0}">
+      <li th:each="i : ${#numbers.sequence(pi.startPage,pi.endPage)}" th:classappend="${pi.currentPage == i ? ' active' : ''}" class="page-item">
+        <a class="page-link" th:href="@{/artshop(currentPage=${i})}" th:text="${i}"></a>
+      </li>
+    </ul>
   </div>
   <!-- Footer 부분 -->
   <div th:replace="common/footer :: footer"></div>
