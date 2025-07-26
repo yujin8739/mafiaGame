@@ -463,12 +463,13 @@
 
    // 쪽지 보내기 (미구현)
    function sendMessage(userName) {
-       alert('쪽지 기능은 준비 중입니다.');
+	   window.location.href = '/message/write';
    }
 
    // 게임 초대하기
    function inviteToGame(userName) {
-		
+	   alert('현재 기능 구현중 쫌만 기다리삼.');
+/* 		
 	   //방번호 입력
        const roomNo = prompt(`${userName}님을 게임에 초대하기\n\n초대할 게임방 번호를 입력하세요:`);
        
@@ -512,7 +513,7 @@
                // 버튼 상태 복원
                inviteButtons.prop('disabled', false).text('초대');
            }
-       });
+       }); */
    }
 </script>
 </body>
