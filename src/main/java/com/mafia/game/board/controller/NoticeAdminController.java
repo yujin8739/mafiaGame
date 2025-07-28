@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -145,6 +146,33 @@ public class NoticeAdminController {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("오류 발생: " + e.getMessage());
 	    }
 	}
+	
+	//공지사항 등록
+	@PostMapping("/noticeUpload")
+    public ResponseEntity<String> uploadNotice(@RequestPart("notice") Notice notice,
+                                               @RequestPart(value = "file", required = false) MultipartFile uploadFile) {
+        try {
+            // 파일 업로드 처리
+            if (uploadFile != null && !uploadFile.isEmpty()) {
+                String changeName = saveFile(uploadFile);
+                notice.setOriginName(uploadFile.getOriginalFilename());
+                // ✅ DB에는 웹 접근 가능한 경로 저장
+                notice.setChangeName("/resources/uploadFile/" + changeName);
+            }
+
+            int result = nService.writeNotice(notice);
+
+            if (result > 0) {
+                return ResponseEntity.ok("공지사항 등록 성공");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("공지사항 등록 실패");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("서버 오류: " + e.getMessage());
+        }
+    }
 	
 	public String saveFile(MultipartFile uploadFile) {
         String originName = uploadFile.getOriginalFilename();
