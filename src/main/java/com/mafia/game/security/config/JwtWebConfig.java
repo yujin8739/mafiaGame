@@ -33,7 +33,7 @@ public class JwtWebConfig implements WebMvcConfigurer {
                         .allowedOriginPatterns("*") // 모든 IP의 :5173 허용
                         .allowedMethods("*") // GET, POST, PUT 등 모든 메서드 허용
                         .allowedHeaders("*") // 모든 헤더 허용
-                        .allowCredentials(false); // 쿠키 인증 허용
+                        .allowCredentials(true); // 쿠키 인증 허용
             }
         };
     }

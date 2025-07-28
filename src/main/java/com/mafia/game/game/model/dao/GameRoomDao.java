@@ -4,9 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.RowBounds;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
@@ -155,5 +157,23 @@ public class GameRoomDao {
     public int selectFilteredRoomCount(SqlSessionTemplate sqlSession, Map<String, Object> searchParams) {
         return sqlSession.selectOne("gameRoomMapper.selectFilteredRoomCount", searchParams);
     }
+
+	public int insertGameResult(SqlSessionTemplate sqlSession, Map<String, Object> gameResultMap) {
+		return sqlSession.insert("gameRoomMapper.insertGameResult", gameResultMap);
+	}
+
+	public int getTotalRecodeCount(SqlSessionTemplate sqlSession, String userName) {
+		return sqlSession.selectOne("gameRoomMapper.getTotalRecodeCount", userName);
+	}
+
+	public List<String> getRecodeList(SqlSessionTemplate sqlSession, PageInfo pi, String userName) {
+		Map<String, Object> param = new HashMap<>();
+		
+		int limit = pi.getBoardLimit();
+		int offset = (pi.getCurrentPage()-1) * limit;
+		param.put("rowBounds", new RowBounds(offset, limit));
+		param.put("userName", userName);
+		return sqlSession.selectList("gameRoomMapper.getRecodeList", param);
+	}
 	
 }
