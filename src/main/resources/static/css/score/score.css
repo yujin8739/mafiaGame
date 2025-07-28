@@ -1,1 +1,78 @@
-@charset "UTF-8";
+body {
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	background: linear-gradient(to bottom right, #101820, #1A1F2B);
+	color: #fff;
+	margin: 0;
+	padding: 20px;
+}
+
+h1 {
+	text-align: center;
+	font-size: 2.5rem;
+	margin-bottom: 40px;
+	color: #FFDC00;
+}
+
+.record-container {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;
+	justify-content: center;
+}
+
+.record-card {
+	background-color: #1e1e2f;
+	border-radius: 12px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+	padding: 20px;
+	width: 250px;
+	transition: transform 0.2s;
+}
+
+.record-card:hover {
+	transform: translateY(-5px);
+}
+
+.record-card .team {
+	font-size: 1.2rem;
+	font-weight: bold;
+	color: #00bcd4;
+	margin-bottom: 10px;
+}
+
+.record-card .job {
+	font-size: 1.1rem;
+	color: #ff9800;
+	margin-bottom: 10px;
+}
+
+.record-card .result {
+	font-size: 1rem;
+	color: #4caf50;
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.pagination button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    margin: 0 5px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: #555;
+}
+
+.pagination button:disabled {
+    background-color: #888;
+    cursor: default;
+}

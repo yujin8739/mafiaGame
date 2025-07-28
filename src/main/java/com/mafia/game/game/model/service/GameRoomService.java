@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.job.model.vo.Job;
@@ -71,6 +72,12 @@ public interface GameRoomService {
 	 * 필터링된 방 개수 조회
 	 */
 	int getFilteredRoomCount(Map<String, Object> searchParams);
+
+	int insertGameResult(Map<String, Object> gameResultMap);
+
+	int getTotalRecodeCount(String userName);
+
+	List<String> getRecodeList(PageInfo pi, String userName);
 	
 	
 	
