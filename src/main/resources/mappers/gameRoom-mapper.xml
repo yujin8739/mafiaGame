@@ -294,4 +294,37 @@
 	<delete id="deleteAllGameRooms">
 		DELETE FROM GAME_ROOM
 	</delete>
+	
+	<insert id="insertGameResult" parameterType="map">
+		INSERT INTO GAME_RESULT (RESULTNO, 
+								 USERNAME, 
+								 JOBNO,
+								 TEAM,
+								 TEAMRESULT,
+								 GAMEDATE)
+		VALUES (#{resultNo}, 
+				#{userName}, 
+				#{jobNo}, 
+				#{team}, 
+				#{teamResult}, 
+				#{date})
+	</insert>
+	
+	<select id="getTotalRecodeCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM GAME_RESULT
+		WHERE USERNAME = #{userName}
+	</select>
+	
+	<select id="getRecodeList" resultType="map">
+		SELECT r.RESULTNO, 
+		       r.USERNAME, 
+		       r.JOBNO, 
+		       r.TEAM, 
+		       r.TEAMRESULT, 
+		       r.GAMEDATE,
+		       j.JOBVISIBLE
+		FROM GAME_RESULT r, JOB j
+		WHERE r.JOBNO = J.JOBNO AND USERNAME = #{userName}
+	</select>
 </mapper>

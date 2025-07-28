@@ -21,11 +21,7 @@
 	</select>
 	
 	<select id="noticeList" resultType="Notice">
-		SELECT NOTICENO
-			  ,USERNAME
-			  ,TITLE
-			  ,CREATEDATE
-			  ,COUNT
+		SELECT *
 		FROM NOTICE
 		WHERE STATUS = 'Y'
 		<if test="keyword != ''">

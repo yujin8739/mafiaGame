@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.game.model.dao.GameRoomDao;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Kill;
@@ -151,6 +152,21 @@ public class GameRoomServiceImpl implements GameRoomService {
     public int getFilteredRoomCount(Map<String, Object> searchParams) {
         return gameRoomDao.selectFilteredRoomCount(sqlSession, searchParams);
     }
+
+	@Override
+	public int insertGameResult(Map<String, Object> gameResultMap) {
+		return gameRoomDao.insertGameResult(sqlSession, gameResultMap);
+	}
+
+	@Override
+	public int getTotalRecodeCount(String userName) {
+		return gameRoomDao.getTotalRecodeCount(sqlSession,userName);
+	}
+
+	@Override
+	public List<String> getRecodeList(PageInfo pi, String userName) {
+		return gameRoomDao.getRecodeList(sqlSession, pi, userName);
+	}
 
 	
 }

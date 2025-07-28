@@ -1,0 +1,83 @@
+<!-- friendSidebar.html - 새로 생성할 파일 전체 내용 -->
+<div th:fragment="friendSidebarFragment">
+    <!-- 사이드바 오버레이 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- 친구 사이드바 -->
+    <div class="friend-sidebar" id="friendSidebar">
+        <!-- 사이드바 헤더 -->
+        <div class="sidebar-header">
+            <div class="sidebar-title">👥 친구 목록</div>
+            <button class="close-btn" id="closeSidebarBtn">&times;</button>
+        </div>
+
+        <!-- 친구 검색 섹션 -->
+        <div class="friend-search-section">
+            <div class="search-container">
+                <input type="text" class="search-input" id="friendSearchInput" placeholder="친구 검색 (아이디 또는 닉네임)">
+                <button class="search-btn" id="searchFriendBtn">검색</button>
+            </div>
+            
+            <!-- 검색 결과 -->
+            <div class="search-result" id="searchResult">
+                <div class="search-user">
+                    <div class="user-info">
+                        <div class="user-name" id="searchedUserName"></div>
+                        <div class="user-nickname" id="searchedUserNickname"></div>
+                    </div>
+                    <button class="action-btn friend-request-btn" id="sendRequestBtn">친구 요청</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 탭 메뉴 -->
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" data-tab="friends">
+                친구 목록 <span class="notification-badge" id="friendCount">0</span>
+            </button>
+            <button class="tab-btn" data-tab="requests">
+                요청 <span class="notification-badge" id="requestCount">0</span>
+            </button>
+            <button class="tab-btn" data-tab="invites">
+                게임 초대 <span class="notification-badge" id="inviteCount">0</span>
+            </button>
+        </div>
+
+        <!-- 컨텐츠 영역 -->
+        <div class="sidebar-content">
+            <!-- 친구 목록 탭 -->
+            <div class="tab-content active" id="friendsTab">
+                <ul class="friend-list" id="friendList">
+                    <!-- 친구 목록이 여기에 동적으로 추가됩니다 -->
+                </ul>
+                <div class="empty-state" id="friendsEmpty" style="display: none;">
+                    <div class="empty-icon">👥</div>
+                    <div>아직 친구가 없습니다.</div>
+                    <div>새로운 친구를 검색해보세요!</div>
+                </div>
+            </div>
+
+            <!-- 친구 요청 탭 -->
+            <div class="tab-content" id="requestsTab">
+                <ul class="friend-list" id="requestList">
+                    <!-- 친구 요청 목록이 여기에 동적으로 추가됩니다 -->
+                </ul>
+                <div class="empty-state" id="requestsEmpty" style="display: none;">
+                    <div class="empty-icon">📬</div>
+                    <div>받은 친구 요청이 없습니다.</div>
+                </div>
+            </div>
+
+            <!-- 게임 초대 탭 -->
+            <div class="tab-content" id="invitesTab">
+                <ul class="friend-list" id="inviteList">
+                    <!-- 게임 초대 목록이 여기에 동적으로 추가됩니다 -->
+                </ul>
+                <div class="empty-state" id="invitesEmpty" style="display: none;">
+                    <div class="empty-icon">🎮</div>
+                    <div>받은 게임 초대가 없습니다.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
