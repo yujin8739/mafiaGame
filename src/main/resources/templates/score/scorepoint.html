@@ -19,7 +19,7 @@
 </body>
 
 <script th:inline="javascript">
-	const userName = loginUser.userName;
+	let userName = /*[[${loginUser.userName}]]*/ '';
 	let currentPage = 1;
 	
 	$.ajax({
