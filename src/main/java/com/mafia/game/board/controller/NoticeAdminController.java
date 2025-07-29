@@ -165,3 +165,4 @@ public class NoticeAdminController {
         return changeName;
 	
 }
+}
