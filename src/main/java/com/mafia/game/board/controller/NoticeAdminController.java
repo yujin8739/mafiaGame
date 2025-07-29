@@ -2,6 +2,8 @@ package com.mafia.game.board.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,7 +11,11 @@ import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -192,5 +198,23 @@ public class NoticeAdminController {
 
         return changeName;
 	
+	}
+	
+	@GetMapping("/download/{fileName}")
+	public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) throws IOException {
+	    String filePath = uploadPath + fileName;
+	    Resource resource = new FileSystemResource(filePath);
+
+	    if (!resource.exists()) {
+	        return ResponseEntity.notFound().build();
+	    }
+
+	    String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+	                                       .replaceAll("\\+", "%20");
+
+	    return ResponseEntity.ok()
+	        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+	        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
+	        .body(resource);
 	}
 }
