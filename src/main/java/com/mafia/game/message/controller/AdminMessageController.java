@@ -15,10 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.SessionAttribute;
 
 import com.mafia.game.common.model.vo.PageInfo;
-import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.message.model.service.MessageService;
 import com.mafia.game.message.model.vo.UserMessage;
 
@@ -30,30 +28,14 @@ public class AdminMessageController {
     private MessageService messageService;
 
     /**
-     * 관리자 권한 확인
-     */
-    private boolean isAdmin(Member loginUser) {
-        // 실제 구현에서는 권한 체크 로직 추가
-        return loginUser != null && loginUser.getUserName() != null;
-    }
-
-    /**
      * 전체 쪽지 목록 조회 (관리자용)
      */
     @GetMapping("/messages")
     public ResponseEntity<?> getMessageList(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+            @RequestParam(defaultValue = "10") int size) {
 
         Map<String, Object> response = new HashMap<>();
-
-        // 관리자 권한 체크
-        if (!isAdmin(loginUser)) {
-            response.put("success", false);
-            response.put("message", "관리자 권한이 필요합니다.");
-            return ResponseEntity.status(403).body(response);
-        }
 
         try {
             // 페이징 계산
@@ -94,17 +76,9 @@ public class AdminMessageController {
      * 쪽지 상세 조회 (관리자용)
      */
     @GetMapping("/messages/{privateMsgNo}")
-    public ResponseEntity<?> getMessageDetail(
-            @PathVariable int privateMsgNo,
-            @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+    public ResponseEntity<?> getMessageDetail(@PathVariable int privateMsgNo) {
 
         Map<String, Object> response = new HashMap<>();
-
-        if (!isAdmin(loginUser)) {
-            response.put("success", false);
-            response.put("message", "관리자 권한이 필요합니다.");
-            return ResponseEntity.status(403).body(response);
-        }
 
         try {
             UserMessage message = messageService.getMessageDetail(privateMsgNo);
@@ -138,16 +112,9 @@ public class AdminMessageController {
             @RequestParam(required = false) String messageType,
             @RequestParam(required = false) String readYn,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+            @RequestParam(defaultValue = "10") int size) {
 
         Map<String, Object> response = new HashMap<>();
-
-        if (!isAdmin(loginUser)) {
-            response.put("success", false);
-            response.put("message", "관리자 권한이 필요합니다.");
-            return ResponseEntity.status(403).body(response);
-        }
 
         try {
             // 검색 조건 맵 생성
@@ -204,17 +171,9 @@ public class AdminMessageController {
      * 쪽지 강제 삭제 (관리자용)
      */
     @DeleteMapping("/messages/{privateMsgNo}")
-    public ResponseEntity<?> forceDeleteMessage(
-            @PathVariable int privateMsgNo,
-            @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+    public ResponseEntity<?> forceDeleteMessage(@PathVariable int privateMsgNo) {
 
         Map<String, Object> response = new HashMap<>();
-
-        if (!isAdmin(loginUser)) {
-            response.put("success", false);
-            response.put("message", "관리자 권한이 필요합니다.");
-            return ResponseEntity.status(403).body(response);
-        }
 
         try {
             // 관리자는 완전 삭제 가능
@@ -244,16 +203,9 @@ public class AdminMessageController {
     @PutMapping("/messages/{privateMsgNo}")
     public ResponseEntity<?> updateMessage(
             @PathVariable int privateMsgNo,
-            @RequestBody UserMessage updateMessage,
-            @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+            @RequestBody UserMessage updateMessage) {
 
         Map<String, Object> response = new HashMap<>();
-
-        if (!isAdmin(loginUser)) {
-            response.put("success", false);
-            response.put("message", "관리자 권한이 필요합니다.");
-            return ResponseEntity.status(403).body(response);
-        }
 
         try {
             // 기존 쪽지 확인
@@ -291,17 +243,9 @@ public class AdminMessageController {
      * 일괄 삭제 (관리자용)
      */
     @PostMapping("/messages/bulk-delete")
-    public ResponseEntity<?> bulkDeleteMessages(
-            @RequestBody Map<String, Object> requestData,
-            @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+    public ResponseEntity<?> bulkDeleteMessages(@RequestBody Map<String, Object> requestData) {
 
         Map<String, Object> response = new HashMap<>();
-
-        if (!isAdmin(loginUser)) {
-            response.put("success", false);
-            response.put("message", "관리자 권한이 필요합니다.");
-            return ResponseEntity.status(403).body(response);
-        }
 
         try {
             @SuppressWarnings("unchecked")
@@ -333,17 +277,9 @@ public class AdminMessageController {
      * 사용자 쪽지 기능 차단 (관리자용)
      */
     @PostMapping("/messages/block-user")
-    public ResponseEntity<?> blockUserMessage(
-            @RequestBody Map<String, Object> requestData,
-            @SessionAttribute(name = "loginUser", required = false) Member loginUser) {
+    public ResponseEntity<?> blockUserMessage(@RequestBody Map<String, Object> requestData) {
 
         Map<String, Object> response = new HashMap<>();
-
-        if (!isAdmin(loginUser)) {
-            response.put("success", false);
-            response.put("message", "관리자 권한이 필요합니다.");
-            return ResponseEntity.status(403).body(response);
-        }
 
         try {
             String targetUserName = (String) requestData.get("userName");
@@ -356,8 +292,8 @@ public class AdminMessageController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 쪽지 차단 처리 (시스템 쪽지로 기록)
-            int result = messageService.blockUserMessage(targetUserName.trim(), blockDays, reason, loginUser.getUserName());
+            // 쪽지 차단 처리 (시스템 쪽지로 기록) - loginUser 정보가 필요하다면 다른 방법으로 처리
+            int result = messageService.blockUserMessage(targetUserName.trim(), blockDays, reason, "ADMIN");
             
             if (result > 0) {
                 response.put("success", true);
