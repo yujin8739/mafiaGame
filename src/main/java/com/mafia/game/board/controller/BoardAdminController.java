@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,10 +30,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.mafia.game.board.model.service.BoardService;
 import com.mafia.game.board.model.vo.Board;
 import com.mafia.game.board.model.vo.BoardFile;
+import com.mafia.game.board.model.vo.FileDownloadDTO;
 import com.mafia.game.board.model.vo.Reply;
 import com.mafia.game.common.model.vo.PageInfo;
 import com.mafia.game.common.template.BadgeSetUtil;
 import com.mafia.game.common.template.Pagination;
+
+import jakarta.data.repository.Delete;
 
 @RestController
 @RequestMapping("/api/board")
@@ -53,7 +57,7 @@ public class BoardAdminController {
     @Value("${file.deletedLoungeImage.path}")
     private String deletedLoungeImagePath;
     
-    @GetMapping("/lounge")
+    @GetMapping("/")
     public ResponseEntity<Map<String, Object>> getLoungeBoardList(
             @RequestParam(defaultValue = "1") int currentPage,
             @RequestParam(required = false) String typeName,
@@ -131,7 +135,7 @@ public class BoardAdminController {
         return ResponseEntity.ok(replyList);
     }
 
-    @PostMapping("/deleteReply")
+    @DeleteMapping("/deleteReply")
     public ResponseEntity<?> deleteReply(int replyNo) {
         Reply reply = service.selectReply(replyNo);
         String changeName = reply.getChangeName();
@@ -154,27 +158,58 @@ public class BoardAdminController {
         }
     }  
     
-    @PostMapping("/lounge/file/download")
-    public ResponseEntity<Resource> downloadFile(@RequestBody Board board) throws IOException {
-        if (board == null || board.getFileList() == null || board.getFileList().isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        BoardFile file = board.getFileList().get(0);
-        String filePath = "C:/godDaddy_uploadImage/loungeImage/" + file.getChangeName();
-
+    @PostMapping("/file/download")
+    public ResponseEntity<Resource> downloadFile(@RequestBody FileDownloadDTO fileDTO) throws IOException {
+    	
+    	
+    	
+    	String filePath = "C:/godDaddy_upload";
+    	
+    	if(fileDTO.getTypeName() != null) {
+    		BoardFile file = fileDTO.getFile();
+    		String typeName = fileDTO.getTypeName();
+    		
+    		switch(typeName) {
+    		case "" : filePath += "Image/loungeImage/" + file.getChangeName(); break;
+    		case "갤러리" : filePath += "Image/galleryImage/" + file.getChangeName(); break;
+    		case "영상" : filePath += "Video/hls/" + file.getChangeName(); break;
+    		}
+    	}else{
+    		filePath += "Image/ReplyImage/" + fileDTO.getChangeName();
+    	}
         Resource resource = new FileSystemResource(filePath);
         if (!resource.exists()) {
             return ResponseEntity.notFound().build();
         }
 
-        String encodedFilename = URLEncoder.encode(file.getOriginName(), StandardCharsets.UTF_8.toString());
+        String encodedFilename = URLEncoder.encode("아무말", StandardCharsets.UTF_8.toString());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFilename + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
+    
+    @GetMapping("/file/download")
+    public ResponseEntity<Resource> downloadFile(String changeName) throws IOException {
+    	
+    	
+    	
+    	String filePath = "C:/godDaddy_uploadImage/ReplyImage/" + changeName;
+    	
+        Resource resource = new FileSystemResource(filePath);
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String encodedFilename = URLEncoder.encode("아무말", StandardCharsets.UTF_8.toString());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFilename + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
+    }
+    
 
     private void deleteFileIfExists(Board board) {
         if (board.getFileList() != null && !board.getFileList().isEmpty()) {
