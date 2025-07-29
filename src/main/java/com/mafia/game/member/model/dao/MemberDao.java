@@ -76,6 +76,10 @@ public class MemberDao {
 		return sqlSession.selectOne("memberMapper.adminLoginDo",username);
 	}
 
+	public int blockUser(SqlSessionTemplate sqlSession, String userName) {
+		return sqlSession.update("memberMapper.blockUser", userName);
+	}
+
 	
 	
 }

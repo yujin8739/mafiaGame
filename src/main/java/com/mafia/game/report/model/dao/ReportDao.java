@@ -1,6 +1,8 @@
 package com.mafia.game.report.model.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -49,6 +51,21 @@ public class ReportDao {
 	// 신고 개수 조회 (페이징용)
 	public int selectReportCount(SqlSessionTemplate sqlSession, String reporterId) {
 		return sqlSession.selectOne("reportMapper.selectReportCount", reporterId);
+	}
+
+	public int getReportCount(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectOne("reportMapper.getReportCount");
+	}
+
+	public List<Report> getReportList(SqlSessionTemplate sqlSession, int offset, int limit) {
+		Map<String, Object> param = new HashMap<>();
+        param.put("offset", offset);
+        param.put("limit", limit);
+		return sqlSession.selectList("reportMapper.selectAllReports",param);
+	}
+
+	public int rejectReport(SqlSessionTemplate sqlSession, int reportId) {
+		return sqlSession.delete("reportMapper.deleteReport", reportId);
 	}
 
 }

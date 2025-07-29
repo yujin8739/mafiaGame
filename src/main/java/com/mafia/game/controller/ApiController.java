@@ -20,6 +20,8 @@ import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
+import com.mafia.game.report.model.service.ReportService;
+import com.mafia.game.report.model.vo.Report;
 import com.mafia.game.security.config.JwtUtil;
 
 @RestController
@@ -31,6 +33,9 @@ public class ApiController {
 	
 	@Autowired 
 	private GameRoomService gService;
+	
+	@Autowired
+	private ReportService rService;
 	
 	@Autowired
 	private BCryptPasswordEncoder bcrypt;
@@ -98,4 +103,52 @@ public class ApiController {
 		return ResponseEntity.ok(response);
 	}
 	
+	@GetMapping("/getReportList")
+	public ResponseEntity<Map<String, Object>> getReportList (@RequestParam int offset, @RequestParam int limit) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			List<Report> reports = rService.getReportList(offset, limit);
+			int totalCount = rService.getReportCount();
+			response.put("report", reports);
+			response.put("totalCount", totalCount);
+			response.put("success", true);
+			response.put("message", "성공");
+		} catch (Exception e) {
+			response.put("error", e);
+			return ResponseEntity.badRequest().body(response);
+		}
+		return ResponseEntity.ok(response);
+	}
+	
+	@PostMapping("/blockUser") 
+	public ResponseEntity<Map<String, Object>> blockUser (@RequestParam String userName, @RequestParam int reportId) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			int result = mService.blockUser(userName);
+			
+			rService.rejectReport(reportId);
+			response.put("result", result);
+			response.put("success", true);
+			response.put("message", "성공");
+		} catch (Exception e) {
+			response.put("error", e);
+			return ResponseEntity.badRequest().body(response);
+		}
+		return ResponseEntity.ok(response);
+	}
+	
+	@PostMapping("/rejectReport")
+	public ResponseEntity<Map<String, Object>> rejectReport (@RequestParam int reportId) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			int result = rService.rejectReport(reportId);
+			response.put("result", result);
+			response.put("success", true);
+			response.put("message", "성공");
+		} catch (Exception e) {
+			response.put("error", e);
+			return ResponseEntity.badRequest().body(response);
+		}
+		return ResponseEntity.ok(response);
+	}
 }
