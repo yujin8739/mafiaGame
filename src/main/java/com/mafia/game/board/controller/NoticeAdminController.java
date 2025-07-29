@@ -218,4 +218,4 @@ public class NoticeAdminController {
 	        .body(resource);
 	}
 }
-}
+
