@@ -1,10 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>내 전적 방문</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
+    <link rel="stylesheet" th:href="@{/css/score/score.css}">
+    <script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+    <title>우주하마피아 게임 전적</title>
 </head>
 <body>
-	<h1>전적 사이또</h1>
+	<h1>나의 전적 확인</h1>
+	<div th:replace="~{common/header :: header}"></div>
+	<div class="recode-Container" id="recordContainer"></div>
+	<div class="pagination" id="pagination"></div>
+	<div th:replace="~{common/footer :: footer}"></div>
+	
 </body>
+
+<script th:inline="javascript">
+	let userName = /*[[${loginUser.userName}]]*/ '';
+	let currentPage = 1;
+	
+	$.ajax({
+		url:"/score/recodeList",
+		data:{
+			userName : userName,
+			currentPage:currentPage
+		},
+		success: function(result) {
+			const recodeContainer = document.getElementById("recordContainer");
+			recodeContainer.innerHTML = ""; // 초기화
+			result.forEach(item =>{
+				const wrapper = document.createElement("div");
+				wrapper.classList.add("recode-wrapper");
+				
+				const contentDiv = document.createElement("div");
+				
+				const jobClassDiv = document.createElement("div");
+				jobClassDiv.classList.add("job-class-text");
+				jobClassDiv.textContent = item.team;
+				
+				const jobNameDiv = document.createElement("div");
+				jobNameDiv.classList.add("job-text");
+				jobNameDiv.textContent = item.jobVisible;
+				
+				const gameResultDiv = document.createElement("div");
+				gameResultDiv.classList.add("result-text");
+				gameResultDiv.textContent = item.teamResult;
+				
+				contentDiv.appendChild(jobClassDiv);
+				contentDiv.appendChild(jobNameDiv);
+				contentDiv.appendChild(gameResultDiv);
+				
+				wrapper.appendChild(contentDiv);
+				recodeContainer.appendChild(wrapper);
+			})
+		},
+		error:function(){
+			alert("전적 검색동작이 실패했습니다.");
+		}
+	})
+	
+    function renderPagination() {
+		const pagination = document.getElementById("pagination");
+		pagination.innerHTML = "";
+
+		const prev = document.createElement("button");
+		prev.textContent = "« 이전";
+		prev.disabled = currentPage === 1;
+		prev.onclick = () => loadRecodeList(currentPage - 1);
+
+		const next = document.createElement("button");
+		next.textContent = "다음 »";
+		next.onclick = () => loadRecodeList(currentPage + 1);
+
+		pagination.appendChild(prev);
+
+		const pageText = document.createElement("span");
+		pageText.textContent = ` 페이지 ${currentPage}`;
+		pageText.style.margin = "0 10px";
+		pagination.appendChild(pageText);
+
+		pagination.appendChild(next);
+	}
+
+	// 초기 로딩
+	loadRecodeList(1);
+</script>
 </html>

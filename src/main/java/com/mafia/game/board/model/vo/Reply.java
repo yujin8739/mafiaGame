@@ -22,6 +22,7 @@ public class Reply {
 	private String status;//STATUS	VARCHAR2(1 BYTE)
 	private int likeCount;//LIKECOUNT	NUMBER
 	private String changeName;
+	private String originName;
 	private String nickName;
 	private int rankPoint;
 	private String profileUrl;

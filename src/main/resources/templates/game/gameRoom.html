@@ -379,46 +379,43 @@
                 	loadHintList(roomNo);
                 	addEtcMsg(msgData);
                 	break;
-                case 'MAFIA_WIN': 
-                	msgData.msg = '마피아의 승리! 게임이 종료되었습니다.';
-                	//setStop();
+                case 'MAFIA_WIN': case 'CITIZEN_WIN': case 'NEUTRALITY_WIN':
+                	switch (msgData.type){
+		                case 'MAFIA_WIN':
+		                	msgData.msg = '마피아의 승리! 게임이 종료되었습니다.'; break;
+		                case 'CITIZEN_WIN':
+		                	msgData.msg = '시민의 승리! 게임이 종료되었습니다.'; break;
+		                case 'NEUTRALITY_WIN':
+		                	msgData.msg = '중립의 승리! 게임이 종료되었습니다.'; break;
+                	}
                     addEtcMsg(msgData);
-                case 'CITIZEN_WIN':
-                	msgData.msg = '시민의 승리! 게임이 종료되었습니다.';
-                	//jobObj.
-                	//setStop();
-                    addEtcMsg(msgData);
-                case 'NEUTRALITY_WIN':
-                	msgData.msg = '중립의 승리! 게임이 종료되었습니다.';
-                    //setStop();
-                    addEtcMsg(msgData);
+                    
+                    $.ajax({
+                    	url : "/room/saveGameResult",
+                    	data : {
+                    		userName : /*[[loginUser.userName]]*/ "",
+                    		jobNo : jobObj.jobNo,
+                    		type : msgData.type,
+                    		startJobNo: startJob.jobNo
+                    	},
+                    	success : function(result){
+                    		if(!(result > 0)){
+                    			alert("전적 등록에 실패하였습니다.");
+                    		}
+                    		
+                    	},
+                    	error : function(){
+                    		alert("서버 오류로 전적 등록에 실패하였습니다.");
+                    	},
+                    	complete : function(){
+                    		setStop();
+                    	}
+                    });
                     break;
                 default:
                     displayChatMessage(msgData);
                     break;
             }
-            
-            $.ajax({
-            	url : "/room/saveGameResult",
-            	data : {
-            		userName : /*[[loginUser.userName]]*/ "",
-            		jobNo : jobObj.jobNo,
-            		type : msgData.type,
-            		startJobNo: startJob.jobNo
-            	},
-            	success : function(result){
-            		if(!(result > 0)){
-            			alert("전적 등록에 실패하였습니다.");
-            		}
-            		
-            	},
-            	error : function(){
-            		alert("서버 오류로 전적 등록에 실패하였습니다.");
-            	},
-            	complete : function(){
-            		setStop();
-            	}
-            });
         }
 
         function addEtcMsg(msgData) {
@@ -476,12 +473,12 @@
                 url: '/room/getJob',
                 data: { roomNo: roomNo },
                 success: function (result) {
-                    jobObj = result.get("myJob");
+                    jobObj = result.myJob;
                     job = jobObj.jobName;
-                    startJob = jobObj.get("myStartJob");
+                    startJob = result.myStartJob;
                     chatLoad(job);
                     if (!isStart) {
-                        alert("당신의 직업은 " + myJob.jobVisible + "입니다.");
+                        alert("당신의 직업은 " + jobObj.jobVisible + "입니다.");
                         isStart = true;
                         if(job==="hacker") {
                         	//직업이 해커면 보여주기   

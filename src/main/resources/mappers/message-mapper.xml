@@ -236,8 +236,228 @@
 		AND DELETESENDER = 'N'
 	</select>
 
+<!-- ====================================== 관리자용 ===================================== -->
 
 
+    <!-- 관리자용 전체 쪽지 조회 -->
+    <select id="getAllMessagesForAdmin" parameterType="map" resultMap="messageResultMap">
+        SELECT * FROM (
+            SELECT ROWNUM as rn, sub.* FROM (
+                SELECT 
+                    m.PRIVATEMSGNO,
+                    m.SENDERUSERNAME,
+                    m.RECEIVERUSERNAME,
+                    m.TITLE,
+                    m.CONTENT,
+                    m.SENDDATE,
+                    m.READDATE,
+                    m.READYN,
+                    m.DELETESENDER,
+                    m.DELETERECEIVER,
+                    m.MESSAGETYPE,
+                    m.PARENTPRIVATEMSGNO,
+                    s.NICKNAME AS SENDER_NICKNAME,
+                    r.NICKNAME AS RECEIVER_NICKNAME
+                FROM USER_MESSAGE m
+                LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+                LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+                ORDER BY m.SENDDATE DESC
+            ) sub
+            WHERE ROWNUM &lt;= #{offset} + #{pageSize}
+        )
+        WHERE rn > #{offset}
+    </select>
+    
+    <!-- 관리자용 전체 쪽지 개수 -->
+    <select id="getTotalMessagesCount" resultType="_int">
+        SELECT COUNT(*) FROM USER_MESSAGE
+    </select>
+    
+    <!-- 관리자용 쪽지 검색 -->
+    <select id="searchMessagesForAdmin" parameterType="map" resultMap="messageResultMap">
+        SELECT * FROM (
+            SELECT ROWNUM as rn, sub.* FROM (
+                SELECT 
+                    m.PRIVATEMSGNO,
+                    m.SENDERUSERNAME,
+                    m.RECEIVERUSERNAME,
+                    m.TITLE,
+                    m.CONTENT,
+                    m.SENDDATE,
+                    m.READDATE,
+                    m.READYN,
+                    m.DELETESENDER,
+                    m.DELETERECEIVER,
+                    m.MESSAGETYPE,
+                    m.PARENTPRIVATEMSGNO,
+                    s.NICKNAME AS SENDER_NICKNAME,
+                    r.NICKNAME AS RECEIVER_NICKNAME
+                FROM USER_MESSAGE m
+                LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+                LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+                <where>
+                    <if test="senderUserName != null and senderUserName != ''">
+                        AND (m.SENDERUSERNAME LIKE '%' || #{senderUserName} || '%' 
+                             OR s.NICKNAME LIKE '%' || #{senderUserName} || '%')
+                    </if>
+                    <if test="receiverUserName != null and receiverUserName != ''">
+                        AND (m.RECEIVERUSERNAME LIKE '%' || #{receiverUserName} || '%'
+                             OR r.NICKNAME LIKE '%' || #{receiverUserName} || '%')
+                    </if>
+                    <if test="title != null and title != ''">
+                        AND m.TITLE LIKE '%' || #{title} || '%'
+                    </if>
+                    <if test="messageType != null and messageType != ''">
+                        AND m.MESSAGETYPE = #{messageType}
+                    </if>
+                    <if test="readYn != null and readYn != ''">
+                        AND m.READYN = #{readYn}
+                    </if>
+                </where>
+                ORDER BY m.SENDDATE DESC
+            ) sub
+            <if test="offset != null and size != null">
+                WHERE ROWNUM &lt;= #{offset} + #{size}
+            </if>
+        )
+        <if test="offset != null and size != null">
+            WHERE rn > #{offset}
+        </if>
+    </select>
+    
+    <!-- 관리자용 검색 결과 개수 -->
+    <select id="getSearchMessagesCount" parameterType="map" resultType="_int">
+        SELECT COUNT(*)
+        FROM USER_MESSAGE m
+        LEFT JOIN USER_INFO s ON m.SENDERUSERNAME = s.USERNAME
+        LEFT JOIN USER_INFO r ON m.RECEIVERUSERNAME = r.USERNAME
+        <where>
+            <if test="senderUserName != null and senderUserName != ''">
+                AND (m.SENDERUSERNAME LIKE '%' || #{senderUserName} || '%' 
+                     OR s.NICKNAME LIKE '%' || #{senderUserName} || '%')
+            </if>
+            <if test="receiverUserName != null and receiverUserName != ''">
+                AND (m.RECEIVERUSERNAME LIKE '%' || #{receiverUserName} || '%'
+                     OR r.NICKNAME LIKE '%' || #{receiverUserName} || '%')
+            </if>
+            <if test="title != null and title != ''">
+                AND m.TITLE LIKE '%' || #{title} || '%'
+            </if>
+            <if test="messageType != null and messageType != ''">
+                AND m.MESSAGETYPE = #{messageType}
+            </if>
+            <if test="readYn != null and readYn != ''">
+                AND m.READYN = #{readYn}
+            </if>
+        </where>
+    </select>
+    
+    <!-- 관리자용 쪽지 강제 삭제 (완전 삭제) -->
+    <delete id="forceDeleteMessage" parameterType="_int">
+        DELETE FROM USER_MESSAGE 
+        WHERE PRIVATEMSGNO = #{privateMsgNo}
+    </delete>
+    
+    <!-- 관리자용 쪽지 수정 -->
+    <update id="updateMessageByAdmin" parameterType="UserMessage">
+        UPDATE USER_MESSAGE
+        <set>
+            <if test="title != null and title != ''">
+                TITLE = #{title},
+            </if>
+            <if test="content != null and content != ''">
+                CONTENT = #{content},
+            </if>
+            <if test="messageType != null and messageType != ''">
+                MESSAGETYPE = #{messageType},
+            </if>
+            <if test="readYn != null">
+                READYN = #{readYn},
+            </if>
+            <if test="deleteSender != null">
+                DELETESENDER = #{deleteSender},
+            </if>
+            <if test="deleteReceiver != null">
+                DELETERECEIVER = #{deleteReceiver},
+            </if>
+            <if test="readDate != null">
+                READDATE = #{readDate},
+            </if>
+        </set>
+        WHERE PRIVATEMSGNO = #{privateMsgNo}
+    </update>
+    
+    <!-- 관리자용 일괄 삭제 -->
+    <delete id="bulkDeleteMessages" parameterType="list">
+        DELETE FROM USER_MESSAGE 
+        WHERE PRIVATEMSGNO IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <!-- 사용자 차단 메시지 조회 (최신) -->
+    <select id="getLatestBlockMessage" parameterType="String" resultMap="messageResultMap">
+        SELECT * FROM (
+            SELECT 
+                PRIVATEMSGNO,
+                SENDERUSERNAME,
+                RECEIVERUSERNAME,
+                TITLE,
+                CONTENT,
+                SENDDATE,
+                READDATE,
+                READYN,
+                DELETESENDER,
+                DELETERECEIVER,
+                MESSAGETYPE,
+                PARENTPRIVATEMSGNO
+            FROM USER_MESSAGE 
+            WHERE RECEIVERUSERNAME = #{userName} 
+              AND MESSAGETYPE = 'BLOCK'
+              AND SENDERUSERNAME = 'SYSTEM'
+            ORDER BY SENDDATE DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+    
+    <!-- 관리자용 쪽지 복구 (삭제 취소) -->
+    <update id="restoreMessage" parameterType="map">
+        UPDATE USER_MESSAGE
+        <set>
+            <if test="restoreType == 'sender'">
+                DELETESENDER = 'N'
+            </if>
+            <if test="restoreType == 'receiver'">
+                DELETERECEIVER = 'N'
+            </if>
+            <if test="restoreType == 'both'">
+                DELETESENDER = 'N',
+                DELETERECEIVER = 'N'
+            </if>
+        </set>
+        WHERE PRIVATEMSGNO = #{privateMsgNo}
+    </update>
+    
+    <!-- 관리자용 쪽지 상태 변경 -->
+    <update id="updateMessageStatus" parameterType="map">
+        UPDATE USER_MESSAGE
+        <set>
+            <if test="readYn != null and readYn != ''">
+                READYN = #{readYn},
+            </if>
+            <if test="deleteSender != null and deleteSender != ''">
+                DELETESENDER = #{deleteSender},
+            </if>
+            <if test="deleteReceiver != null and deleteReceiver != ''">
+                DELETERECEIVER = #{deleteReceiver},
+            </if>
+            <if test="readYn == 'Y'">
+                READDATE = SYSDATE,
+            </if>
+        </set>
+        WHERE PRIVATEMSGNO = #{privateMsgNo}
+    </update>
 
 
 
