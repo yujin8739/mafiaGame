@@ -72,7 +72,24 @@
 			} else if (msgData.type === "ready" || msgData.type === "unReady" || msgData.type === "start"){
 				div.classList.add("ready-bubble"); // 흐린 배경용 클래스
 				insertMsg(msgData, div);
-			} else {
+			}  else if(msgData.type && msgData.type === "VOTE"){
+            	let killList = [];
+	            try {
+	                console.log(kill);
+
+	                if (kill.vote) {
+	                    killList = JSON.parse(msgData.msg);
+	                }
+
+	                const total = document.querySelectorAll(".slot").length;
+	                const current = killList.length;
+	                document.getElementById("killCount").innerText = "투표: " + current + " / " + total;
+	            } catch (e) {
+	                console.error("투표 리스트 파싱 실패", e);
+	            } finally {
+	            	return;
+	            }
+            } else {
 				// 이벤트 메시지 - 이미지 + 텍스트 + 엑자 스타일
 				try {
 					const eventData = JSON.parse(msgData.msg); // msg는 JSON 문자열
