@@ -1,17 +1,17 @@
 <div th:fragment="team">
     <div class="team-select d-flex justify-content-center mb-4">
         <div class="team-icon text-center mx-4" data-team="mafia">
-            <img th:src="@{${selectedTeam == 'mafia'} ? '/images/team/team_mafia_selected.png' : '/images/team/team_mafia.png'}"
+            <img th:src="@{${selectedTeam == 'mafia'} ? '/godDaddy_etc/introduce/team_mafia_selected.png' : '/godDaddy_etc/introduce/team_mafia.png'}"
                  alt="마피아팀" class="team-img" />
             <div class="team-name" th:classappend="${selectedTeam == 'mafia'} ? ' text-danger fw-bold'">마피아팀</div>
         </div>
         <div class="team-icon text-center mx-4" data-team="citizen">
-            <img th:src="@{${selectedTeam == 'citizen'} ? '/images/team/team_citizen_selected.png' : '/images/team/team_citizen.png'}"
+            <img th:src="@{${selectedTeam == 'citizen'} ? '/godDaddy_etc/introduce/team_citizen_selected.png' : '/godDaddy_etc/introduce/team_citizen.png'}"
                  alt="시민팀" class="team-img" />
             <div class="team-name" th:classappend="${selectedTeam == 'citizen'} ? ' text-primary fw-bold'">시민팀</div>
         </div>
         <div class="team-icon text-center mx-4" data-team="neutral">
-            <img th:src="@{${selectedTeam == 'neutral'} ? '/images/team/team_neutral_selected.png' : '/images/team/team_neutral.png'}"
+            <img th:src="@{${selectedTeam == 'neutral'} ? '/godDaddy_etc/introduce/team_neutral_selected.png' : '/godDaddy_etc/introduce/team_neutral.png'}"
                  alt="제3팀" class="team-img" />
             <div class="team-name" th:classappend="${selectedTeam == 'neutral'} ? ' text-warning fw-bold'">제3팀</div>
         </div>
