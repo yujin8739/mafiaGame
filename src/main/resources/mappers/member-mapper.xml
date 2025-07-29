@@ -16,7 +16,7 @@
 	<select id="loginDo" resultType="Member" resultMap="memberResultMap">
 		SELECT USERNAME, NICKNAME, PASSWORD, EMAIL, STATUS, PHONE, PROFILEIMAGE
 		FROM USER_INFO 
-		WHERE USERNAME = #{userName}
+		WHERE USERNAME = #{userName} AND ISBLOCK = 'N'
 	</select>
 	
 	<select id="countByUsername" resultType="_int">
@@ -88,5 +88,11 @@
 		FROM USER_INFO 
 		WHERE USERNAME = #{userName} AND ISADMIN = 'Y'
 	</select>
+	
+	<update id="blockUser" parameterType="string">
+		UPDATE USER_INFO
+		SET ISBLOCK = 'Y'
+		WHERE USERNAME = #{userName} AND ISADMIN = 'N'
+	</update>
 	
 </mapper>

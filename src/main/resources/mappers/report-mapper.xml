@@ -97,5 +97,10 @@
 		FROM REPORT
 		WHERE REPORTERID = #{reporterId}
 	</select>
+	
+	<select id="getReportCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM REPORT
+	</select>
 
 </mapper>

@@ -23,7 +23,7 @@
 				WHERE B.TYPENAME = #{typeName}
 			</otherwise>
 		</choose>
-		<if test="condition != ''">
+		<if test="condition != null and condition != ''">
 			<choose>
 				<when test="condition == 'title'">
 					AND LOWER(B.TITLE) LIKE '%'||LOWER(#{keyword})||'%'
@@ -107,7 +107,7 @@
 				AND B.TYPENAME = #{typeName}
 			</otherwise>
 		</choose>
-		<if test="condition != ''">
+		<if test="condition != null and condition != ''">
 			<choose>
 				<when test="condition == 'title'">
 					AND LOWER(B.TITLE) LIKE '%'||LOWER(#{keyword})||'%'
@@ -179,7 +179,7 @@
 				AND B.TYPENAME = #{typeName}
 			</otherwise>
 		</choose>
-		<if test="condition != ''">
+		<if test="condition != null and condition != ''">
 			<choose>
 				<when test="condition == 'title'">
 					AND LOWER(B.TITLE) LIKE '%'||LOWER(#{keyword})||'%'
