@@ -1,6 +1,7 @@
 package com.mafia.game.report.model.service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.mafia.game.report.model.vo.Report;
 
@@ -23,5 +24,11 @@ public interface ReportService {
 
 	// 특정 사용자가 받은 신고 개수 조회
 	int getReportCountByReported(String reportedName);
+	
+	int getReportCount();
+
+	List<Report> getReportList(int offset, int limit);
+
+	int rejectReport(int reportId);
 
 }

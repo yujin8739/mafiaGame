@@ -81,6 +81,11 @@ public class MemberServiceImpl implements MemberService {
 	public Member adminLoginDo(String username) {
 		return dao.adminLoginDo(sqlSession, username);
 	}
+
+	@Override
+	public int blockUser(String userName) {
+		return dao.blockUser(sqlSession, userName);
+	}
 	
 	
 }
