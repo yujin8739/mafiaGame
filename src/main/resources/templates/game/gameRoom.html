@@ -413,7 +413,7 @@
                     });
                     break;
                 default:
-                    displayChatMessage(msgData);
+                	addEtcMsg(msgData);
                     break;
             }
         }
@@ -449,8 +449,6 @@
                     div.appendChild(typeDiv);
                 }
             }
-
-            reciveMsg(msgData, div);
             chatArea.appendChild(div);
             scrollIfNeeded(wasAtBottom);
         }
@@ -977,6 +975,8 @@
                                 div.appendChild(typeDiv);
                             }
                         }
+                        
+                        console.log("아니지???");
 
                         reciveMsg(msgData, div);
 
@@ -1032,8 +1032,11 @@
 		        },
 		        success: function (kill) {
 		            if (!kill) return;
+		            const msg = { type: 'VOTE', userName: userName, msg: kill.vote, roomNo: roomNo };
+		        	safeSend({ type, userName: nickName, msg, roomNo });
+		            
 
-		            let killList = [];
+/* 		            let killList = [];
 		            try {
 		                console.log(kill);
 
@@ -1047,7 +1050,7 @@
 		                document.getElementById("killCount").innerText = "투표: " + current + " / " + total;
 		            } catch (e) {
 		                console.error("투표 리스트 파싱 실패", e);
-		            }
+		            } */
 		        },
 		        error: function () {
 		            alert("투표 요청 중 오류가 발생했습니다.");

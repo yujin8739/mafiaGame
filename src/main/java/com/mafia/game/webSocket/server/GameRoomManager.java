@@ -95,7 +95,7 @@ public class GameRoomManager {
 
 	public WebSocketSession getSessionByUser(int roomNo, String userName) {
 		Map<String, WebSocketSession> m = roomUserSessions.get(roomNo);
-		return (m == null ? null : m.get(userName));
+		return ((m == null && m.isEmpty()) ? null : m.get(userName));
 	}
 
 	public void setRoomMasterCache(int roomNo, String userName) {
@@ -260,6 +260,7 @@ public class GameRoomManager {
     		int mafiaCount = 0; //마피아 인원
     	    int citizenCount = 0; //시민 인원
     	    int neutralCount = 0; //중립 인원
+    	    int spyCount = 0;
     	    
     		if(room.getCount() == null || jobCounts.size()<1) {
     			// 일반 모드일때 
@@ -273,19 +274,19 @@ public class GameRoomManager {
 	    	    } else if (totalPlayers == 8) {
 	    	        mafiaCount = 2; citizenCount = 5; neutralCount = 1;
 	    	    } else if (totalPlayers == 9) {
-	    	        mafiaCount = 3; citizenCount = 6; neutralCount = 0;
+	    	        mafiaCount = 2; citizenCount = 6; neutralCount = 0; spyCount = 1;
 	    	    } else if (totalPlayers == 10) {
-	    	        mafiaCount = 3; citizenCount = 6; neutralCount = 1;
+	    	        mafiaCount = 3; citizenCount = 6; neutralCount = 1; spyCount = 1;
 	    	    } else if (totalPlayers == 11) {
-	    	        mafiaCount = 3; citizenCount = 7; neutralCount = 1;
+	    	        mafiaCount = 3; citizenCount = 7; neutralCount = 1; spyCount = 1;
 	    	    } else if (totalPlayers == 12) {
 	    	        mafiaCount = 3; citizenCount = 8; neutralCount = 1;
 	    	    } else if (totalPlayers == 13) {
-	    	        mafiaCount = 4; citizenCount = 9; neutralCount = 0;
+	    	        mafiaCount = 3; citizenCount = 8; neutralCount = 1; spyCount = 1;
 	    	    } else if (totalPlayers == 14) {
-	    	        mafiaCount = 4; citizenCount = 9; neutralCount = 1;
+	    	        mafiaCount = 3; citizenCount = 8; neutralCount = 2; spyCount = 1;
 	    	    } else if (totalPlayers == 15) {
-	    	        mafiaCount = 4; citizenCount = 10; neutralCount = 1;
+	    	        mafiaCount = 3; citizenCount = 9; neutralCount = 2; spyCount = 1;
 	    	    } else {
 	    	        // 6~15명 범위를 벗어나는 경우에 대한 예외 처리
 	    	        throw new IllegalArgumentException("게임은 6명에서 15명까지만 가능합니다.");
@@ -295,6 +296,7 @@ public class GameRoomManager {
     			mafiaCount = jobCounts.get(0);
     			citizenCount = jobCounts.get(1);
     			neutralCount = jobCounts.get(2);
+    			spyCount = jobCounts.get(3);
     		}
     		
         	List<Job> jobList = gameRoomService.selectRandomJobs(mafiaCount, citizenCount, neutralCount);
@@ -302,6 +304,9 @@ public class GameRoomManager {
         	for (Job job : jobList) {
         	    // 각 Job 객체에서 jobNo를 가져와 새로운 리스트에 추가합니다.
         		jobArr.add(job.getJobNo());
+        	}
+        	for(int i = 0; i<spyCount; i++) {
+        		jobArr.add(13);
         	}
         	String updatedJob = new ObjectMapper().writeValueAsString(jobArr);
         	int result = gameRoomService.updateStart(roomNo,updatedJob);
@@ -462,7 +467,10 @@ public class GameRoomManager {
 					payload.put("userName", msg.getUserName()); // nickName
 					payload.put("msg", msg.getMsg()); // 메시지																								// 본문
 					payload.put("type", "EVENT");
-					gameRoomService.updateJob(roomNo, updatedJobJson);
+					
+					if(updatedJobJson != null) {
+						gameRoomService.updateJob(roomNo, updatedJobJson);
+					}
 
 					String json = mapper.writeValueAsString(payload);
 					
@@ -517,18 +525,30 @@ public class GameRoomManager {
 			});
 
 			int index = userList.indexOf(mostKilldUser);
+			
+			Message msg = null;
+			String targetName = null;
 			//정치인은 투표로 죽지 않음
 			if (index != -1 && index < jobList.size() && jobList.get(index) != 4) {
 				jobList.set(index, 0);
 				String updatedJobJson = objectMapper.writeValueAsString(jobList);
-				gameRoomService.updateJob(roomNo, updatedJobJson);
+				if(updatedJobJson != null) {
+					gameRoomService.updateJob(roomNo, updatedJobJson);
+				}
+				
+				targetName = memberService.getMemberByUserName(mostKilldUser).getNickName();	
+				
+				msg = new Message(roomNo, UUID.randomUUID().toString(), "EVENT"
+						,chatService.selectEvent(9, targetName),
+						"시스템",new Date());
+				
+			} else if(jobList.get(index) == 4){
+				msg = new Message(roomNo, UUID.randomUUID().toString(), "EVENT"
+						,chatService.selectEvent(15, targetName),
+						"시스템",new Date());
 			}
 
-			String targetName = memberService.getMemberByUserName(mostKilldUser).getNickName();	
 			
-			Message msg = new Message(roomNo, UUID.randomUUID().toString(), "EVENT"
-					,chatService.selectEvent(9, targetName),
-					"시스템",new Date());
 			sendMessage(msg);
 			
 			

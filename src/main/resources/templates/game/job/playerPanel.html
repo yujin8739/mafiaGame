@@ -73,7 +73,8 @@
 					setAlive();
 		            setStart();
 		            roomReload();
-					if(job === 'mafia'){
+		            console.log(phase);
+					if(job === 'mafia') {
 						sendBtn.disabled = false;
 						sendBtn.classList.remove('disabled-btn');
 						chatInput.disabled = false;
@@ -150,6 +151,23 @@
 								img.style.cursor = 'pointer';
 								img.onclick = () => {
 									robberTo(userNickList[index],index);
+								};
+							}
+						});	
+					} else if (job == 'spy' && dayNo >=1) {
+						sendBtn.disabled = false;
+						sendBtn.classList.remove('disabled-btn');
+						chatInput.placeholder = "밤에는 채팅할 수 없습니다.";
+											        
+						const slots = document.querySelectorAll('.slot');
+						slots.forEach((slot, index) => {
+							const img = slot.querySelector('img.someNails');
+							if (!img) return;
+							
+							if(img.src === '/images/사망이미지.png'){
+								img.style.cursor = 'pointer';
+								img.onclick = () => {
+									spyTo(userNickList[index],index);
 								};
 							}
 						});	
