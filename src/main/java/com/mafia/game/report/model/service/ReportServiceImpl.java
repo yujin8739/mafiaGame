@@ -2,6 +2,7 @@ package com.mafia.game.report.model.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -55,6 +56,22 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public int getReportCountByReported(String reportedName) {
 		return reportDao.countReportsByReported(sqlSession, reportedName);
+	}
+
+	@Override
+	public int getReportCount() {
+		return reportDao.getReportCount(sqlSession);
+	}
+
+	@Override
+	public List<Report> getReportList(int offset, int limit) {
+		return reportDao.getReportList(sqlSession, offset, limit);
+	}
+
+	@Override
+	public int rejectReport(int reportId) {
+		// TODO Auto-generated method stub
+		return reportDao.rejectReport(sqlSession, reportId);
 	}
 
 }

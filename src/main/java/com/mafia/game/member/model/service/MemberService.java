@@ -30,4 +30,6 @@ public interface MemberService {
 	List<String> getUserNickList(String userList);
 	
 	Member adminLoginDo(String username);
+	
+	int blockUser(String userName);
 }
