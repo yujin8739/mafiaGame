@@ -30,9 +30,11 @@ public interface ShopService {
 
 	int getListCount();
 
-	
+	List<Shop> selectAllArtworks(int offset, int limit);
 
-
-
-	
+	int deleteArtwork(int artId);
 }
+
+	
+
+	

@@ -85,6 +85,16 @@ public class ShopDao {
 		// TODO Auto-generated method stub
 		return sqlSession.selectOne("artshopMapper.getListCount");
 	}
+
+
+
+	public List<Shop> selectAllArtworks(SqlSession sqlSession, int offset, int limit) {
+		
+		RowBounds rb = new RowBounds(offset, limit);
+		return sqlSession.selectList("artshopMapper.selectAllArtworks", null, rb);
+	}
+	
+	
     
     
     
