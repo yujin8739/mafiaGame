@@ -82,4 +82,69 @@ public class MessageDao {
         return sqlSession.selectOne("messageMapper.getTotalSentMessagesCount", senderUserName);
     }
     
+    
+    // =================================== 관리자용 새로운 메소드들만 ===================================
+    
+    
+    
+    // 관리자용 전체 쪽지 조회 (페이징)    
+    public ArrayList<UserMessage> getAllMessagesForAdmin(SqlSessionTemplate sqlSession, int offset, int pageSize) {
+        Map<String, Integer> params = Map.of("offset", offset, "pageSize", pageSize);
+        return (ArrayList)sqlSession.selectList("messageMapper.getAllMessagesForAdmin", params);
+    }
+    
+    // 관리자용 전체 쪽지 개수 
+    public int getTotalMessagesCount(SqlSessionTemplate sqlSession) {
+        return sqlSession.selectOne("messageMapper.getTotalMessagesCount");
+    }
+    
+    // 관리자용 쪽지 검색    
+    public ArrayList<UserMessage> searchMessagesForAdmin(SqlSessionTemplate sqlSession, Map<String, Object> searchParams) {
+        return (ArrayList)sqlSession.selectList("messageMapper.searchMessagesForAdmin", searchParams);
+    }
+
+   
+    // 관리자용 검색 결과 개수   
+    public int getSearchMessagesCount(SqlSessionTemplate sqlSession, Map<String, Object> searchParams) {
+        return sqlSession.selectOne("messageMapper.getSearchMessagesCount", searchParams);
+    }
+
+    // 관리자용 쪽지 강제 삭제 (완전 삭제)
+    public int forceDeleteMessage(SqlSessionTemplate sqlSession, int privateMsgNo) {
+        return sqlSession.delete("messageMapper.forceDeleteMessage", privateMsgNo);
+    }
+   
+   // 관리자용 쪽지 수정
+    public int updateMessageByAdmin(SqlSessionTemplate sqlSession, UserMessage message) {
+        return sqlSession.update("messageMapper.updateMessageByAdmin", message);
+    }
+    
+    // 관리자용 일괄 삭제    
+    public int bulkDeleteMessages(SqlSessionTemplate sqlSession, ArrayList<Integer> messageIds) {
+        return sqlSession.delete("messageMapper.bulkDeleteMessages", messageIds);
+    }
+
+    // 사용자 차단 메시지 조회
+    public UserMessage getLatestBlockMessage(SqlSessionTemplate sqlSession, String userName) {
+        return sqlSession.selectOne("messageMapper.getLatestBlockMessage", userName);
+    }
+
+    // 관리자용 쪽지 복구
+    public int restoreMessage(SqlSessionTemplate sqlSession, int privateMsgNo, String restoreType) {
+        Map<String, Object> params = Map.of("privateMsgNo", privateMsgNo, "restoreType", restoreType);
+        return sqlSession.update("messageMapper.restoreMessage", params);
+    }
+
+    // 관리자용 쪽지 상태 변경
+    public int updateMessageStatus(SqlSessionTemplate sqlSession, int privateMsgNo, String readYn, 
+                                 String deleteSender, String deleteReceiver) {
+        Map<String, Object> params = Map.of(
+            "privateMsgNo", privateMsgNo,
+            "readYn", readYn,
+            "deleteSender", deleteSender,
+            "deleteReceiver", deleteReceiver
+        );
+        return sqlSession.update("messageMapper.updateMessageStatus", params);
+    }
+    
 }
