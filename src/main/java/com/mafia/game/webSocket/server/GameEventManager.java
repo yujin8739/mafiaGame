@@ -70,15 +70,16 @@ public class GameEventManager {
         }
     }
     
-    public void broadcastReadyStateChanged(int roomNo, String userName, boolean isReady) {
+    public void broadcastReadyStateChanged(int roomNo, String nickName, boolean isReady) {
         String status = isReady ? "준비" : "준비 취소";
-        String message = String.format("%s님이 %s했습니다.", userName, status);
+        String message = String.format("%s님이 %s했습니다.", nickName, status);
         try {
             Map<String, Object> payload = Map.of(
-                    "type", "READY_STATE_CHANGED",
+                    "type", "READY_STATE_CHANGED", // 클라이언트가 기다리는 바로 그 타입
                     "userName", "시스템",
                     "msg", message
             );
+            // 모든 클라이언트에게 이벤트 전송
             eventServer.broadcastEvent(roomNo, mapper.writeValueAsString(payload));
         } catch (JsonProcessingException e) {
             e.printStackTrace();

@@ -58,11 +58,11 @@ public class WebSocketConfig implements WebSocketConfigurer{
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 
 		// 2. 게임 상태 핸들러 등록
-		registry.addHandler(gameRoomServer(), "/room/game")
+		registry.addHandler(gameRoomServer(), "/chat/gameRoom")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
         
         // 3. 게임 채팅 핸들러 등록
-		registry.addHandler(gameChatServer(), "/chat/game")
+		registry.addHandler(gameChatServer(), "/chat/gameChat")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 
         // 4. 이벤트 핸들러 등록

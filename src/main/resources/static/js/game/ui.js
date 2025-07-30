@@ -27,7 +27,7 @@ export function displayMessage(msg, isPrepended = false) {
     const div = document.createElement("div");
 
     // ✨ [핵심 수정] 메시지 타입에 따른 클래스 분기 강화
-    if (['enter', 'leave', 'gameEnd'].includes(msg.type)) {
+    if (['enter', 'leave', 'gameEnd', 'READY_STATE_CHANGED'].includes(msg.type)) {
         div.classList.add("system-bubble");
         div.textContent = msg.msg;
     } else if (msg.type === 'EVENT') {
