@@ -54,8 +54,7 @@ public class SecurityConfig {
             })
             .accessDeniedHandler((request, response, accessDeniedException) -> {
                 response.sendRedirect("/access-denied");
-            })
-    );
+            }));
         
         return http.build();
     }

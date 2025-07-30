@@ -176,6 +176,33 @@ export function loadUserPanel(nicks, deaths) {
     updatePlayerClickHandlers();
 }
 
+export function updateUserConnectionStatus(userName, status) {
+    // data-user-name 속성을 사용하여 특정 플레이어 슬롯을 찾습니다.
+    const slot = document.querySelector(`.slot[data-user-name="${userName}"]`);
+    if (!slot) return;
+
+    // 연결 끊김 아이콘을 찾거나, 없으면 새로 만듭니다.
+    let icon = slot.querySelector('.connection-icon');
+    if (!icon) {
+        icon = document.createElement('div');
+        icon.className = 'connection-icon';
+        // 아이콘 스타일 (CSS로 옮기는 것이 더 좋습니다)
+        icon.style.position = 'absolute';
+        icon.style.top = '5px';
+        icon.style.right = '5px';
+        icon.style.color = 'red';
+        icon.style.fontWeight = 'bold';
+        slot.appendChild(icon);
+    }
+
+    if (status === 'disconnected') {
+        icon.textContent = '❌'; // 또는 이미지 아이콘
+        icon.style.display = 'block';
+    } else {
+        icon.style.display = 'none';
+    }
+}
+
 export function updatePlayerClickHandlers() {
     const phaseText = elements.phaseDisplay.textContent;
     const phase = phaseText.includes('밤') ? 'NIGHT' : phaseText.includes('투표') ? 'VOTE' : 'DAY';
