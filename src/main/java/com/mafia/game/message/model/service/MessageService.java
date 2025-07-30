@@ -46,7 +46,7 @@ public interface MessageService {
     // ========================= 관리자용 ===========================
         
     // 관리자용 전체 쪽지 조회
-    ArrayList<UserMessage> getAllMessagesForAdmin(int offset, int pageSize);
+    ArrayList<UserMessage> getAllMessagesForAdmin(Map<String, Object> params);
         
     // 관리자용 전체 쪽지 개수    
     int getTotalMessagesCount();
