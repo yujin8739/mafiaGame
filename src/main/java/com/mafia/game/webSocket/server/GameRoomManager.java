@@ -6,6 +6,8 @@ import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.service.RoomHintService;
 import com.mafia.game.game.model.vo.*;
 import com.mafia.game.job.model.vo.Job;
+import com.mafia.game.member.model.service.MemberService;
+import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.webSocket.timer.PhaseBroadcaster;
 import com.mafia.game.webSocket.timer.RoomCleanupScheduler;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class GameRoomManager {
 
+	private final MemberService memberService;
     private final GameRoomService gameRoomService;
     private final RoomHintService roomHintService;
     private final GameChatManager gameChatManager;
@@ -50,12 +53,13 @@ public class GameRoomManager {
     @Autowired
     public GameRoomManager(GameRoomService gameRoomService, RoomHintService roomHintService,
                            @Lazy GameChatManager gameChatManager, GameEventManager gameEventManager,
-                           @Lazy AbilityManager abilityManager) {
+                           @Lazy AbilityManager abilityManager, @Lazy MemberService memberService) {
         this.gameRoomService = gameRoomService;
         this.roomHintService = roomHintService;
         this.gameChatManager = gameChatManager;
         this.gameEventManager = gameEventManager;
         this.abilityManager = abilityManager;
+        this.memberService = memberService;
     }
 
     @PostConstruct
@@ -181,31 +185,40 @@ public class GameRoomManager {
     }
 
     public void addReadyToRoom(int roomNo, String userName) {
-        GameRoom room = gameRoomService.selectRoom(roomNo);
-        if (room == null) return;
-        List<String> ready = parseJsonList(room.getReadyUser());
-        if (!ready.contains(userName)) {
-            ready.add(userName);
-            try {
-                gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		if (room == null) return;
+		List<String> ready = parseJsonList(room.getReadyUser());
+		if (!ready.contains(userName)) {
+			ready.add(userName);
+			try {
+				gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
+                // ✨ [핵심 추가] 이벤트 매니저 호출
+                Member member = memberService.getMemberByUserName(userName); // MemberService를 통해 닉네임 가져오기
+                if (member != null) {
+                    gameEventManager.broadcastReadyStateChanged(roomNo, member.getNickName(), true);
+                }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
-    public void removeReady(int roomNo, String userName) {
-        GameRoom room = gameRoomService.selectRoom(roomNo);
-        if (room == null) return;
-        List<String> ready = parseJsonList(room.getReadyUser());
-        if (ready.remove(userName)) {
-            try {
-                gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	public void removeReady(int roomNo, String userName) {
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		if (room == null) return;
+		List<String> ready = parseJsonList(room.getReadyUser());
+		if (ready.remove(userName)) {
+			try {
+				gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
+                Member member = memberService.getMemberByUserName(userName);
+                if (member != null) {
+                    gameEventManager.broadcastReadyStateChanged(roomNo, member.getNickName(), false);
+                }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
     
     // --- Game Logic ---
     public void updateStart(int roomNo) {

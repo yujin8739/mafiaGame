@@ -26,7 +26,6 @@ export function cacheElements() {
 export function displayMessage(msg, isPrepended = false) {
     const div = document.createElement("div");
 
-    // ✨ [핵심 수정] 메시지 타입에 따른 클래스 분기 강화
     if (['enter', 'leave', 'gameEnd'].includes(msg.type)) {
         div.classList.add("system-bubble");
         div.textContent = msg.msg;
@@ -60,7 +59,6 @@ export function displayMessage(msg, isPrepended = false) {
             div.appendChild(contentDiv);
         }
     } else {
-        // ✨ 일반 채팅, 마피아 채팅, 사망자 채팅 등을 여기서 처리
         
         // 1. 방향 결정 (right/left)
         div.classList.add(msg.userName === state.nickName ? "right" : "left");
@@ -87,6 +85,7 @@ export function displayMessage(msg, isPrepended = false) {
         if (wasAtBottom) {
             scrollToBottom(elements.chatArea);
         }
+		
     }
 }
 

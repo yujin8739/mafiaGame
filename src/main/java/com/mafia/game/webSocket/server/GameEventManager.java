@@ -69,4 +69,19 @@ public class GameEventManager {
             e.printStackTrace();
         }
     }
+    
+    public void broadcastReadyStateChanged(int roomNo, String userName, boolean isReady) {
+        String status = isReady ? "준비" : "준비 취소";
+        String message = String.format("%s님이 %s했습니다.", userName, status);
+        try {
+            Map<String, Object> payload = Map.of(
+                    "type", "READY_STATE_CHANGED",
+                    "userName", "시스템",
+                    "msg", message
+            );
+            eventServer.broadcastEvent(roomNo, mapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
 }
