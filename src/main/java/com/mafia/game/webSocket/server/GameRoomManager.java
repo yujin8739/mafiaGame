@@ -26,7 +26,7 @@ import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.webSocket.timer.PhaseBroadcaster;
-import com.mafia.game.webSocket.timer.RoomCleanupScheduler;
+//import com.mafia.game.webSocket.timer.RoomCleanupScheduler;
 
 import jakarta.annotation.PostConstruct;
 
@@ -45,7 +45,7 @@ public class GameRoomManager {
     @Value("${game.room.empty-delete-delay-ms:300000}") // 5분
     private long cleanupDelayMs;
 	
-	private RoomCleanupScheduler roomCleanupScheduler; // 수동 생성
+	//private RoomCleanupScheduler roomCleanupScheduler; // 수동 생성
 
 	private final Map<Integer, GameRoom> gameRoomMap = new ConcurrentHashMap<>();
 	private final Map<Integer, List<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
@@ -62,7 +62,7 @@ public class GameRoomManager {
 	
 	 @PostConstruct
 	 public void initScheduler() {
-		 this.roomCleanupScheduler = new RoomCleanupScheduler(gameRoomService, this, cleanupDelayMs);
+		// this.roomCleanupScheduler = new RoomCleanupScheduler(gameRoomService, this, cleanupDelayMs);
 	 }
 	    
 	 // 캐시 삭제 메서드 추가
@@ -174,12 +174,12 @@ public class GameRoomManager {
 				// 최종적으로 방 인원에 따라 삭제 예약 또는 예약 취소
 				if (userList.isEmpty()) {
 					// 게임 진행 여부와 무관하게 모두 나갔으면 삭제 예약
-					roomCleanupScheduler.scheduleIfEmpty(roomNo);
+					//roomCleanupScheduler.scheduleIfEmpty(roomNo);
 					// ※ 게임 진행용 타이머/브로드캐스트를 즉시 멈출지 여부는 선택
 					stopPhaseBroadcast(roomNo); // 필요하면 유지 / 제거
 				} else {
 					// 아직 유저 있음 → 혹시 이전에 예약된 삭제를 취소
-					roomCleanupScheduler.cancel(roomNo);
+					//roomCleanupScheduler.cancel(roomNo);
 				}
 			}
 		} catch (Exception e) {

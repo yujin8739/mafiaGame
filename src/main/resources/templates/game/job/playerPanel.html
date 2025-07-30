@@ -35,7 +35,7 @@
 			        const status = userDeathList[index];
 			        const someNails = document.createElement('img');
 			        someNails.className = 'someNails';
-			        someNails.src = (status === 'alive') ? '/images/생존이미지.png' : '/images/사망이미지.png';
+			        someNails.src = (status === 'alive') ? '/godDaddy_etc/statusprofile/생존이미지.png' : '/godDaddy_etc/statusprofile/사망이미지.png';
 			        
 			        const input = document.createElement('input');
 			        
@@ -58,7 +58,7 @@
 			        if (!img) return;
 
 			        const status = userDeathList[index];
-			        const newSrc = (status === 'alive') ? '/images/생존이미지.png' : '/images/사망이미지.png';
+			        const newSrc = (status === 'alive') ? '/godDaddy_etc/statusprofile/생존이미지.png' : '/godDaddy_etc/statusprofile/사망이미지.png';
 
 			        // 플래그: 이미지가 다르면 src 교체
 			        if (img.src.indexOf(newSrc) === -1) {
@@ -84,7 +84,7 @@
 							const img = slot.querySelector('img.someNails');
 							if (!img) return;
 											
-							if(img.src !== '/images/사망이미지.png'){
+							if(img.src !=='/godDaddy_etc/statusprofile/사망이미지.png'){
 								img.style.cursor = 'pointer';
 								img.onclick = () => {
 									killTo(userNickList[index],index);
@@ -146,7 +146,7 @@
 							const img = slot.querySelector('img.someNails');
 							if (!img) return;
 							
-							if(img.src === '/images/사망이미지.png'){
+							if(img.src ==='/godDaddy_etc/statusprofile/사망이미지.png'){
 								img.style.cursor = 'pointer';
 								img.onclick = () => {
 									robberTo(userNickList[index],index);
@@ -189,7 +189,7 @@
 						const img = slot.querySelector('img.someNails');
 						if (!img) return; 
 						
-						if(img.src !== '/images/사망이미지.png'){
+						if(img.src !=='/godDaddy_etc/statusprofile/사망이미지.png'){
 							img.style.cursor = 'pointer';
 							img.onclick = () => {
 								voteTo(userNickList[index], index);
