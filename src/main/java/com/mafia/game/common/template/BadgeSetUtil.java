@@ -9,15 +9,15 @@ public class BadgeSetUtil {
 	public static Board setBadgeUrl(Board board) {
 		int rankPoint = board.getRankPoint();
 		if(0 <= rankPoint && rankPoint < 500) {
-			board.setProfileUrl("/images/badge/iron.png");
+			board.setProfileUrl("/godDaddy_etc/badge/iron.png");
 		}else if(500 <= rankPoint && rankPoint < 1200) {
-			board.setProfileUrl("/images/badge/thug.png");
+			board.setProfileUrl("/godDaddy_etc/badge/thug.png");
 		}else if(1200 <= rankPoint && rankPoint < 2000) {
-			board.setProfileUrl("/images/badge/agent.png");
+			board.setProfileUrl("/godDaddy_etc/badge/agent.png");
 		}else if(2000 <= rankPoint && rankPoint < 3000) {
-			board.setProfileUrl("/images/badge/underBoss.png");
+			board.setProfileUrl("/godDaddy_etc/badge/underBoss.png");
 		}else if(3000 <= rankPoint) {
-			board.setProfileUrl("/images/badge/boss.png");
+			board.setProfileUrl("/godDaddy_etc/badge/boss.png");
 		}
 		
 		return board;
@@ -26,15 +26,15 @@ public class BadgeSetUtil {
 	public static Reply setBadgeUrl(Reply reply) {
 		int rankPoint = reply.getRankPoint();
 		if(0 <= rankPoint && rankPoint < 500) {
-			reply.setProfileUrl("/images/badge/iron.png");
+			reply.setProfileUrl("/godDaddy_etc/badge/iron.png");
 		}else if(500 <= rankPoint && rankPoint < 1200) {
-			reply.setProfileUrl("/images/badge/thug.png");
+			reply.setProfileUrl("/godDaddy_etc/badge/thug.png");
 		}else if(1200 <= rankPoint && rankPoint < 2000) {
-			reply.setProfileUrl("/images/badge/agent.png");
+			reply.setProfileUrl("/godDaddy_etc/badge/agent.png");
 		}else if(2000 <= rankPoint && rankPoint < 3000) {
-			reply.setProfileUrl("/images/badge/underBoss.png");
+			reply.setProfileUrl("/godDaddy_etc/badge/underBoss.png");
 		}else if(3000 <= rankPoint) {
-			reply.setProfileUrl("/images/badge/boss.png");
+			reply.setProfileUrl("/godDaddy_etc/badge/boss.png");
 		}
 		
 		return reply;
@@ -43,15 +43,15 @@ public class BadgeSetUtil {
 	public static BoardFile setBadgeUrl(BoardFile file) {
 		int rankPoint = file.getRankPoint();
 		if(0 <= rankPoint && rankPoint < 500) {
-			file.setProfileUrl("/images/badge/iron.png");
+			file.setProfileUrl("/godDaddy_etc/badge/iron.png");
 		}else if(500 <= rankPoint && rankPoint < 1200) {
-			file.setProfileUrl("/images/badge/thug.png");
+			file.setProfileUrl("/godDaddy_etc/badge/thug.png");
 		}else if(1200 <= rankPoint && rankPoint < 2000) {
-			file.setProfileUrl("/images/badge/agent.png");
+			file.setProfileUrl("/godDaddy_etc/badge/agent.png");
 		}else if(2000 <= rankPoint && rankPoint < 3000) {
-			file.setProfileUrl("/images/badge/underBoss.png");
+			file.setProfileUrl("/godDaddy_etc/badge/underBoss.png");
 		}else if(3000 <= rankPoint) {
-			file.setProfileUrl("/images/badge/boss.png");
+			file.setProfileUrl("/godDaddy_etc/badge/boss.png");
 		}
 		
 		return file;
