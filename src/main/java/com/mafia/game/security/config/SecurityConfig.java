@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/")
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**","/chat/**","/music/**","/api/**","/godDaddy_uploadImage/**","godDaddy_uploadVideo/**" ).permitAll()
+                .requestMatchers("/", "/css/**", "/js/**", "/login/**","/images/**","/fragment/**","/chat/**","/music/**","/api/**","/godDaddy_uploadImage/**","godDaddy_uploadVideo/**","/resources/**","/introduce/**","/godDaddy_etc/**" ).permitAll()
                 .anyRequest().authenticated()
             ).exceptionHandling(exceptionHandling -> 
             exceptionHandling
@@ -54,8 +54,7 @@ public class SecurityConfig {
             })
             .accessDeniedHandler((request, response, accessDeniedException) -> {
                 response.sendRedirect("/access-denied");
-            })
-    );
+            }));
         
         return http.build();
     }

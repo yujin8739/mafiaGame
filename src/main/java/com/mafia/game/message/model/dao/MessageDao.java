@@ -86,11 +86,9 @@ public class MessageDao {
     // =================================== 관리자용 새로운 메소드들만 ===================================
     
     
-    
-    // 관리자용 전체 쪽지 조회 (페이징)    
-    public ArrayList<UserMessage> getAllMessagesForAdmin(SqlSessionTemplate sqlSession, int offset, int pageSize) {
-        Map<String, Integer> params = Map.of("offset", offset, "pageSize", pageSize);
-        return (ArrayList)sqlSession.selectList("messageMapper.getAllMessagesForAdmin", params);
+    // 관리자용 전체 쪽지 조회
+    public ArrayList<UserMessage> getAllMessagesForAdmin(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+        return new ArrayList<>(sqlSession.selectList("messageMapper.getAllMessagesForAdmin", params));
     }
     
     // 관리자용 전체 쪽지 개수 

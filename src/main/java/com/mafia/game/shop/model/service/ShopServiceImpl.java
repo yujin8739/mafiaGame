@@ -81,6 +81,16 @@ public class ShopServiceImpl implements ShopService {
 		// TODO Auto-generated method stub
 		return shopDao.getListCount(sqlSession);
 	}
+	
+	@Override
+	public List<Shop> selectAllArtworks(int offset, int limit) {
+		return shopDao.selectAllArtworks(sqlSession, offset, limit);
+	}
+
+	@Override
+	public int deleteArtwork(int artId) {
+		return shopDao.deleteArt(sqlSession, artId);
+	}
 
   
 }

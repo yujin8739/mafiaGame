@@ -189,6 +189,7 @@
 	   SELECT 
 	     CASE
 	       WHEN job_number = 0 THEN 'death'
+	       WHEN job_number IS NULL THEN 'death'
 	       ELSE 'alive'
 	     END AS status
 	   FROM (
