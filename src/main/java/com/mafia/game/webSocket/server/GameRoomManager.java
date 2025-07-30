@@ -55,7 +55,7 @@ public class GameRoomManager {
                            @Lazy GameChatManager gameChatManager, GameEventManager gameEventManager,
                            @Lazy AbilityManager abilityManager, @Lazy MemberService memberService) {
         this.gameRoomService = gameRoomService;
-        this.roomHintService = roomHintService;
+		this.roomHintService = roomHintService;
         this.gameChatManager = gameChatManager;
         this.gameEventManager = gameEventManager;
         this.abilityManager = abilityManager;
@@ -192,9 +192,9 @@ public class GameRoomManager {
 			ready.add(userName);
 			try {
 				gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
-                // ✨ [핵심 추가] 이벤트 매니저 호출
-                Member member = memberService.getMemberByUserName(userName); // MemberService를 통해 닉네임 가져오기
-                if (member != null) {
+                // ✨ 닉네임 조회를 위해 MemberService 사용
+                Member member = memberService.getMemberByUserName(userName);
+                if(member != null) {
                     gameEventManager.broadcastReadyStateChanged(roomNo, member.getNickName(), true);
                 }
 			} catch (Exception e) {
@@ -211,7 +211,7 @@ public class GameRoomManager {
 			try {
 				gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(ready));
                 Member member = memberService.getMemberByUserName(userName);
-                if (member != null) {
+                if(member != null) {
                     gameEventManager.broadcastReadyStateChanged(roomNo, member.getNickName(), false);
                 }
 			} catch (Exception e) {

@@ -53,7 +53,8 @@ public class GameChatServer extends TextWebSocketHandler {
         String type = (String) raw.get("type");
         int roomNo = (int) session.getAttributes().get("roomNo");
         Member loginUser = (Member) session.getAttributes().get("loginUser");
-
+        String userName = loginUser.getUserName();
+        
         if ("loadMore".equals(type)) {
             int page = (int) raw.get("page");
             loadAndSendPreviousMessages(session, roomNo, page);
