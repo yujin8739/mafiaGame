@@ -1,78 +1,110 @@
 body {
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-	background: linear-gradient(to bottom right, #101820, #1A1F2B);
-	color: #fff;
 	margin: 0;
+	padding: 0;
+	font-family: 'Pretendard', 'Segoe UI', sans-serif;
+	color: #333;
+}
+
+.score-main-container {
+	max-width: 1000px;
+	margin: 60px auto;
 	padding: 20px;
-}
-
-h1 {
 	text-align: center;
-	font-size: 2.5rem;
-	margin-bottom: 40px;
-	color: #FFDC00;
+	background-color: rgba(255, 255, 255, 0.05); /* 유리 느낌 */
+	border-radius: 20px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+	backdrop-filter: blur(5px);
 }
 
-.record-container {
+.score-title {
+	font-size: 2.8rem;
+	color: #4ea1d3; /* 하늘색 계열 */
+	font-weight: 700;
+	letter-spacing: -1px;
+	margin-bottom: 40px;
+	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.score-record-list {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 20px;
 	justify-content: center;
+	gap: 24px;
 }
 
-.record-card {
-	background-color: #1e1e2f;
-	border-radius: 12px;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-	padding: 20px;
-	width: 250px;
-	transition: transform 0.2s;
+.score-card {
+	background: rgba(255, 255, 255, 0.12);
+	backdrop-filter: blur(10px);
+	border-radius: 18px;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+	padding: 24px;
+	width: 260px;
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.record-card:hover {
-	transform: translateY(-5px);
+.score-card:hover {
+	transform: translateY(-8px);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
-.record-card .team {
-	font-size: 1.2rem;
+.score-team {
+	font-size: 1.3rem;
 	font-weight: bold;
-	color: #00bcd4;
+	color: #4ea1d3; /* 하늘색 */
 	margin-bottom: 10px;
 }
 
-.record-card .job {
+.score-job {
 	font-size: 1.1rem;
-	color: #ff9800;
-	margin-bottom: 10px;
+	color: #a678de; /* 보라톤 */
+	margin-bottom: 8px;
 }
 
-.record-card .result {
+.score-result {
+	font-size: 1.1rem;
+	font-weight: bold;
+	color: #26c6da; /* 승패 구분용 청록 계열 */
+}
+
+.score-result::before {
+	content: '결과: ';
+	color: #555;
+	font-weight: normal;
+}
+
+.score-pagination {
+	margin-top: 40px;
+}
+
+.score-pagination button {
+	background: linear-gradient(135deg, #80dfff, #4ea1d3);
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	margin: 0 8px;
+	border-radius: 30px;
+	cursor: pointer;
 	font-size: 1rem;
-	color: #4caf50;
+	font-weight: 600;
+	transition: background 0.3s, transform 0.2s;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.pagination {
-    text-align: center;
-    margin-top: 30px;
+.score-pagination button:hover:not(:disabled) {
+	background: linear-gradient(135deg, #64c7ff, #3a91c3);
+	transform: translateY(-2px);
 }
 
-.pagination button {
-    background-color: #333;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    margin: 0 5px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s;
+.score-pagination button:disabled {
+	background-color: #b0bec5;
+	cursor: not-allowed;
+	box-shadow: none;
 }
 
-.pagination button:hover:not(:disabled) {
-    background-color: #555;
-}
-
-.pagination button:disabled {
-    background-color: #888;
-    cursor: default;
+.score-page-info {
+	margin: 0 15px;
+	font-size: 1.1rem;
+	color: #666;
+	vertical-align: middle;
 }
