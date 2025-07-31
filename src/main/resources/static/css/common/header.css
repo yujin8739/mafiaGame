@@ -1,5 +1,5 @@
 body {
-  background-image: url('/images/background.png');  /* 정적 경로 */
+  background-image: url('/godDaddy_etc/homeImages/background.png');  /* 정적 경로 */
   background-size: cover;        /* ✅ 화면에 꽉 차게 확대/축소 */
   background-repeat: no-repeat;  /* ✅ 반복 없이 한 번만 */
   background-position: center;   /* ✅ 가운데 정렬 */

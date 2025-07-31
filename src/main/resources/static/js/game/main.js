@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadInitialData();
 	ui.updateLobbyButtons();
 
-	// [핵심 추가] 절전 모드 등에서 복귀했을 때를 감지하는 이벤트 리스너
+	// 절전 모드 등에서 복귀했을 때를 감지하는 이벤트 리스너
 	document.addEventListener('visibilitychange', () => {
 		// 탭이 다시 화면에 보일 때 (활성화될 때)
 		if (document.visibilityState === 'visible') {

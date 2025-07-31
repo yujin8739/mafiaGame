@@ -75,7 +75,7 @@ public class WebSocketConfig implements WebSocketConfigurer{
 	}
 	
 	/**
-	 * WebSocket 메시지 버퍼 크기를 설정합니다. (기존 코드 유지)
+	 * WebSocket 메시지 버퍼 크기를 설정합니다.
 	 */
 	@Bean
     public TomcatServletWebServerFactory tomcatFactory() {
@@ -83,8 +83,6 @@ public class WebSocketConfig implements WebSocketConfigurer{
             @Override
             protected void postProcessContext(Context context) {
                 context.addServletContainerInitializer((c, ctx) -> {
-                    // jakarta.websocket.server.ServerContainer는 Tomcat 10 이상부터 사용됩니다.
-                    // 만약 Tomcat 9 이하라면 "javax.websocket.server.ServerContainer"를 사용해야 할 수 있습니다.
                     Object serverContainerAttr = ctx.getAttribute("jakarta.websocket.server.ServerContainer");
                     if (serverContainerAttr == null) {
                          serverContainerAttr = ctx.getAttribute("javax.websocket.server.ServerContainer");
@@ -93,6 +91,7 @@ public class WebSocketConfig implements WebSocketConfigurer{
                     if (serverContainerAttr instanceof WsServerContainer wsContainer) {
                         wsContainer.setDefaultMaxTextMessageBufferSize(1024 * 1024 * 5); // 5MB
                         wsContainer.setDefaultMaxBinaryMessageBufferSize(1024 * 1024 * 5); // 5MB
+                        wsContainer.setAsyncSendTimeout(600000L); 
                     }
                 }, null);
             }

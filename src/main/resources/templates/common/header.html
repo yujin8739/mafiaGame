@@ -12,10 +12,9 @@
         <!-- 로고 -->
         <div class="logo">
             <a href="/"> 
-                <img src="/images/godFatherLogo.png" alt="GodFather 로고">
+                <img src="/godDaddy_etc/homeImages/godFatherLogo.png" alt="GodFather 로고">
             </a>
         </div>
-
 
         <!-- 비로그인 상태 -->
         <div th:if="${loginUser == null}">
@@ -28,19 +27,17 @@
         <!-- 로그인 상태 -->
         <div th:if="${loginUser != null}">
             <div class="auth-buttons" style="flex-direction: column; align-items: center;">
-
                 <!-- 프로필 이미지 영역 -->
                 <div class="profile-wrapper">
                     <a href="/mypage/myitems">
-                        <!-- ✅ 테두리 이미지 -->
+                        <!--
                         <img src="/images/profile/iron.png"
                              class="border-img"
                              th:style="${session.borderEnabled == 'Y'} ? 'display:block' : 'display:none'"
                              alt="테두리 이미지">
-
-                        <!-- 프로필 이미지 -->
+                        -->
                         <img class="profile-img"
-                             th:src="${loginUser.profileImage != null} ? ${loginUser.profileImage} : '/images/profile/Profile.png'"
+                             th:src="${loginUser.profileImage != null} ? ${loginUser.profileImage} : '/godDaddy_etc/profile/Profile.png'"
                              alt="프로필 이미지" />
                     </a>
                 </div>
@@ -53,7 +50,7 @@
                         <a href="/logout">로그아웃</a>
                         <!-- ⚙ 설정 아이콘 -->
                         <button id="open-settings" style="background: none; border: none;" title="설정 열기">
-                            <img src="/images/profile/gear.png" style="width: 20px;" />
+                            <img src="/godDaddy_etc/profile/gear.png" style="width: 20px;" />
                         </button>
                     </div>
                 </div>
@@ -61,28 +58,21 @@
         </div>
     </div>
 
+    <!--  모달창: 테두리 설정 -->
+    <div id="settings-modal">
+        <div class="modal-content" id="modal-toggle-border">
+            <h3>⚙ 설정</h3>
 
+            <div>
+                <button type="button" id="resetProfileBtn">기본 프로필로 설정</button>
+            </div>
 
-	<!--  모달창: 테두리 설정 -->
-	<div id="settings-modal">
-	    <div class="modal-content">
-	        <h3>⚙ 설정</h3>
-
-	        <label>
-	            <input type="checkbox" id="modal-toggle-border"
-	                   th:checked="${session.borderEnabled == 'Y'}"> 테두리 보기
-	        </label>
-
-	        <div>
-	            <button type="button" id="resetProfileBtn">기본 프로필로 설정</button>
-	        </div>
-
-	        <div style="margin-top: 15px;">
-	            <button id="save-settings">저장</button>
-	            <button id="close-settings">닫기</button>
-	        </div>
-	    </div>
-	</div>
+            <div style="margin-top: 15px;">
+                <button id="save-settings">저장</button>
+                <button id="close-settings">닫기</button>
+            </div>
+        </div>
+    </div>
 
     <!--  모달 설정 스크립트 -->
     <script>
@@ -105,6 +95,9 @@
         });
 
         saveBtn.addEventListener("click", () => {
+            // borderEnabled 값을 체크박스 대신 div(id=modal-toggle-border)로 감싸서 체크 여부 판단 시 수정 필요!
+            // 만약 체크박스가 없다면 여기 코드를 다시 점검해야 합니다.
+            // 아래는 기존 로직 유지 (참고용)
             const isEnabled = modalCheckbox.checked ? 'Y' : 'N';
 
             fetch('/profile/setBorder', {
@@ -119,7 +112,6 @@
                 }
             });
 
-            // 즉시 적용
             if (borderImg) {
                 borderImg.style.display = (isEnabled === 'Y') ? 'block' : 'none';
             }
@@ -129,480 +121,112 @@
     });
     </script>
 
+    <div style="position: fixed; top: 10px; left: 10px; z-index: 9999; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px;">
+        <audio id="bgm-audio" src="/music/test1.mp3" th:src="@{/music/test1.mp3}" loop></audio>
+        <button id="play-btn">▶️ 재생</button>
+        <button id="pause-btn">⏸️ 정지</button>
+    </div>
 
+    <script>
+        window.onload = () => {
+            const audio = document.getElementById('bgm-audio');
+            const playBtn = document.getElementById('play-btn');
+            const pauseBtn = document.getElementById('pause-btn');
 
-<div class="top-nav">
-  <ul class="menu">
-	
+            const bgmState = localStorage.getItem('bgmState');
+            const savedTime = parseFloat(localStorage.getItem('bgmTime')) || 0;
 
+            audio.currentTime = savedTime;
 
-    <!-- 게임 -->
-    <li class="menu-item">
-      <a href="/">게임찾기</a>
-    </li>
+            if (bgmState === 'playing') {
+                audio.play().catch(() => {
+                    console.log("자동 재생이 차단되었습니다. 사용자가 직접 재생해야 합니다.");
+                });
+            }
 
-    <!-- 라운지 -->
-    <li class="menu-item">
-      <a th:href="@{/board/lounge}">라운지</a>
-    </li>
+            playBtn.onclick = () => {
+                audio.play();
+                localStorage.setItem('bgmState', 'playing');
+            };
 
-    <!-- 커뮤니티 (클릭 불가) -->
-    <li class="menu-item">
-      <span class="disabled-link">커뮤니티</span>
-    </li>
+            pauseBtn.onclick = () => {
+                audio.pause();
+                localStorage.setItem('bgmState', 'paused');
+            };
 
-    <!-- 상점 (클릭 불가) -->
-    <li class="menu-item">
-      <span class="disabled-link">상점</span>
-    </li>
+            setInterval(() => {
+                if (!audio.paused) {
+                    localStorage.setItem('bgmTime', audio.currentTime);
+                }
+            }, 500);
+        };
 
-  </ul>
+        window.onbeforeunload = () => {
+            const audio = document.getElementById('bgm-audio');
+            localStorage.setItem('bgmTime', audio.currentTime);
+        };
+    </script>
 
-  <!-- 전체 하위 메뉴 드롭다운 -->
-  <div class="all-submenus">
-    <div class="menu-group">
-      <!-- 게임 하위 메뉴 -->
-      <div class="menu-column">
-        <a th:href="@{/room/createRoom}">게임 생성</a>
-        <a href="/">랭크게임</a>
-      </div>
-      <!-- 라운지 하위 메뉴 -->
-      <div class="menu-column">
-        <a th:href="@{/board/gallery}">갤러리</a>
-        <a th:href="@{/board/video}">하이라이트 영상</a>
-        <a th:href="@{/introduce/list}">게임소개</a>
-      </div>
-      <!-- 커뮤니티 하위 메뉴 -->
-      <div class="menu-column">
-        <a href="javascript:void(0)" onclick="openFriendSidebar()">친구목록</a>
-        <a th:href="@{/message/inbox}">쪽지함</a>
-        <a th:href="@{/notice/list}">공지사항</a>
-      </div>
-      <!-- 상점 하위 메뉴 -->
-      <div class="menu-column">
-        <a th:href="@{/artshop}">아트샵</a>
-        <a th:href="@{/itemshop}">아이템상점</a>
+    <script>
+    document.getElementById("resetProfileBtn").addEventListener("click", function () {
+        if (confirm("기본 프로필로 변경할까요?")) {
+            fetch("/mypage/reset-profile", {
+                method: "POST"
+            }).then(response => {
+                if (response.ok) {
+                    alert("기본 프로필로 변경되었습니다.");
+                    location.reload(); // 새로고침으로 즉시 반영
+                } else {
+                    alert("변경 실패");
+                }
+            });
+        }
+    });
+    </script>
+
+    <!-- 친구 사이드바 fragment 불러오기 -->
+    <div th:replace="~{friend/friendSidebar :: friendSidebarFragment}"></div>
+
+    <!-- 친구 관련 JS 외부 분리된 스크립트 로드 -->
+    <script src="/js/friend/friendsidebar.js"></script>
+
+    <div class="top-nav">
+      <ul class="menu">
+        <li class="menu-item">
+          <a href="/">게임찾기</a>
+        </li>
+        <li class="menu-item">
+          <a th:href="@{/board/lounge}">라운지</a>
+        </li>
+        <li class="menu-item">
+          <span class="disabled-link">커뮤니티</span>
+        </li>
+        <li class="menu-item">
+          <span class="disabled-link">상점</span>
+        </li>
+      </ul>
+
+      <div class="all-submenus">
+        <div class="menu-group">
+          <div class="menu-column">
+            <a th:href="@{/room/createRoom}">게임 생성</a>
+            <a href="/">랭크게임</a>
+          </div>
+          <div class="menu-column">
+            <a th:href="@{/board/gallery}">갤러리</a>
+            <a th:href="@{/board/video}">하이라이트 영상</a>
+            <a th:href="@{/introduce/list}">게임소개</a>
+          </div>
+          <div class="menu-column">
+            <a href="javascript:void(0)" onclick="openFriendSidebar()">친구목록</a>
+            <a th:href="@{/message/inbox}">쪽지함</a>
+            <a th:href="@{/notice/list}">공지사항</a>
+          </div>
+          <div class="menu-column">
+            <a th:href="@{/artshop}">아트샵</a>
+            <a th:href="@{/itemshop}">아이템상점</a>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <div style="position: fixed; top: 10px; left: 10px; z-index: 9999; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px;">
-      <audio id="bgm-audio" src="/music/test1.mp3" th:src="@{/music/test1.mp3}" loop></audio>
-      <button id="play-btn">▶️ 재생</button>
-      <button id="pause-btn">⏸️ 정지</button>
-  </div>
-
-  <script>
-    window.onload = () => {
-      const audio = document.getElementById('bgm-audio');
-      const playBtn = document.getElementById('play-btn');
-      const pauseBtn = document.getElementById('pause-btn');
-
-      const bgmState = localStorage.getItem('bgmState');
-      const savedTime = parseFloat(localStorage.getItem('bgmTime')) || 0;
-
-      // 저장된 재생 위치 복원
-      audio.currentTime = savedTime;
-
-      if (bgmState === 'playing') {
-        audio.play().catch(() => {
-          console.log("자동 재생이 차단되었습니다. 사용자가 직접 재생해야 합니다.");
-        });
-      }
-
-      playBtn.onclick = () => {
-        audio.play();
-        localStorage.setItem('bgmState', 'playing');
-      };
-
-      pauseBtn.onclick = () => {
-        audio.pause();
-        localStorage.setItem('bgmState', 'paused');
-      };
-
-      // 재생 중일 때 재생 위치 저장 (0.5초마다)
-      setInterval(() => {
-        if (!audio.paused) {
-          localStorage.setItem('bgmTime', audio.currentTime);
-        }
-      }, 500);
-    };
-
-    // 페이지를 떠날 때도 재생 위치 저장
-    window.onbeforeunload = () => {
-      const audio = document.getElementById('bgm-audio');
-      localStorage.setItem('bgmTime', audio.currentTime);
-    };
-  </script>
-</div>
-
-<script>
-document.getElementById("resetProfileBtn").addEventListener("click", function () {
-    if (confirm("기본 프로필로 변경할까요?")) {
-        fetch("/mypage/reset-profile", {
-            method: "POST"
-        }).then(response => {
-            if (response.ok) {
-                alert("기본 프로필로 변경되었습니다.");
-                location.reload(); // 새로고침으로 즉시 반영
-            } else {
-                alert("변경 실패");
-            }
-        });
-    }
-});
-</script>
-
-<div th:replace="~{friend/friendSidebar :: friendSidebarFragment}"></div>
-
-<script>
-    // 전역 함수로 정의
-    function openFriendSidebar() {
-        $('#sidebarOverlay').addClass('active');
-        $('#friendSidebar').addClass('active');
-        $('body').css('overflow', 'hidden');
-        loadFriendData();
-    }
-
-    function closeFriendSidebar() {
-        $('#sidebarOverlay').removeClass('active');
-        $('#friendSidebar').removeClass('active');
-        $('body').css('overflow', 'auto');
-        hideSearchResult();
-    }
-
-    function switchTab(tabName) {
-        $('.tab-btn').removeClass('active');
-        $(`[data-tab="${tabName}"]`).addClass('active');
-        
-        $('.tab-content').removeClass('active');
-        $(`#${tabName}Tab`).addClass('active');
-    }
-
-    function hideSearchResult() {
-        $('#searchResult').removeClass('show');
-    }
-
-    // 친구 검색
-    function searchFriend() {
-        const searchKeyword = $('#friendSearchInput').val().trim();
-        
-        if (!searchKeyword) {
-            alert('검색어를 입력해주세요.');
-            return;
-        }
-        
-        $.ajax({
-            url: '/friend/search',
-            type: 'POST',
-            data: { searchKeyword: searchKeyword },
-            success: function(response) {
-                if (response.success) {
-                    showSearchResult(response.user);
-                } else {
-                    alert(response.message);
-                    hideSearchResult();
-                }
-            },
-            error: function() {
-                alert('검색 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 검색 결과 표시
-    function showSearchResult(user) {
-        $('#searchedUserName').text(user.userName);
-        $('#searchedUserNickname').text(user.nickName);
-        $('#searchResult').addClass('show');
-    }
-
-    // 친구 요청 보내기
-    function sendFriendRequest() {
-        const targetUser = $('#searchedUserName').text();
-        
-        $.ajax({
-            url: '/friend/request',
-            type: 'POST',
-            data: { targetUserName: targetUser },
-            success: function(response) {
-                alert(response.message);
-                if (response.success) {
-                    hideSearchResult();
-                    $('#friendSearchInput').val('');
-                }
-            },
-            error: function() {
-                alert('친구 요청 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 친구 데이터를 Ajax로 실시간 로드
-    function loadFriendData() {
-        $.ajax({
-            url: '/friend/notifications',
-            type: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    updateFriendList(response.friendList || []);
-                    updateRequestList(response.friendRequests || []);
-                    updateInviteList(response.gameInvites || []);
-                }
-            },
-            error: function() {
-                console.log('친구 데이터 로드 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 친구 목록 업데이트
-    function updateFriendList(friendList) {
-        $('#friendList').empty();
-        $('#friendCount').text(friendList.length);
-        
-        if (friendList.length === 0) {
-            $('#friendsEmpty').show();
-            return;
-        }
-        
-        $('#friendsEmpty').hide();
-        friendList.forEach(function(friend) {
-            const friendItem = createFriendItem(friend);
-            $('#friendList').append(friendItem);
-        });
-    }
-
-    // 친구 요청 목록 업데이트
-    function updateRequestList(friendRequests) {
-        $('#requestList').empty();
-        $('#requestCount').text(friendRequests.length);
-        
-        if (friendRequests.length === 0) {
-            $('#requestsEmpty').show();
-            return;
-        }
-        
-        $('#requestsEmpty').hide();
-        friendRequests.forEach(function(request) {
-            const requestItem = createRequestItem(request);
-            $('#requestList').append(requestItem);
-        });
-    }
-
-    // 게임 초대 목록 업데이트
-    function updateInviteList(gameInvites) {
-        $('#inviteList').empty();
-        $('#inviteCount').text(gameInvites.length);
-        
-        if (gameInvites.length === 0) {
-            $('#invitesEmpty').show();
-            return;
-        }
-        
-        $('#invitesEmpty').hide();
-        gameInvites.forEach(function(invite) {
-            const inviteItem = createInviteItem(invite);
-            $('#inviteList').append(inviteItem);
-        });
-    }
-
-    // 친구 아이템 생성
-    function createFriendItem(friend) {
-        return $(`
-            <li class="friend-item">
-                <div class="friend-avatar">
-                    👤
-                    <div class="online-status offline"></div>
-                </div>
-                <div class="friend-info">
-                    <div class="friend-name">${friend.friendNickName || friend.friendUserName}</div>
-                    <div class="friend-status">오프라인</div>
-                </div>
-                <div class="friend-actions">
-                    <button class="action-btn message-btn" onclick="sendMessage('${friend.friendUserName}')">쪽지</button>
-                    <button class="action-btn invite-btn" onclick="inviteToGame('${friend.friendUserName}')">초대</button>
-                    <button class="action-btn remove-btn" onclick="removeFriend('${friend.friendUserName}')">삭제</button>
-                </div>
-            </li>
-        `);
-    }
-
-    // 친구 요청 아이템 생성
-    function createRequestItem(request) {
-        return $(`
-            <li class="friend-item">
-                <div class="friend-avatar">👤</div>
-                <div class="friend-info">
-                    <div class="friend-name">${request.requesterNickName || request.requesterName}</div>
-                    <div class="friend-status">친구 요청을 보냈습니다</div>
-                </div>
-                <div class="friend-actions">
-                    <button class="action-btn accept-btn" onclick="acceptFriendRequest(${request.relationNo})">수락</button>
-                    <button class="action-btn reject-btn" onclick="rejectFriendRequest(${request.relationNo})">거절</button>
-                </div>
-            </li>
-        `);
-    }
-
-    // 게임 초대 아이템 생성
-    function createInviteItem(invite) {
-        return $(`
-            <li class="friend-item">
-                <div class="friend-avatar">🎮</div>
-                <div class="friend-info">
-                    <div class="friend-name">${invite.senderNickName || invite.senderName}</div>
-                    <div class="friend-status">${invite.roomName}에 초대했습니다</div>
-                </div>
-                <div class="friend-actions">
-                    <button class="action-btn accept-btn" onclick="acceptGameInvite(${invite.inviteNo})">수락</button>
-                    <button class="action-btn reject-btn" onclick="rejectGameInvite(${invite.inviteNo})">거절</button>
-                </div>
-            </li>
-        `);
-    }
-
-    // 친구 요청 수락
-    function acceptFriendRequest(relationNo) {
-        $.ajax({
-            url: '/friend/accept',
-            type: 'POST',
-            data: { relationNo: relationNo },
-            success: function(response) {
-                alert(response.message);
-                if (response.success) {
-                    loadFriendData();
-                }
-            },
-            error: function() {
-                alert('친구 요청 수락 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 친구 요청 거절
-    function rejectFriendRequest(relationNo) {
-        $.ajax({
-            url: '/friend/reject',
-            type: 'POST',
-            data: { relationNo: relationNo },
-            success: function(response) {
-                alert(response.message);
-                if (response.success) {
-                    loadFriendData();
-                }
-            },
-            error: function() {
-                alert('친구 요청 거절 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 친구 삭제
-    function removeFriend(friendUserName) {
-        if (!confirm('정말로 이 친구를 삭제하시겠습니까?')) {
-            return;
-        }
-        
-        $.ajax({
-            url: '/friend/delete',
-            type: 'POST',
-            data: { friendUserName: friendUserName },
-            success: function(response) {
-                alert(response.message);
-                if (response.success) {
-                    loadFriendData();
-                }
-            },
-            error: function() {
-                alert('친구 삭제 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 게임 초대 수락
-    function acceptGameInvite(inviteNo) {
-        $.ajax({
-            url: '/friend/invite/respond',
-            type: 'POST',
-            data: { 
-                inviteNo: inviteNo,
-                status: 'ACCEPTED'
-            },
-            success: function(response) {
-                alert(response.message);
-                if (response.success) {
-                    loadFriendData();
-                    // 게임방으로 이동하는 로직 추가 가능
-                }
-            },
-            error: function() {
-                alert('게임 초대 수락 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 게임 초대 거절
-    function rejectGameInvite(inviteNo) {
-        $.ajax({
-            url: '/friend/invite/respond',
-            type: 'POST',
-            data: { 
-                inviteNo: inviteNo,
-                status: 'REJECTED'
-            },
-            success: function(response) {
-                alert(response.message);
-                if (response.success) {
-                    loadFriendData();
-                }
-            },
-            error: function() {
-                alert('게임 초대 거절 중 오류가 발생했습니다.');
-            }
-        });
-    }
-
-    // 쪽지 보내기 (미구현)
-    function sendMessage(userName) {
-        window.location.href = '/message/write';
-    }
-
-    // 게임 초대하기
-    function inviteToGame(userName) {
-        alert('현재 기능 구현중 쫌만 기다리삼.');
-    }
-
-    // 문서 로드 후 이벤트 바인딩
-    $(document).ready(function() {
-        // 사이드바 닫기 이벤트
-        $(document).on('click', '#closeSidebarBtn, #sidebarOverlay', function() {
-            closeFriendSidebar();
-        });
-
-        // 탭 전환 이벤트
-        $(document).on('click', '.tab-btn', function() {
-            const tabName = $(this).data('tab');
-            switchTab(tabName);
-        });
-
-        // ESC 키로 사이드바 닫기
-        $(document).on('keydown', function(e) {
-            if (e.which === 27) { // ESC key
-                closeFriendSidebar();
-            }
-        });
-
-        // 친구 검색 이벤트
-        $(document).on('click', '#searchFriendBtn', searchFriend);
-        $(document).on('keypress', '#friendSearchInput', function(e) {
-            if (e.which === 13) { // Enter key
-                searchFriend();
-            }
-        });
-
-        // 친구 요청 보내기 이벤트
-        $(document).on('click', '#sendRequestBtn', sendFriendRequest);
-    });
-</script>
 </div>
