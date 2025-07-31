@@ -1,5 +1,4 @@
 import { state } from './state.js';
-import { useAbility } from './gameLogic.js';
 
 export const elements = {};
 let phaseTimer = null;
@@ -19,14 +18,12 @@ export function cacheElements() {
     elements.togglePhoneBtn = document.getElementById("togglePhoneModalBtn");
     elements.closePhoneBtn = document.getElementById("closePhoneModalBtn");
     elements.hackBtn = document.getElementById("hackBtn");
-    elements.hintListContainer = $("#hintListContainer"); // jQuery 객체
+    elements.hintListContainer = $("#hintListContainer");
     elements.controlPanel = document.getElementById("controlPanel");
 }
 
 export function displayMessage(msg, isPrepended = false) {
     const div = document.createElement("div");
-
-    // ✨ [핵심 수정] 메시지 타입에 따른 클래스 분기 강화
     if (['enter', 'leave', 'gameEnd', 'READY_STATE_CHANGED'].includes(msg.type)) {
         div.classList.add("system-bubble");
         div.textContent = msg.msg;
@@ -60,16 +57,8 @@ export function displayMessage(msg, isPrepended = false) {
             div.appendChild(contentDiv);
         }
     } else {
-        // ✨ 일반 채팅, 마피아 채팅, 사망자 채팅 등을 여기서 처리
-        
-        // 1. 방향 결정 (right/left)
         div.classList.add(msg.userName === state.nickName ? "right" : "left");
-        
-        // 2. 채팅 타입에 따른 버블 스타일 클래스 추가
-        //    (예: chat-bubble, mafia-bubble, death-bubble)
         div.classList.add(`${msg.type}-bubble`);
-
-        // 3. 발신자와 내용 추가
         const sender = document.createElement("div");
         sender.className = "chat-sender";
         sender.textContent = msg.userName;
@@ -77,8 +66,6 @@ export function displayMessage(msg, isPrepended = false) {
         content.textContent = msg.msg;
         div.append(sender, content);
     }
-    
-    // 최종적으로 생성된 div를 채팅창에 추가
     if (isPrepended) {
         elements.chatArea.insertBefore(div, elements.chatArea.firstChild);
     } else {
@@ -117,7 +104,7 @@ export function updateTimerUI(phase, time) {
     const phaseKR = { NIGHT: '밤', DAY: '낮', VOTE: '투표' }[phase] || '대기';
     elements.phaseDisplay.textContent = `현재 단계: ${phaseKR}`;
     elements.timerDisplay.textContent = `남은 시간: ${remaining}초`;
-
+    if (time <= 0) return;
     phaseTimer = setInterval(() => {
         remaining--;
         if(remaining < 0) remaining = 0;
@@ -130,7 +117,6 @@ export function updateChatInputState(phase) {
     const jobName = state.job ? state.job.jobName : '';
     let enabled = false;
     let placeholder = "대화할 수 없습니다.";
-
     if (!state.isGaming || phase === 'DAY') {
         enabled = true; placeholder = "메시지를 입력하세요...";
     } else if (phase === 'NIGHT') {
@@ -141,7 +127,6 @@ export function updateChatInputState(phase) {
     if (jobName.includes('Ghost') || jobName === 'spiritualists') {
         enabled = true; placeholder = "사망자와 대화하세요...";
     }
-    
     elements.chatInput.disabled = !enabled;
     elements.chatInput.placeholder = placeholder;
 }
@@ -153,40 +138,31 @@ export function loadUserPanel(nicks, deaths) {
         const div = document.createElement('div');
         div.className = 'slot';
         div.dataset.userName = userList[index] || '';
-        
         const panels = document.createElement('div');
         panels.className = 'panels';
-        
         const isDead = deaths[index] === 'dead';
         const someNails = document.createElement('img');
         someNails.className = 'someNails';
         someNails.src = isDead ? '/godDaddy_etc/statusprofile/사망이미지.png' : '/godDaddy_etc/statusprofile/생존이미지.png';
-        
         const input = document.createElement('input');
         input.className = 'player-name';
         input.type = 'text';
         input.readOnly = true;
         input.value = name;
-        
         panels.appendChild(someNails);
         div.appendChild(input);
         div.appendChild(panels);
         elements.playerPanelContainer.appendChild(div);
     });
-    updatePlayerClickHandlers();
 }
 
 export function updateUserConnectionStatus(userName, status) {
-    // data-user-name 속성을 사용하여 특정 플레이어 슬롯을 찾습니다.
     const slot = document.querySelector(`.slot[data-user-name="${userName}"]`);
     if (!slot) return;
-
-    // 연결 끊김 아이콘을 찾거나, 없으면 새로 만듭니다.
     let icon = slot.querySelector('.connection-icon');
     if (!icon) {
         icon = document.createElement('div');
         icon.className = 'connection-icon';
-        // 아이콘 스타일 (CSS로 옮기는 것이 더 좋습니다)
         icon.style.position = 'absolute';
         icon.style.top = '5px';
         icon.style.right = '5px';
@@ -194,49 +170,12 @@ export function updateUserConnectionStatus(userName, status) {
         icon.style.fontWeight = 'bold';
         slot.appendChild(icon);
     }
-
     if (status === 'disconnected') {
-        icon.textContent = '❌'; // 또는 이미지 아이콘
+        icon.textContent = '❌';
         icon.style.display = 'block';
     } else {
         icon.style.display = 'none';
     }
-}
-
-export function updatePlayerClickHandlers() {
-    const phaseText = elements.phaseDisplay.textContent;
-    const phase = phaseText.includes('밤') ? 'NIGHT' : phaseText.includes('투표') ? 'VOTE' : 'DAY';
-    
-    document.querySelectorAll('.slot').forEach(slot => {
-        const targetUserName = slot.dataset.userName;
-        const targetNickName = slot.querySelector('.player-name').value;
-        const img = slot.querySelector('img.someNails');
-        const isDead = img.src.includes('사망이미지');
-
-        let canClick = false;
-        if(state.isGaming && state.job) {
-            const jobName = state.job.jobName;
-            if (!isDead) {
-                if (phase === 'NIGHT') {
-                    if(['mafia', 'doctor', 'police', 'spy', 'necromancer'].includes(jobName) && jobName !== 'necromancerUsed') canClick = true;
-                } else if (phase === 'VOTE') {
-                    canClick = true;
-                }
-            } else {
-                if (phase === 'NIGHT' && jobName === 'robber' && state.dayNo >= 1) {
-                    canClick = true;
-                }
-            }
-        }
-        
-        if (canClick) {
-            img.style.cursor = 'pointer';
-            img.onclick = () => useAbility(targetUserName, targetNickName);
-        } else {
-            img.style.cursor = 'default';
-            img.onclick = null;
-        }
-    });
 }
 
 export function loadHintListUI(hintList) {

@@ -45,9 +45,12 @@ public class GameRoomServer extends TextWebSocketHandler {
         String userName = loginUser.getUserName();
 
         switch (type) {
+        	case "requestSync":
+	            roomManager.sendFullGameState(roomNo, userName);
+	            break;
 	        case "ping":
 	            roomManager.recordHeartbeat(userName);
-            break;
+	            break;
             case "ready":
                 roomManager.addReadyToRoom(roomNo, userName);
                 break;
