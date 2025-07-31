@@ -1,4 +1,4 @@
-
+//
 //  package com.mafia.game.system.cleaner;
 //  
 //  import org.springframework.beans.factory.annotation.Autowired; import
@@ -17,3 +17,4 @@
 //  @EventListener(ApplicationReadyEvent.class) public void clearOnStartup() {
 //  gameRoomService.deleteAllGameRooms();
 //  System.out.println(">>> 서버 시작: GAME_ROOM 데이터 초기화 완료"); } }
+// 

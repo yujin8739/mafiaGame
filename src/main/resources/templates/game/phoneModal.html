@@ -1,39 +1,14 @@
 <div id="phoneModal" class="phone-modal" th:fragment="phoneModal">
     <div class="phone-notch"></div>
-
     <div class="phone-screen">
         <div class="phone-header">
             <span>휴대폰</span>
-            <button type="button" id="hackBtn" onclick="hackHint()">해킹하기</button>
-            <button type="button" id="closePhoneModalBtn">&times;</button>
+            <button type="button" id="hackBtn">해킹하기</button>
+            <button type="button" id="closePhoneModalBtn">×</button>
         </div>
         <div id="hintListContainer" class="phone-content" style="overflow-y:auto;">
-		    <!-- JS로 설정 -->
+		    <!-- JavaScript로 동적 생성됩니다. -->
 		</div>
     </div>
-
     <div class="phone-home-button"></div>
-    <script th:inline="javascript">
-	    function setHintList(hintList, container) {
-	        hintList.forEach(function (hint) {
-	            const div = $("<div>").addClass("slot-phone");
-	            const panels = $("<div>").addClass("panels-phone");
-	
-	            const img = $("<img>")
-	                .addClass("someNails")
-	                .attr("src", "/images/생존이미지.png"); // 기본 아이콘
-	
-	            panels.append(img);
-	
-	            const input = $("<input>")
-	                .addClass("player-name-phone")
-	                .attr("type", "text")
-	                .attr("readonly", true)
-	                .val(`${hint.userName}: ${hint.hint}`);
-	
-	            div.append(panels).append(input);
-	            container.append(div);
-	        });
-	    }
-    </script>
 </div>

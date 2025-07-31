@@ -6,14 +6,9 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mafia.game.game.model.vo.Message;
 import com.mafia.game.webSocket.server.GameRoomManager;
 
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class PhaseBroadcaster {
 
@@ -24,6 +19,7 @@ public class PhaseBroadcaster {
     private final int roomNo;
 
     private int phaseIndex = -1;
+    private int dayNo = 0;
     private final String[] phases = { "NIGHT", "DAY", "VOTE" };
     private final int[] durations = { 60, 60, 30 };
 
@@ -40,56 +36,40 @@ public class PhaseBroadcaster {
     private void executePhaseTransition() {
         if (phaseIndex != -1) {
             String previousPhase = phases[phaseIndex];
-
-            // ⭐️⭐️⭐️⭐️⭐️ 여기가 핵심 수정 부분입니다 ⭐️⭐️⭐️⭐️⭐️
-            // 'DAY'가 아닌 'NIGHT'가 끝났을 때 마피아 킬을 처리하도록 수정했습니다.
             if ("NIGHT".equals(previousPhase)) {
-                gameRoomManager.mafiaKill(roomNo);
+                gameRoomManager.processNightActions(roomNo);
             } else if ("VOTE".equals(previousPhase)) {
-                gameRoomManager.voteKill(roomNo);
+                gameRoomManager.processVote(roomNo);
             }
         }
 
-        String winner = gameRoomManager.checkWinner(roomNo,phaseIndex);
-
+        String winner = gameRoomManager.checkWinner(roomNo, phaseIndex);
         if (!"CONTINUE".equals(winner)) {
             endGameAndNotify(winner);
             return;
-        } else {
-            phaseIndex = (phaseIndex + 1) % phases.length;
-            String nextPhase = phases[phaseIndex];
-            int nextDuration = durations[phaseIndex];
-
-            broadcastPhaseInfo(nextPhase, nextDuration);
-            scheduler.schedule(this::executePhaseTransition, nextDuration, TimeUnit.SECONDS);
         }
+
+        phaseIndex = (phaseIndex + 1) % phases.length;
+        if (phaseIndex == 0) { // 밤이 시작될 때 dayNo 증가
+            dayNo++;
+            gameRoomManager.updateDayNo(roomNo);
+        }
+
+        String nextPhase = phases[phaseIndex];
+        int nextDuration = durations[phaseIndex];
+
+        broadcastPhaseInfo(nextPhase, nextDuration, dayNo);
+        scheduler.schedule(this::executePhaseTransition, nextDuration, TimeUnit.SECONDS);
     }
 
     private void endGameAndNotify(String winner) {
-        try {
-            Message msg = new Message(roomNo, UUID.randomUUID().toString(), winner, "게임이 종료되었습니다.", "시스템", new Date());
-
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("userName", msg.getUserName());
-            payload.put("msg", msg.getMsg());
-            payload.put("type", winner);
-
-            String finalMessage = mapper.writeValueAsString(payload);
-            broadcast(finalMessage);
-            
-            gameRoomManager.updateStop(roomNo);
-            
-            stop();
-
-        } catch (Exception e) {
-            System.err.println("게임 종료 메시지 전송 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-        }
+        gameRoomManager.endGame(roomNo, winner);
+        stop();
     }
 
-    private void broadcastPhaseInfo(String phase, int duration) {
+    private void broadcastPhaseInfo(String phase, int duration, int currentDay) {
         try {
-            PhaseMessage phaseMessage = new PhaseMessage(phase, duration);
+            PhaseMessage phaseMessage = new PhaseMessage(phase, duration, currentDay);
             String message = mapper.writeValueAsString(phaseMessage);
             broadcast(message);
         } catch (Exception e) {
@@ -121,10 +101,12 @@ public class PhaseBroadcaster {
         public String type = "phase";
         public String phase;
         public int remaining;
+        public int dayNo;
 
-        public PhaseMessage(String phase, int remaining) {
+        public PhaseMessage(String phase, int remaining, int dayNo) {
             this.phase = phase;
             this.remaining = remaining;
+            this.dayNo = dayNo;
         }
     }
 }
