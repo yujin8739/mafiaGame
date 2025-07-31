@@ -84,8 +84,8 @@ public class MessageServiceImpl implements MessageService {
     // ======================== 관리자용 새로운 메소드들 ========================
     
     @Override
-    public ArrayList<UserMessage> getAllMessagesForAdmin(int offset, int pageSize) {
-        return messageDao.getAllMessagesForAdmin(sqlSession, offset, pageSize);
+    public ArrayList<UserMessage> getAllMessagesForAdmin(Map<String, Object> params) {
+        return messageDao.getAllMessagesForAdmin(sqlSession, params);
     }
 
     @Override

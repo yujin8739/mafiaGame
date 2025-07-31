@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -39,6 +40,7 @@ import com.mafia.game.game.model.vo.RoomHint;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
+import com.mafia.game.webSocket.server.GameRoomManager;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -59,6 +61,9 @@ public class GameRoomController {
 
 	@Autowired
 	private RoomHintService roomHintService;
+	
+	@Autowired
+    private GameRoomManager gameRoomManager;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -669,63 +674,75 @@ public class GameRoomController {
 			return "score/scorepoint"; // → templates/score/scorepoint.html 로 연결됨
 		}
 
-		@GetMapping("/recodeList") 
-        @ResponseBody
-        public List<String> getRecodeList(@RequestParam String userName, int currentPage ) {
+		@GetMapping("/recodeList")
+		@ResponseBody
+		public List<String> getRecodeList(@RequestParam String userName, int currentPage) {
 			int pageLimit = 10;
 			int boardLimit = 10;
 			int totalCount = gameRoomService.getTotalRecodeCount(userName);
-			
+
 			PageInfo pi = Pagination.getPageInfo(totalCount, currentPage, pageLimit, boardLimit);
-			
-        	return gameRoomService.getRecodeList(pi, userName);
-        }
-    }
 
-		// 전적 저장을 위한 메소드 추가 by 이수한
-		@GetMapping("/saveGameResult")
-		@ResponseBody
-		public int saveGameResult(String userName, int jobNo, String type, int startJobNo) {
+			return gameRoomService.getRecodeList(pi, userName);
+		}
+	}
 
-			Map<String, Object> gameResultMap = new HashMap<>();
-			gameResultMap.put("resultNo", UUID.randomUUID().toString());
-			gameResultMap.put("userName", userName);
-			gameResultMap.put("jobNo", jobNo);
+	// 전적 저장을 위한 메소드 추가 by 이수한
+	@GetMapping("/saveGameResult")
+	@ResponseBody
+	public int saveGameResult(String userName, int jobNo, String type, int startJobNo) {
 
-			Job finalJob = gameRoomService.getJobDetail(jobNo); // 최종 직업 정보 가져오기
-			int jobClass = finalJob.getJobClass();
+		Map<String, Object> gameResultMap = new HashMap<>();
+		gameResultMap.put("resultNo", UUID.randomUUID().toString());
+		gameResultMap.put("userName", userName);
+		gameResultMap.put("jobNo", jobNo);
 
-			switch (jobClass) {
-			case 1:
-				gameResultMap.put("team", "마피아팀");
-				break;
-			case 2:
-				gameResultMap.put("team", "시민팀");
-				break;
-			case 3:
-				gameResultMap.put("team", "중립팀");
-				break;
-			}
+		Job finalJob = gameRoomService.getJobDetail(jobNo); // 최종 직업 정보 가져오기
+		int jobClass = finalJob.getJobClass();
 
-			gameResultMap.put("teamResult", checkWin(jobClass, type));
-			gameResultMap.put("date", new Date());
-			return gameRoomService.insertGameResult(gameResultMap);
+		switch (jobClass) {
+		case 1:
+			gameResultMap.put("team", "마피아팀");
+			break;
+		case 2:
+			gameResultMap.put("team", "시민팀");
+			break;
+		case 3:
+			gameResultMap.put("team", "중립팀");
+			break;
 		}
 
-		private String checkWin(int jobClass, String type) {
-			String result = null;
-			switch (jobClass) {
-			case 1:
-				result = type.equals("MAFIA_WIN") ? "승리" : "패배";
-				break;
-			case 2:
-				result = type.equals("CITIZEN_WIN") ? "승리" : "패배";
-				break;
-			case 3:
-				result = type.equals("NEUTRALITY_WIN") ? "승리" : "패배";
-				break;
-			}
-			return result;
+		gameResultMap.put("teamResult", checkWin(jobClass, type));
+		gameResultMap.put("date", new Date());
+		return gameRoomService.insertGameResult(gameResultMap);
+	}
+
+	@PostMapping("/leave")
+	@ResponseBody // 이 어노테이션이 있어야 View를 찾지 않고 API로 동작합니다.
+	public void handleBeaconLeave(@RequestBody Map<String, Integer> payload, HttpSession session) {
+		Member loginUser = (Member) session.getAttribute("loginUser");
+		Integer roomNo = payload.get("roomNo");
+
+		if (loginUser != null && roomNo != null) {
+			// 이전에 만들었던 "즉시 퇴장" 메소드를 그대로 호출합니다.
+			gameRoomManager.leaveRoomImmediately(roomNo, loginUser.getUserName());
 		}
+	}
+
+	private String checkWin(int jobClass, String type) {
+		String result = null;
+		switch (jobClass) {
+		case 1:
+			result = type.equals("MAFIA_WIN") ? "승리" : "패배";
+			break;
+		case 2:
+			result = type.equals("CITIZEN_WIN") ? "승리" : "패배";
+			break;
+		case 3:
+			result = type.equals("NEUTRALITY_WIN") ? "승리" : "패배";
+			break;
+		}
+		return result;
+	}
 
 }

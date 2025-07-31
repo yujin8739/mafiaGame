@@ -41,8 +41,13 @@ public class AdminMessageController {
             // 페이징 계산
             int offset = (page - 1) * size;
 
+            // Map으로 파라미터 전달
+            Map<String, Object> params = new HashMap<>();
+            params.put("offset", offset);
+            params.put("pageSize", size);
+
             // 전체 쪽지 조회 (관리자는 모든 쪽지 조회 가능)
-            ArrayList<UserMessage> messages = messageService.getAllMessagesForAdmin(offset, size);
+            ArrayList<UserMessage> messages = messageService.getAllMessagesForAdmin(params);
             
             // 전체 쪽지 개수
             int totalCount = messageService.getTotalMessagesCount();

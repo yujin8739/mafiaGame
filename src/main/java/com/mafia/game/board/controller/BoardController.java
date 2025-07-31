@@ -515,22 +515,32 @@ public class BoardController {
 		
 		try {
 			
-			if(remainFileList.length + newFiles.length > 5) {
-				throw new IllegalArgumentException();
+			int realFileCount = 0;
+			for (MultipartFile f : newFiles) {
+			    if (!f.isEmpty()) realFileCount++;
 			}
+			if (remainFileList.length + realFileCount > 5) {
+			    throw new IllegalArgumentException();
+			}
+			
+			
 			//새로운 이미지들 저장하기 위한 로직
 			ArrayList<BoardFile> boardFiles = new ArrayList<>();
-			for(MultipartFile f : newFiles) {
-				String changeName = getChangedFileName(f);
-				BoardFile bf = BoardFile.builder()
-									    .originName(f.getOriginalFilename())
-									    .changeName(changeName)
-									    .type("image")
-									    .build();
-				boardFiles.add(bf);
+			System.out.println("newFiles : " + newFiles);
+			if(newFiles != null) {
+				for(MultipartFile f : newFiles) {
+					if (!f.isEmpty()) {
+						String changeName = getChangedFileName(f);
+						BoardFile bf = BoardFile.builder()
+								.originName(f.getOriginalFilename())
+								.changeName(changeName)
+								.type("image")
+								.build();
+						boardFiles.add(bf);
+					}
+						
+				}
 			}
-		
-		
 		
 			int result = service.updateGalleryBoard(board, remainFileList, boardFiles, deletedFileList);
 			

@@ -3,6 +3,8 @@ import { api } from './api.js';
 import * as sockets from './sockets.js';
 import * as ui from './ui.js';
 
+let reloadTimer = null; 
+
 export function sendChatMessage() {
     const msgText = ui.elements.chatInput.value.trim();
     if (msgText === '') return;
@@ -25,25 +27,37 @@ export function toggleReady() {
     ui.elements.readyBtn.textContent = state.isReady ? 'Unready' : 'Ready';
 }
 
-export async function reloadRoomAndUsers() {
-    try {
-        const newRoom = await api.reloadRoom();
-        state.room = newRoom;
-        state.isGaming = newRoom.isGaming === 'Y';
-        state.isHost = newRoom.master === state.userName;
-        const newUserListJSON = newRoom.userList || '[]';
-        if (typeof updateUserListForVoice === 'function') { // voiceChat.js가 로드되었는지 확인
-            updateUserListForVoice(JSON.parse(newUserListJSON));
-        }
-
-        const nicks = await api.getUserNickList(newUserListJSON);
-        state.userNickList = nicks;
-        const deaths = await api.getUserDeathList();
-        ui.loadUserPanel(nicks, deaths);
-        ui.updateReadyCount(JSON.parse(newRoom.readyUser || '[]').length);
-    } catch (error) {
-        console.error("방 정보 리로드 실패:", error);
+export function reloadRoomAndUsers() {
+    if (reloadTimer) {
+        clearTimeout(reloadTimer);
     }
+
+    reloadTimer = setTimeout(async () => {
+        try {
+            const newRoom = await api.reloadRoom();
+            state.room = newRoom;
+            state.isGaming = newRoom.isGaming === 'Y';
+            state.isHost = newRoom.master === state.userName;
+            const newUserListJSON = newRoom.userList || '[]';
+            if (typeof updateUserListForVoice === 'function') {
+                updateUserListForVoice(JSON.parse(newUserListJSON));
+            }
+
+            const nicks = await api.getUserNickList(newUserListJSON);
+            state.userNickList = nicks;
+            const deaths = await api.getUserDeathList();
+            
+            ui.loadUserPanel(nicks, deaths);
+            ui.updateReadyCount(JSON.parse(newRoom.readyUser || '[]').length);
+            // [핵심 수정] 로비 버튼의 상태(Ready/Start)를 갱신하는 함수를 호출합니다.
+            ui.updateLobbyButtons(); 
+
+        } catch (error) {
+            console.error("방 정보 리로드 실패:", error);
+        } finally {
+            reloadTimer = null;
+        }
+    }, 300); // 0.3초의 지연으로 데이터 정합성 보장
 }
 
 export async function handleGameEnd(winner) {
@@ -66,7 +80,6 @@ export async function handleGameEnd(winner) {
     
     setTimeout(() => {
         reloadRoomAndUsers();
-        ui.updateLobbyButtons();
         state.job = null;
         state.startJob = null;
     }, 3000);
@@ -83,8 +96,10 @@ export function setPhase(phase, duration) {
 
 export async function loadHintList() {
     try {
-        const hints = await api.getHintList();
-        ui.loadHintListUI(hints);
+		if (state.isGaming && state.job) {
+	        const hints = await api.getHintList();
+	        ui.loadHintListUI(hints);
+		}
     } catch (e) { console.error("힌트 로딩 실패", e); }
 }
 

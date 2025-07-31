@@ -19,4 +19,6 @@ export const state = {
 	chatPage: 1,
 	isChatLoading: false,
 	isLastChatPage: false,
+	
+	lastActivityTime: Date.now(),
 };
