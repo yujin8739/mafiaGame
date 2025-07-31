@@ -12,7 +12,7 @@
     <link rel="stylesheet" th:href="@{/css/message/message.css}" />
     <link rel="stylesheet" th:href="@{/css/friend/friendList.css}" />
 </head>
-<body>
+<body data-current-user="[[${senderUserName}]]" data-is-reply="[[${isReply}]]">
 
     <!-- 메시지 표시 -->
     <div th:if="${msg}">
@@ -83,7 +83,6 @@
 			        <option value="친구요청">친구 요청</option>
 			        <option value="거래">거래</option>
 			        <option value="게임초대">게임 초대</option>
-			        <!-- 시스템은 관리자용이므로 제외 -->
 			    </select>
             </div>
 
@@ -107,163 +106,7 @@
     <!-- 푸터 -->
     <div th:replace="~{common/footer :: footer}"></div>
 
-    <script th:inline="javascript">
-        $(document).ready(function() {
-            // 글자 수 카운터
-            updateCharCounter();
-            
-            $('#title').on('input', updateCharCounter);
-            $('#content').on('input', updateCharCounter);
-
-            // 임시저장된 내용 불러오기
-            loadDraft();
-            
-            console.log('쪽지 쓰기 페이지 로드 완료');
-        });
-
-        // 글자 수 카운터 업데이트
-        function updateCharCounter() {
-            const titleLength = $('#title').val().length;
-            const contentLength = $('#content').val().length;
-            
-            $('#titleCounter').text(titleLength);
-            $('#contentCounter').text(contentLength);
-            
-            // 글자 수 제한 경고
-            if (titleLength > 90) {
-                $('#titleCounter').css('color', '#ff3b3b');
-            } else {
-                $('#titleCounter').css('color', '#888');
-            }
-            
-            if (contentLength > 900) {
-                $('#contentCounter').css('color', '#ff3b3b');
-            } else {
-                $('#contentCounter').css('color', '#888');
-            }
-        }
-
-        // 폼 유효성 검사
-        function validateForm() {
-            const receiverUserName = $('#receiverUserName').val().trim();
-            const title = $('#title').val().trim();
-            const content = $('#content').val().trim();
-            
-            if (!receiverUserName) {
-                alert('받는 사람을 입력해주세요.');
-                $('#receiverUserName').focus();
-                return false;
-            }
-            
-            if (!title) {
-                alert('제목을 입력해주세요.');
-                $('#title').focus();
-                return false;
-            }
-            
-            if (!content) {
-                alert('내용을 입력해주세요.');
-                $('#content').focus();
-                return false;
-            }
-            
-            if (title.length > 100) {
-                alert('제목은 100자를 초과할 수 없습니다.');
-                $('#title').focus();
-                return false;
-            }
-            
-            if (content.length > 1000) {
-                alert('내용은 1000자를 초과할 수 없습니다.');
-                $('#content').focus();
-                return false;
-            }
-
-            // 자기 자신에게 보내는지 확인
-            const currentUser = /*[[${senderUserName}]]*/ '';
-            if (receiverUserName === currentUser) {
-                alert('자기 자신에게는 쪽지를 보낼 수 없습니다.');
-                $('#receiverUserName').focus();
-                return false;
-            }
-            
-            return confirm('쪽지를 보내시겠습니까?');
-        }
-
-        // 임시저장
-        function saveDraft() {
-            const draftData = {
-                receiverUserName: $('#receiverUserName').val(),
-                title: $('#title').val(),
-                content: $('#content').val(),
-                messageType: $('#messageType').val(),
-                timestamp: new Date().toISOString()
-            };
-            
-            localStorage.setItem('messageDraft', JSON.stringify(draftData));
-            alert('임시저장되었습니다.');
-        }
-
-        // 임시저장 불러오기
-        function loadDraft() {
-            const draft = localStorage.getItem('messageDraft');
-            if (draft) {
-                try {
-                    const draftData = JSON.parse(draft);
-                    
-                    // 24시간이 지난 임시저장은 삭제
-                    const draftTime = new Date(draftData.timestamp);
-                    const now = new Date();
-                    const hoursDiff = (now - draftTime) / (1000 * 60 * 60);
-                    
-                    if (hoursDiff > 24) {
-                        localStorage.removeItem('messageDraft');
-                        return;
-                    }
-                    
-                    // 현재 폼이 비어있고 답장이 아닌 경우에만 불러오기
-                    const isReply = /*[[${isReply}]]*/ false;
-                    if (!isReply && !$('#receiverUserName').val() && !$('#title').val() && !$('#content').val()) {
-                        if (confirm('임시저장된 내용이 있습니다. 불러오시겠습니까?')) {
-                            $('#receiverUserName').val(draftData.receiverUserName || '');
-                            $('#title').val(draftData.title || '');
-                            $('#content').val(draftData.content || '');
-                            $('#messageType').val(draftData.messageType || '');
-                            updateCharCounter();
-                        }
-                    }
-                } catch (e) {
-                    console.error('임시저장 데이터 로드 실패:', e);
-                    localStorage.removeItem('messageDraft');
-                }
-            }
-        }
-
-        // 폼 초기화
-        function resetForm() {
-            if (confirm('작성 중인 내용이 모두 삭제됩니다. 계속하시겠습니까?')) {
-                const isReply = /*[[${isReply}]]*/ false;
-                if (!isReply) {
-                    $('#receiverUserName').val('');
-                    $('#title').val('');
-                }
-                $('#content').val('');
-                $('#messageType').val('');
-                updateCharCounter();
-                
-                // 임시저장 삭제
-                localStorage.removeItem('messageDraft');
-            }
-        }
-
-        // 페이지 떠날 때 임시저장 확인
-        window.addEventListener('beforeunload', function(e) {
-            const hasContent = $('#content').val().trim() || $('#title').val().trim();
-            if (hasContent) {
-                saveDraft();
-            }
-        });
-    </script>
-
+    <!-- JS 분리 -->
+    <script th:src="@{/js/message/messageWrite.js}"></script>
 </body>
 </html>
