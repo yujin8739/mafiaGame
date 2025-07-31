@@ -129,8 +129,7 @@ public class GameRoomManager {
 								+ "' for 5 minutes. Closing session.");
 						try {
 							session.close(new CloseStatus(4008, "Heartbeat timeout"));
-						} catch (IOException e) {
-							/* Ignore */ }
+						} catch (IOException e) { }
 					}
 				}
 			});
@@ -499,23 +498,56 @@ public class GameRoomManager {
 	}
 
 	public void updateJob(int roomNo, String userName, int newJobNo) {
-		Job newJob = gameRoomService.getJobDetail(newJobNo);
-		if (newJob != null) {
-			userJobs.get(roomNo).put(userName, newJob);
-		}
+	    try {
+	        GameRoom room = gameRoomService.selectRoom(roomNo);
+	        if (room == null) return;
+	        
+	        List<String> userList = parseJsonList(room.getUserList());
+	        Map<String, Job> currentJobs = userJobs.get(roomNo);
+
+	        if (userList == null || currentJobs == null) return;
+
+	        // 1. 메모리 상의 직업 정보를 먼저 업데이트합니다.
+	        Job newJob = gameRoomService.getJobDetail(newJobNo);
+	        if (newJob != null) {
+	            currentJobs.put(userName, newJob);
+	        }
+
+	        // 2. DB에 저장할 새로운 직업 번호(Integer) 리스트를 만듭니다.
+	        //    반드시 userList의 순서대로 만들어야 합니다.
+	        List<Integer> updatedJobNos = new ArrayList<>();
+	        for (String u : userList) {
+	            Job job = currentJobs.get(u);
+	            if (job != null) {
+	                updatedJobNos.add(job.getJobNo());
+	            } else {
+	                
+	                updatedJobNos.add(0);
+	            }
+	        }
+
+	        String updatedJobJson = mapper.writeValueAsString(updatedJobNos);
+	        gameRoomService.updateJob(roomNo, updatedJobJson);
+
+	        System.out.println("[DB Sync] Room " + roomNo + " job list updated: " + updatedJobJson);
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
 
 	public void updateJobToGhost(int roomNo, String userName) {
-		Job startJob = getStartJobForUser(roomNo, userName);
-		int ghostJobNo = 0;
-		if (startJob != null) {
-			int startJobClass = startJob.getJobClass();
-			if (startJobClass == 1 || startJobClass == 5)
-				ghostJobNo = 1000;
-			else if (startJobClass == 3 || startJobClass == 6)
-				ghostJobNo = 2000;
-		}
-		updateJob(roomNo, userName, ghostJobNo);
+	    Job startJob = getStartJobForUser(roomNo, userName);
+	    int ghostJobNo = 0; 
+	    if (startJob != null) {
+	        int startJobClass = startJob.getJobClass();
+	        if (startJobClass == 1 || startJobClass == 5) { 
+	            ghostJobNo = 1000;
+	        } else if (startJobClass == 3 || startJobClass == 6) { 
+	            ghostJobNo = 2000;
+	        }
+	    }
+	    updateJob(roomNo, userName, ghostJobNo);
 	}
 
 	public RoomHintService getRoomHintService() {

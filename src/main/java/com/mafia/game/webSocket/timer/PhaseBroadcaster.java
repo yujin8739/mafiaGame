@@ -34,23 +34,27 @@ public class PhaseBroadcaster {
     }
 
     private void executePhaseTransition() {
-        if (phaseIndex != -1) {
-            String previousPhase = phases[phaseIndex];
-            if ("NIGHT".equals(previousPhase)) {
-                gameRoomManager.processNightActions(roomNo);
-            } else if ("VOTE".equals(previousPhase)) {
-                gameRoomManager.processVote(roomNo);
+        try {
+            if (phaseIndex != -1) {
+                String previousPhase = phases[phaseIndex];
+                if ("NIGHT".equals(previousPhase)) {
+                    gameRoomManager.processNightActions(roomNo);
+                } else if ("VOTE".equals(previousPhase)) {
+                    gameRoomManager.processVote(roomNo);
+                }
             }
-        }
 
-        String winner = gameRoomManager.checkWinner(roomNo, phaseIndex);
-        if (!"CONTINUE".equals(winner)) {
-            endGameAndNotify(winner);
-            return;
+            String winner = gameRoomManager.checkWinner(roomNo, phaseIndex);
+            if (!"CONTINUE".equals(winner)) {
+                endGameAndNotify(winner);
+                return; // 게임이 끝나면 여기서 종료. 더 이상 스케줄링하지 않음.
+            }
+        } catch (Exception e) {
+            System.out.println("CRITICAL ERROR during game logic processing in room " + roomNo + ". Forcing next phase."+e);
         }
 
         phaseIndex = (phaseIndex + 1) % phases.length;
-        if (phaseIndex == 0) { // 밤이 시작될 때 dayNo 증가
+        if (phaseIndex == 0) {
             dayNo++;
             gameRoomManager.updateDayNo(roomNo);
         }
