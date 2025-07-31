@@ -77,7 +77,7 @@ public interface GameRoomService {
 
 	int getTotalRecodeCount(String userName);
 
-	List<String> getRecodeList(PageInfo pi, String userName);
+	List<Map<String,Object>> getRecodeList(PageInfo pi, String userName);
 	
 	
 	
