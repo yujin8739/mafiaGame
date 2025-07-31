@@ -86,6 +86,25 @@ public class IntroductionController {
 	        			+ "연인은 둘이 한 팀으로 행동하며, 밤에 마피아의 타깃이 상대 연인일 경우 자신이 대신 죽음을 맞이합니다.";
 	            imagePath = "/godDaddy_etc/introduce/lover2.png";
 	            break;
+	        case "정치인":
+	        	description = "노련한 정치인인 그는 이 도시에서 뛰어난 화술과 감각으로 살아남았습니다.<br>"
+	        			+ "정치인은 투표로 인해 처형당하지 않습니다.";
+	            imagePath = "/godDaddy_etc/introduce/politician2.png";
+	            break;
+	        case "군인":
+	        	description = "든든한 군인입니다.<br>"
+	        			+ "군인은 1회에 한하여 마피아의 공격으로부터 살아남을 수 있습니다.";
+	            imagePath = "/godDaddy_etc/introduce/soldier2.png";
+	            break;
+	        case "영매사":
+	        	description = "어렸을 때부터 남들이 보지 못하는 것들을 보던 그녀는 희생당한 이들의 이야기를 듣습니다.<br>"
+	        			+ "영매사는 사망한 유저와 대화할 수 있습니다.";
+	            imagePath = "/godDaddy_etc/introduce/spiritualists2.png";
+	            break;
+	        case "네크로맨서":
+	        	description = "네크로맨서는 1회에 한해 사망한 플레이어를 부활시킬 수 있습니다.";
+	            imagePath = "/godDaddy_etc/introduce/necromancer2.png";
+	            break;
 	        default:
 	            description = "알 수 없는 직업입니다.";
 	            imagePath = "/images/사망이미지.png";

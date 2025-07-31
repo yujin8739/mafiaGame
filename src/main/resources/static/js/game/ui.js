@@ -160,7 +160,7 @@ export function loadUserPanel(nicks, deaths) {
         const isDead = deaths[index] === 'dead';
         const someNails = document.createElement('img');
         someNails.className = 'someNails';
-        someNails.src = isDead ? '/images/사망이미지.png' : '/images/생존이미지.png';
+        someNails.src = isDead ? '/godDaddy_etc/statusprofile/사망이미지.png' : '/godDaddy_etc/statusprofile/생존이미지.png';
         
         const input = document.createElement('input');
         input.className = 'player-name';
@@ -243,7 +243,7 @@ export function loadHintListUI(hintList) {
     elements.hintListContainer.empty();
     hintList.forEach(hint => {
         const div = $("<div>").addClass("slot-phone");
-        const panels = $("<div>").addClass("panels-phone").append($("<img>").addClass("someNails").attr("src", "/images/생존이미지.png"));
+        const panels = $("<div>").addClass("panels-phone").append($("<img>").addClass("someNails").attr("src", "/godDaddy_etc/statusprofile/생존이미지.png"));
         const input = $("<input>").addClass("player-name-phone").attr({type: "text", readonly: true}).val(`${hint.userNick}: ${hint.hint}`);
         div.append(panels).append(input);
         elements.hintListContainer.append(div);
