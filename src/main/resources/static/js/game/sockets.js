@@ -1,5 +1,4 @@
-// /js/game/sockets.js (전체 코드)
-
+// /js/game/sockets.js (전체 최종 코드)
 import { state } from './state.js';
 import * as gameLogic from './gameLogic.js';
 import * as ui from './ui.js';
@@ -8,14 +7,18 @@ export let roomSocket, chatSocket, eventSocket;
 let heartbeatInterval = null;
 let reconnectAttempts = 0;
 
-function createWebSocket(path, onMessageCallback) {
+function createWebSocket(path, onMessageCallback, onOpenCallback) {
 	const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
 	const socket = new WebSocket(`${protocol}${location.host}${path}?roomNo=${state.roomNo}`);
 
 	socket.onmessage = event => onMessageCallback(JSON.parse(event.data));
-	socket.onopen = () => console.log(`✅ WebSocket Connected: ${path}`);
+	socket.onopen = () => {
+        console.log(`✅ WebSocket Connected: ${path}`);
+        if(onOpenCallback) {
+            onOpenCallback(socket);
+        }
+    };
 	socket.onerror = (e) => console.error(`❌ WebSocket Error: ${path}`, e);
-
 	socket.onclose = (event) => {
 		console.warn(`⚠️ WebSocket Closed: ${path}. Code: ${event.code}`);
 		if (event.code === 1000 || event.code >= 4000) {
@@ -41,7 +44,13 @@ export function connectAllSockets() {
 	if (chatSocket) chatSocket.close(1000);
 	if (eventSocket) eventSocket.close(1000);
 
-	roomSocket = createWebSocket('/chat/gameRoom', handleRoomMessage);
+	roomSocket = createWebSocket('/chat/gameRoom', handleRoomMessage, (socket) => {
+        reconnectAttempts = 0;
+        if (state.isGaming) {
+            console.log("Reconnected during game. Requesting full game state sync from server...");
+            socket.send(JSON.stringify({ type: 'requestSync' }));
+        }
+    });
 	chatSocket = createWebSocket('/chat/gameChat', handleChatMessage);
 	eventSocket = createWebSocket('/chat/gameEvent', handleEventMessage);
 
@@ -59,8 +68,7 @@ export function chatSocket_send(obj) { if (chatSocket && chatSocket.readyState =
 function handleRoomMessage(msg) {
 	switch (msg.type) {
 		case 'phase':
-			state.dayNo = msg.dayNo;
-			gameLogic.setPhase(msg.phase, msg.remaining);
+			gameLogic.syncGameState(msg);
 			break;
 		case 'jobInfo':
 			state.job = msg.job;
@@ -85,16 +93,12 @@ function handleChatMessage(msg) {
 			state.isChatLoading = false;
 			return;
 		}
-
 		const scrollBefore = ui.elements.chatArea.scrollHeight - ui.elements.chatArea.scrollTop;
-
 		msg.messages.forEach(messageData => {
 			ui.displayMessage(messageData, true);
 		});
-
 		const scrollAfter = ui.elements.chatArea.scrollHeight;
 		ui.elements.chatArea.scrollTop = scrollAfter - scrollBefore;
-
 		state.isChatLoading = false;
 	} else {
 		ui.displayMessage(msg);

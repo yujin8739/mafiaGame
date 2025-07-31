@@ -49,6 +49,7 @@ public class GameRoomManager {
 	private final Map<Integer, Map<String, Job>> userJobs = new ConcurrentHashMap<>();
 	private final Map<Integer, Map<String, Job>> userStartJobs = new ConcurrentHashMap<>();
 	private final ObjectMapper mapper = new ObjectMapper();
+	private final Map<String, String> playerStates = new ConcurrentHashMap<>();
 	private final Map<String, ScheduledFuture<?>> pendingRemovals = new ConcurrentHashMap<>();
 	private final Map<String, Long> userHeartbeats = new ConcurrentHashMap<>();
 	private final ScheduledExecutorService heartbeatCheckerScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -74,6 +75,8 @@ public class GameRoomManager {
 	}
 
 	public void addSession(int roomNo, WebSocketSession session, String userName) {
+		boolean isReconnection = playerStates.containsKey(userName);
+
 		if (pendingRemovals.containsKey(userName)) {
 			ScheduledFuture<?> pendingTask = pendingRemovals.remove(userName);
 			pendingTask.cancel(false);
@@ -81,21 +84,38 @@ public class GameRoomManager {
 		}
 		recordHeartbeat(userName);
 		roomGameSessions.computeIfAbsent(roomNo, k -> new ConcurrentHashMap<>()).put(userName, session);
-		addUserToRoom(roomNo, userName);
+		
+		if (!isReconnection) {
+            addUserToRoom(roomNo, userName);
+        } else {
+            System.out.println("[Reconnect] User '" + userName + "' reconnected to room " + roomNo);
+            // 재연결 시 PhaseBroadcaster의 세션 목록을 갱신
+            PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
+            if (broadcaster != null) {
+                broadcaster.updateSessions(new ArrayList<>(roomGameSessions.get(roomNo).values()));
+            }
+        }
 	}
 
 	public void removeSession(int roomNo, WebSocketSession session, String userName) {
-		if (pendingRemovals.containsKey(userName)) {
-			return;
-		}
-		System.out.println("[Network Drop] User '" + userName + "' disconnected. Scheduling removal in 5 seconds.");
-		ScheduledFuture<?> removalTask = removalScheduler.schedule(() -> {
-			System.out.println("[Network Drop] Grace period expired for '" + userName + "'. Executing final removal.");
-			handleUserLeave(roomNo, userName);
-			pendingRemovals.remove(userName);
-		}, 5, TimeUnit.SECONDS);
-		pendingRemovals.put(userName, removalTask);
-	}
+        Map<String, WebSocketSession> gameSessions = roomGameSessions.get(roomNo);
+        if (gameSessions != null) {
+            gameSessions.remove(userName);
+            PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
+            if (broadcaster != null) {
+                broadcaster.updateSessions(new ArrayList<>(gameSessions.values()));
+            }
+        }
+
+        if (pendingRemovals.containsKey(userName)) { return; }
+        System.out.println("[Network Drop] User '" + userName + "' disconnected. Scheduling removal in 5 seconds.");
+        ScheduledFuture<?> removalTask = removalScheduler.schedule(() -> {
+            System.out.println("[Network Drop] Grace period expired for '" + userName + "'. Executing final removal.");
+            handleUserLeave(roomNo, userName);
+            pendingRemovals.remove(userName);
+        }, 5, TimeUnit.SECONDS);
+        pendingRemovals.put(userName, removalTask);
+    }
 
 	public void leaveRoomImmediately(int roomNo, String userName) {
 		if (pendingRemovals.containsKey(userName)) {
@@ -410,6 +430,39 @@ public class GameRoomManager {
 		userJobs.put(roomNo, currentJobs);
 		userStartJobs.put(roomNo, startJobs);
 	}
+	
+	public void sendFullGameState(int roomNo, String userName) {
+        WebSocketSession session = getGameSessionByUser(roomNo, userName);
+        if (session == null || !session.isOpen()) return;
+
+        GameRoom room = selectRoom(roomNo);
+        if (room == null || !"Y".equals(room.getIsGaming())) return;
+
+        PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
+        if (broadcaster != null) {
+            Map<String, Job> currentUserJobs = getUserJobs(roomNo);
+            
+            // PhaseBroadcaster의 새로운 getter들을 사용하여 현재 상태를 가져옵니다.
+            String currentPhase = broadcaster.getCurrentPhase();
+            int remainingTime = broadcaster.getRemainingTime();
+            int currentDayNo = broadcaster.getDayNo();
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", "phase");
+            payload.put("phase", currentPhase);
+            payload.put("remaining", remainingTime);
+            payload.put("dayNo", currentDayNo);
+            payload.put("room", room);
+            payload.put("userJobs", currentUserJobs);
+
+            try {
+                session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
+                System.out.println("Sent full game state sync to " + userName);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 	public void useAbility(int roomNo, String userName, String targetUserName) {
 		abilityManager.useAbility(roomNo, userName, targetUserName);
