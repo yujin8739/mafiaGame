@@ -166,14 +166,15 @@ public class GameRoomDao {
 		return sqlSession.selectOne("gameRoomMapper.getTotalRecodeCount", userName);
 	}
 
-	public List<String> getRecodeList(SqlSessionTemplate sqlSession, PageInfo pi, String userName) {
+	public List<Map<String,Object>> getRecodeList(SqlSessionTemplate sqlSession, PageInfo pi, String userName) {
 		Map<String, Object> param = new HashMap<>();
 		
 		int limit = pi.getBoardLimit();
 		int offset = (pi.getCurrentPage()-1) * limit;
-		param.put("rowBounds", new RowBounds(offset, limit));
+//		param.put("rowBounds", new RowBounds(offset, limit));
 		param.put("userName", userName);
-		return sqlSession.selectList("gameRoomMapper.getRecodeList", param);
+		param.put("maxPage", pi.getMaxPage());
+		return sqlSession.selectList("gameRoomMapper.getRecodeList", param, new RowBounds(offset, limit));
 	}
 	
 }

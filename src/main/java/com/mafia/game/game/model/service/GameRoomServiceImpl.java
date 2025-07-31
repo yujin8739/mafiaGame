@@ -164,7 +164,7 @@ public class GameRoomServiceImpl implements GameRoomService {
 	}
 
 	@Override
-	public List<String> getRecodeList(PageInfo pi, String userName) {
+	public List<Map<String,Object>> getRecodeList(PageInfo pi, String userName) {
 		return gameRoomDao.getRecodeList(sqlSession, pi, userName);
 	}
 

@@ -676,14 +676,17 @@ public class GameRoomController {
 
 		@GetMapping("/recodeList")
 		@ResponseBody
-		public List<String> getRecodeList(@RequestParam String userName, int currentPage) {
+		public Map<String,Object> getRecodeList(@RequestParam String userName, int currentPage) {
 			int pageLimit = 10;
 			int boardLimit = 10;
 			int totalCount = gameRoomService.getTotalRecodeCount(userName);
 
 			PageInfo pi = Pagination.getPageInfo(totalCount, currentPage, pageLimit, boardLimit);
-
-			return gameRoomService.getRecodeList(pi, userName);
+			//List<Map<String,Object>>
+			Map<String,Object> resultMap = new HashMap<>();
+			resultMap.put("recodeList", gameRoomService.getRecodeList(pi, userName));
+			resultMap.put("maxPage", pi.getMaxPage());
+			return resultMap;
 		}
 	}
 

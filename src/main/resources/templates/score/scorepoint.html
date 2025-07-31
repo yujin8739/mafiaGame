@@ -1,91 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
-    <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
-    <link rel="stylesheet" th:href="@{/css/index.css}" />
-    <link rel="stylesheet" th:href="@{/css/score/score.css}">
-    <script th:src="@{/js/jquery-3.6.0.min.js}"></script>
-    <title>우주하마피아 게임 전적</title>
+<meta charset="UTF-8" />
+<title>우주하마피아 게임 전적</title>
+
+<!-- 기존 공통 CSS 유지 -->
+<link rel="stylesheet" th:href="@{/css/common/header.css}" />
+<link rel="stylesheet" th:href="@{/css/common/footer.css}" />
+<link rel="stylesheet" th:href="@{/css/friend/friendList.css}" />
+<link rel="stylesheet" th:href="@{/css/score/score.css}" />
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
-	<h1>나의 전적 확인</h1>
 	<div th:replace="~{common/header :: header}"></div>
-	<div class="recode-Container" id="recordContainer"></div>
-	<div class="pagination" id="pagination"></div>
+
+	<main class="score-main-container">
+		<h1 class="score-title">🌌 나의 전적 확인</h1>
+		<div id="score-record-list" class="score-record-list"></div>
+		<div id="score-pagination" class="score-pagination"></div>
+	</main>
+
 	<div th:replace="~{common/footer :: footer}"></div>
-	
-</body>
 
-<script th:inline="javascript">
-	let userName = /*[[${loginUser.userName}]]*/ '';
-	let currentPage = 1;
-	
-	$.ajax({
-		url:"/score/recodeList",
-		data:{
-			userName : userName,
-			currentPage:currentPage
-		},
-		success: function(result) {
-			const recodeContainer = document.getElementById("recordContainer");
-			recodeContainer.innerHTML = ""; // 초기화
-			result.forEach(item =>{
-				const wrapper = document.createElement("div");
-				wrapper.classList.add("recode-wrapper");
-				
-				const contentDiv = document.createElement("div");
-				
-				const jobClassDiv = document.createElement("div");
-				jobClassDiv.classList.add("job-class-text");
-				jobClassDiv.textContent = item.team;
-				
-				const jobNameDiv = document.createElement("div");
-				jobNameDiv.classList.add("job-text");
-				jobNameDiv.textContent = item.jobVisible;
-				
-				const gameResultDiv = document.createElement("div");
-				gameResultDiv.classList.add("result-text");
-				gameResultDiv.textContent = item.teamResult;
-				
-				contentDiv.appendChild(jobClassDiv);
-				contentDiv.appendChild(jobNameDiv);
-				contentDiv.appendChild(gameResultDiv);
-				
-				wrapper.appendChild(contentDiv);
-				recodeContainer.appendChild(wrapper);
-			})
-		},
-		error:function(){
-			alert("전적 검색동작이 실패했습니다.");
-		}
-	})
-	
+	<script th:inline="javascript">
+    let userName = /*[[${loginUser.userName}]]*/ '';
+    let currentPage = 1;
+    let maxPage = 1; // 최대 페이지 수 저장
+
+    function loadRecodeList(page) {
+        currentPage = page;
+        $.ajax({
+            url: "/score/recodeList",
+            data: { userName, currentPage },
+            success: function (resultMap) {
+                const container = document.getElementById("score-record-list");
+                container.innerHTML = "";
+
+                // 전적 리스트 렌더링
+                resultMap.recodeList.forEach(recode => {
+                    const card = document.createElement("div");
+                    card.className = "score-card";
+                    card.innerHTML = `
+                        <div class="score-team">${recode.TEAM}</div>
+                        <div class="score-job">${recode.JOBVISIBLE}</div>
+                        <div class="score-result">${recode.TEAMRESULT}</div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // 총 페이지 수 업데이트
+                maxPage = resultMap.maxPage;
+                renderPagination();
+            },
+            error: function () {
+                alert("전적 로딩 실패");
+            }
+        });
+    }
+
     function renderPagination() {
-		const pagination = document.getElementById("pagination");
-		pagination.innerHTML = "";
+        const pagination = document.getElementById("score-pagination");
+        pagination.innerHTML = "";
 
-		const prev = document.createElement("button");
-		prev.textContent = "« 이전";
-		prev.disabled = currentPage === 1;
-		prev.onclick = () => loadRecodeList(currentPage - 1);
+        const prev = document.createElement("button");
+        prev.textContent = "« 이전";
+        prev.disabled = currentPage === 1;
+        prev.onclick = () => loadRecodeList(currentPage - 1);
 
-		const next = document.createElement("button");
-		next.textContent = "다음 »";
-		next.onclick = () => loadRecodeList(currentPage + 1);
+        const next = document.createElement("button");
+        next.textContent = "다음 »";
+        next.disabled = currentPage >= maxPage; // 제한 추가
+        next.onclick = () => loadRecodeList(currentPage + 1);
 
-		pagination.appendChild(prev);
+        const pageInfo = document.createElement("span");
+        pageInfo.textContent = `페이지 ${currentPage} / ${maxPage}`;
+        pageInfo.className = "score-page-info";
 
-		const pageText = document.createElement("span");
-		pageText.textContent = ` 페이지 ${currentPage}`;
-		pageText.style.margin = "0 10px";
-		pagination.appendChild(pageText);
+        pagination.append(prev, pageInfo, next);
+    }
 
-		pagination.appendChild(next);
-	}
+    loadRecodeList(1);
 
-	// 초기 로딩
-	loadRecodeList(1);
-</script>
+    </script>
+</body>
 </html>
