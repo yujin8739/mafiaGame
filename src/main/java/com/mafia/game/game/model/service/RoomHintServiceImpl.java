@@ -45,4 +45,10 @@ public class RoomHintServiceImpl implements RoomHintService {
 	public List<RoomHint> selectRoomHintList(int roomNo) {
 		return roomHintDao.selectRoomHintList(sqlSession, roomNo);
 	}
+
+	@Override
+	public void deleteRoomHints(int roomNo) {
+		roomHintDao.deleteRoomHints(sqlSession,roomNo);
+		
+	}
 }

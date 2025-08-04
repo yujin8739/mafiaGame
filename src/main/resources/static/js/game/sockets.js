@@ -1,7 +1,6 @@
-// /js/game/sockets.js (전체 최종 코드)
-import { state } from './state.js';
 import * as gameLogic from './gameLogic.js';
 import * as ui from './ui.js';
+import { reconnectVoiceChat } from './voiceChat.js'; 
 
 export let roomSocket, chatSocket, eventSocket;
 let heartbeatInterval = null;
@@ -9,7 +8,7 @@ let reconnectAttempts = 0;
 
 function createWebSocket(path, onMessageCallback, onOpenCallback) {
 	const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-	const socket = new WebSocket(`${protocol}${location.host}${path}?roomNo=${state.roomNo}`);
+	const socket = new WebSocket(`${protocol}${location.host}${path}?roomNo=${window.MAFIA_GAME_STATE.roomNo}`);
 
 	socket.onmessage = event => onMessageCallback(JSON.parse(event.data));
 	socket.onopen = () => {
@@ -46,18 +45,18 @@ export function connectAllSockets() {
 
 	roomSocket = createWebSocket('/chat/gameRoom', handleRoomMessage, (socket) => {
         reconnectAttempts = 0;
-        if (state.isGaming) {
-            console.log("Reconnected during game. Requesting full game state sync from server...");
-            socket.send(JSON.stringify({ type: 'requestSync' }));
-        }
+        
+        console.log("Requesting full game state sync from server upon connection...");
+        socket.send(JSON.stringify({ type: 'requestSync' }));
     });
+    
 	chatSocket = createWebSocket('/chat/gameChat', handleChatMessage);
 	eventSocket = createWebSocket('/chat/gameEvent', handleEventMessage);
 
 	heartbeatInterval = setInterval(() => {
 		if (roomSocket && roomSocket.readyState === WebSocket.OPEN) {
 			roomSocket.send(JSON.stringify({ type: 'ping' }));
-			state.lastActivityTime = Date.now();
+			window.MAFIA_GAME_STATE.lastActivityTime = Date.now();
 		}
 	}, 25000);
 }
@@ -68,14 +67,21 @@ export function chatSocket_send(obj) { if (chatSocket && chatSocket.readyState =
 function handleRoomMessage(msg) {
 	switch (msg.type) {
 		case 'phase':
+            window.MAFIA_GAME_STATE.currentPhase = msg.phase; 
 			gameLogic.syncGameState(msg);
+            reconnectVoiceChat(); 
 			break;
 		case 'jobInfo':
-			state.job = msg.job;
-			state.startJob = msg.startJob;
-			alert(`당신의 직업은 [${state.job.jobVisible}] 입니다.`);
-			state.isGaming = true;
+			window.MAFIA_GAME_STATE.job = msg.job;
+			window.MAFIA_GAME_STATE.startJob = msg.startJob;
+            // jobInfo를 받을 때 userJobs 맵에도 내 직업 정보를 업데이트
+            if (window.MAFIA_GAME_STATE.userName) {
+                window.MAFIA_GAME_STATE.userJobs[window.MAFIA_GAME_STATE.userName] = msg.job;
+            }
+			alert(`당신의 직업은 [${window.MAFIA_GAME_STATE.job.jobVisible}] 입니다.`);
+			window.MAFIA_GAME_STATE.isGaming = true;
 			ui.updateLobbyButtons();
+            reconnectVoiceChat();
 			break;
 		case 'abilityResult':
 			alert(msg.msg);
@@ -89,8 +95,8 @@ function handleRoomMessage(msg) {
 function handleChatMessage(msg) {
 	if (msg.type === 'load') {
 		if (msg.messages.length === 0) {
-			state.isLastChatPage = true;
-			state.isChatLoading = false;
+			window.MAFIA_GAME_STATE.isLastChatPage = true;
+			window.MAFIA_GAME_STATE.isChatLoading = false;
 			return;
 		}
 		const scrollBefore = ui.elements.chatArea.scrollHeight - ui.elements.chatArea.scrollTop;
@@ -99,7 +105,7 @@ function handleChatMessage(msg) {
 		});
 		const scrollAfter = ui.elements.chatArea.scrollHeight;
 		ui.elements.chatArea.scrollTop = scrollAfter - scrollBefore;
-		state.isChatLoading = false;
+		window.MAFIA_GAME_STATE.isChatLoading = false;
 	} else {
 		ui.displayMessage(msg);
 	}
@@ -112,11 +118,23 @@ function handleEventMessage(msg) {
 		ui.updateUserConnectionStatus(msg.userName, msg.status);
 	}
 
-	if (['enter', 'leave', 'EVENT', 'READY_STATE_CHANGED'].includes(msg.type)) {
-		gameLogic.reloadRoomAndUsers();
-	}
+    if (window.MAFIA_GAME_STATE.isGaming) {
+        if (msg.type === 'EVENT') {
+            requestStateSync();
+        }
+        else if (msg.type === 'gameEnd') {
+            gameLogic.handleGameEnd(msg.winner);
+        }
+    } else {
+        if (['enter', 'leave', 'READY_STATE_CHANGED'].includes(msg.type)) {
+            gameLogic.reloadRoomAndUsers();
+        }
+    }
+}
 
-	if (msg.type === 'gameEnd') {
-		gameLogic.handleGameEnd(msg.winner);
-	}
+export function requestStateSync() {
+    if (roomSocket && roomSocket.readyState === WebSocket.OPEN) {
+        console.log("Requesting state sync from server manually.");
+        roomSocket.send(JSON.stringify({ type: 'requestSync' }));
+    }
 }

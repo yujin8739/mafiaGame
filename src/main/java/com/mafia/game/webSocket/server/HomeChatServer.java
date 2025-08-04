@@ -13,14 +13,14 @@ public class HomeChatServer extends TextWebSocketHandler{
 	
 	private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
-    public HomeChatServer() {
-        System.out.println("HomeChatServer 생성자 호출");
-    }
-    
+//    public HomeChatServer() {
+//        System.out.println("HomeChatServer 생성자 호출");
+//    }
+//    
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-		System.out.println("접속");
-		System.out.println("WebSocketSession : "+session);
+//		System.out.println("접속");
+//		System.out.println("WebSocketSession : "+session);
 		sessions.add(session);
 	}
 

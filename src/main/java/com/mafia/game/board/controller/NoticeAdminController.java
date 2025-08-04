@@ -67,7 +67,7 @@ public class NoticeAdminController {
 
         result.put("noticeList", noticeList);
         result.put("pi", pi);
-        System.out.println(noticeList.toString());
+//        System.out.println(noticeList.toString());
         return result;
 	}
 	

@@ -329,4 +329,11 @@
 		FROM GAME_RESULT r, JOB j
 		WHERE r.JOBNO = J.JOBNO AND USERNAME = #{userName}
 	</select>
+	
+	<delete id="deleteRoomHints" parameterType="_int">
+	    DELETE FROM ROOM_HINT WHERE ROOMNO = #{roomNo}
+	</delete>
+	<delete id="deleteKillData" parameterType="_int">
+	    DELETE FROM KILL WHERE ROOMNO = #{roomNo}
+	</delete>
 </mapper>

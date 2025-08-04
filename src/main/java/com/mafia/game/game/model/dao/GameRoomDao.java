@@ -176,5 +176,9 @@ public class GameRoomDao {
 		param.put("maxPage", pi.getMaxPage());
 		return sqlSession.selectList("gameRoomMapper.getRecodeList", param, new RowBounds(offset, limit));
 	}
+
+	public void deleteKillData(SqlSessionTemplate sqlSession, int roomNo) {
+		sqlSession.delete("gameRoomMapper.deleteKillData", roomNo);
+	}
 	
 }

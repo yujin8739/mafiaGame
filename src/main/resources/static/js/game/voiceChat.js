@@ -1,10 +1,9 @@
-//voiceChat
-
-// 전역 스코프에서 공유될 변수
 let voice_userName;
 let voice_roomNo;
 
 let voiceSocket;
+let currentVoiceSocketPath = null; 
+
 const voiceState = {
     localStream: null,
     peers: {},
@@ -14,10 +13,7 @@ const voiceState = {
 };
 const voiceUI = {};
 
-/**
- * 음성 채팅 모듈 초기화 함수
- */
-function initVoiceChat(config) {
+export function initVoiceChat(config) {
     voice_userName = config.userName;
     voice_roomNo = config.roomNo;
 
@@ -26,82 +22,119 @@ function initVoiceChat(config) {
     voiceUI.muteBtn = document.getElementById('muteVoiceBtn');
     voiceUI.container = document.getElementById('voiceRemoteContainer');
 
-    voiceUI.startBtn.onclick = startVoiceChat;
-    voiceUI.stopBtn.onclick = stopVoiceChat;
-    voiceUI.muteBtn.onclick = toggleMute;
+    if (voiceUI.startBtn) voiceUI.startBtn.onclick = startVoiceChat;
+    if (voiceUI.stopBtn) voiceUI.stopBtn.onclick = stopVoiceChat;
+    if (voiceUI.muteBtn) voiceUI.muteBtn.onclick = toggleMute;
+}
+
+export function reconnectVoiceChat() {
+    if (!voiceState.isVoiceStarted) return;
+    
+    const newSocketPath = getCorrectVoiceSocketUrl();
+    console.log(`[Voice Check] Current: ${currentVoiceSocketPath}, Required: ${newSocketPath}`);
+
+    if (newSocketPath !== currentVoiceSocketPath) {
+        console.log("음성 채널이 변경되어 재연결합니다...");
+        
+        if (voiceSocket && voiceSocket.readyState === WebSocket.OPEN) {
+            voiceSocket.onclose = null; 
+            voiceSocket.close(1000);
+        }
+        clearVoiceConnections();
+        
+        // 불안정한 네트워크 환경을 고려하여 약간의 딜레이 후 연결 시도
+        const randomDelay = 200 + Math.random() * 500;
+        setTimeout(() => {
+            connectVoiceSocket(newSocketPath);
+        }, randomDelay);
+    }
+}
+
+function getCorrectVoiceSocketUrl() {
+    const state = window.MAFIA_GAME_STATE;
+    const myJob = state.job;
+    const phase = state.currentPhase;
+    
+    // 게임중이 아니면 모두가 대화 가능
+    if (!state.isGaming) return '/voice/alive';
+    
+    // 내 직업 정보가 없으면 음성채팅 불가
+    if (!myJob || !myJob.jobName) return null;
+
+    const amIDead = myJob.jobName.toLowerCase().includes('ghost');
+
+    // 1. 사망자는 언제나 사망자 채널에서 대화
+    if (amIDead) return '/voice/dead';
+
+    // 2. 살아있는 경우, 게임 단계별 규칙 적용
+    switch (phase) {
+        case 'DAY':
+            return '/voice/alive';
+        case 'NIGHT':
+            // 마피아 팀(jobClass 1 또는 5)은 마피아 채널에서 대화
+            if (myJob.jobClass === 1 || myJob.jobClass === 5) {
+                return '/voice/mafia';
+            }
+            return null;
+        case 'VOTE':
+            return null;
+        default:
+            return null;
+    }
 }
 
 
-/**
- * 음성 시그널링 WebSocket 연결
- */
-function connectVoiceSocket() {
-    if (voiceSocket && voiceSocket.readyState === WebSocket.OPEN) {
+function connectVoiceSocket(socketPath) {
+    currentVoiceSocketPath = socketPath;
+
+    // 연결할 소켓 경로가 없으면(대화가 불가능한 상태) 모든 연결을 종료하고 함수 종료
+    if (!socketPath) {
+        console.warn("음성 채팅이 허용되지 않는 상태입니다. 모든 연결을 종료합니다.");
+        clearVoiceConnections(); 
         return;
     }
+    
     const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const voiceUrl = protocol + location.host + '/chat/gameMainVoice?roomNo=' + voice_roomNo;
+    const voiceUrl = protocol + location.host + socketPath + '?roomNo=' + voice_roomNo;
+
     voiceSocket = new WebSocket(voiceUrl);
-
     voiceSocket.onopen = () => {
-        console.log('✅ Voice-Signal WebSocket 연결 성공');
-        if (voiceState.isVoiceStarted) {
-             voiceSafeSend({ type: 'voiceReady' });
-        }
+        console.log(`✅ Voice-Signal WebSocket 연결 성공: ${voiceUrl}`);
+        voiceSafeSend({ type: 'voiceReady' });
     };
-
-    voiceSocket.onmessage = event => {
-        const msgData = JSON.parse(event.data);
-        handleVoiceSignal(msgData);
-    };
-
-    voiceSocket.onerror = err => console.error('❌ Voice-Signal WebSocket 오류', err);
-
+    voiceSocket.onmessage = event => handleVoiceSignal(JSON.parse(event.data));
+    voiceSocket.onerror = err => console.error(`❌ Voice-Signal WebSocket 오류 (${voiceUrl})`, err);
     voiceSocket.onclose = () => {
-        console.warn('⚠️ Voice-Signal WebSocket 끊김.');
+        console.warn(`⚠️ Voice-Signal WebSocket 끊김. (${voiceUrl})`);
+        if (currentVoiceSocketPath === socketPath) {
+            currentVoiceSocketPath = null;
+        }
     };
 }
 
 function voiceSafeSend(obj) {
     if (voiceSocket && voiceSocket.readyState === WebSocket.OPEN) {
         voiceSocket.send(JSON.stringify(obj));
-    } else {
-        console.warn('Voice-Signal WebSocket이 열려있지 않아 전송 불가', obj);
     }
 }
 
 async function startVoiceChat() {
     if (voiceState.isVoiceStarted) return;
     
-    connectVoiceSocket();
-
     try {
         voiceState.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-
         if (voiceState.localStream.getAudioTracks().length === 0) {
             alert("연결된 마이크 장치가 없거나 인식되지 않습니다.");
             voiceState.localStream = null;
             return;
         }
-
-        let localPrev = document.getElementById('localAudio');
-        if (!localPrev) {
-            localPrev = document.createElement('audio');
-            localPrev.id = 'localAudio';
-            localPrev.autoplay = true;
-            localPrev.muted = true;
-            localPrev.playsInline = true;
-            voiceUI.container.appendChild(localPrev);
-        }
-        localPrev.srcObject = voiceState.localStream;
-        await localPrev.play().catch(e => console.warn("로컬 프리뷰 재생 실패:", e));
-
+        
         voiceState.isVoiceStarted = true;
         voiceUI.startBtn.style.display = "none";
         voiceUI.stopBtn.style.display = "inline-block";
         voiceUI.muteBtn.style.display = "inline-block";
-
-        voiceSafeSend({ type: 'voiceReady' });
+        
+        reconnectVoiceChat();
 
     } catch (e) {
         console.error("❌ startVoiceChat 오류:", e);
@@ -117,7 +150,6 @@ async function startVoiceChat() {
 
 function stopVoiceChat() {
     if (!voiceState.isVoiceStarted) return;
-    voiceState.isVoiceStarted = false;
 
     if (voiceState.localStream) {
         voiceState.localStream.getTracks().forEach(t => t.stop());
@@ -125,11 +157,13 @@ function stopVoiceChat() {
     }
     
     if (voiceSocket && voiceSocket.readyState === WebSocket.OPEN) {
-        voiceSocket.close();
+        voiceSocket.onclose = null;
+        voiceSocket.close(1000);
     }
-    
     clearVoiceConnections();
+    currentVoiceSocketPath = null;
     
+    voiceState.isVoiceStarted = false;
     voiceUI.startBtn.style.display = "inline-block";
     voiceUI.stopBtn.style.display = "none";
     voiceUI.muteBtn.style.display = "none";
@@ -140,7 +174,6 @@ function toggleMute() {
     voiceState.localMuted = !voiceState.localMuted;
     voiceState.localStream.getAudioTracks().forEach(track => track.enabled = !voiceState.localMuted);
     voiceUI.muteBtn.textContent = voiceState.localMuted ? ' 🔇 ' : ' 🔈 ';
-    voiceSafeSend({ type: voiceState.localMuted ? 'voiceMute' : 'voiceUnmute' });
 }
 
 function clearVoiceConnections() {
@@ -150,7 +183,7 @@ function clearVoiceConnections() {
         }
     }
     voiceState.peers = {};
-    Array.from(voiceUI.container.children).forEach(child => child.remove());
+    if(voiceUI.container) voiceUI.container.innerHTML = '';
     voiceState.remoteAudioEls = {};
 }
 
@@ -160,21 +193,15 @@ function handleVoiceSignal(msg) {
 
     switch (msg.type) {
         case 'voiceReady':
-             if (voiceState.isVoiceStarted) {
-                createAndSendOffer(fromUser);
-             }
+             if (voiceState.isVoiceStarted) createAndSendOffer(fromUser);
              break;
         case 'voiceOffer': onVoiceOffer(msg); break;
         case 'voiceAnswer': onVoiceAnswer(msg); break;
         case 'voiceCandidate': onVoiceCandidate(msg); break;
-        case 'voiceMute': muteRemoteAudio(fromUser, true); break;
-        case 'voiceUnmute': muteRemoteAudio(fromUser, false); break;
     }
 }
 
 async function createAndSendOffer(targetUser) {
-    if (voiceState.peers[targetUser]) return;
-    
     const pc = createVoicePeerConnection(targetUser);
     try {
         const offer = await pc.createOffer();
@@ -199,10 +226,12 @@ async function onVoiceOffer(msg) {
 async function onVoiceAnswer(msg) {
     const fromUser = msg.from;
     const pc = voiceState.peers[fromUser];
-    if (pc) {
+    if (pc && pc.signalingState === "have-local-offer") {
         try {
             await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         } catch (e) { console.error(`Set Answer 실패 from ${fromUser}:`, e); }
+    } else {
+        console.warn(`[WebRTC] 잘못된 상태(${pc?.signalingState})에서 Answer를 받아 무시합니다: from ${fromUser}`);
     }
 }
 
@@ -211,42 +240,36 @@ function onVoiceCandidate(msg) {
     const pc = voiceState.peers[fromUser];
     if (pc && msg.candidate) {
         pc.addIceCandidate(new RTCIceCandidate(msg.candidate))
-          .catch(e => console.error(`Add ICE Candidate 실패 from ${fromUser}:`, e));
+          .catch(e => {}); 
     }
 }
 
 function createVoicePeerConnection(remoteUser) {
-    if (voiceState.peers[remoteUser]) return voiceState.peers[remoteUser];
-
+    if (voiceState.peers[remoteUser]) {
+        voiceState.peers[remoteUser].close();
+    }
     const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
     voiceState.peers[remoteUser] = pc;
-
     if (voiceState.localStream) {
         voiceState.localStream.getAudioTracks().forEach(track => pc.addTrack(track, voiceState.localStream));
     }
-
     pc.onicecandidate = e => {
         if (e.candidate) {
             voiceSafeSend({ type: 'voiceCandidate', target: remoteUser, candidate: e.candidate });
         }
     };
-
     pc.ontrack = e => { addRemoteAudio(remoteUser, e.streams[0]); };
-
     pc.onconnectionstatechange = () => {
         if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
             removeRemoteAudio(remoteUser);
-            if (voiceState.peers[remoteUser]) {
-                voiceState.peers[remoteUser].close();
-                delete voiceState.peers[remoteUser];
-            }
+            delete voiceState.peers[remoteUser];
         }
     };
-
     return pc;
 }
 
 function addRemoteAudio(peerUser, stream) {
+    if (!voiceUI.container) return;
     let el = voiceState.remoteAudioEls[peerUser];
     if (!el) {
         el = document.createElement('audio');
@@ -257,7 +280,8 @@ function addRemoteAudio(peerUser, stream) {
         voiceState.remoteAudioEls[peerUser] = el;
     }
     el.srcObject = stream;
-    el.play().catch(err => console.warn(`원격 오디오 재생 실패: ${peerUser}`, err));
+    el.muted = false; 
+    el.play().catch(err => {});
 }
 
 function removeRemoteAudio(peerUser) {
@@ -267,9 +291,4 @@ function removeRemoteAudio(peerUser) {
         el.remove();
         delete voiceState.remoteAudioEls[peerUser];
     }
-}
-
-function muteRemoteAudio(user, mute) {
-    const el = voiceState.remoteAudioEls[user];
-    if (el) el.muted = mute;
 }

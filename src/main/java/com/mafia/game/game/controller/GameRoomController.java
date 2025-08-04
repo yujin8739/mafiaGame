@@ -4,6 +4,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.Clob;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -90,10 +91,10 @@ public class GameRoomController {
 		}
 
 		int result = gameRoomService.createRoom(room);
-		System.out.println(room.getPassword());
+		//System.out.println(room.getPassword());
 		if (result > 0) {
 			redirectAttributes.addFlashAttribute("msg", "방이 성공적으로 생성되었습니다!");
-			System.out.println(room.getPassword());
+			//System.out.println(room.getPassword());
 			if (room.getPassword() == null || room.getPassword().isEmpty()) {
 				return "redirect:/room/" + room.getRoomNo() + "/" + "0000";
 			} else {
@@ -311,6 +312,12 @@ public class GameRoomController {
 			redirectAttributes.addFlashAttribute("msg", "방 인원이 가득 찼습니다.");
 			return "redirect:/";
 		}
+		
+        if ("Y".equals(room.getIsGaming())) {
+            model.addAttribute("userJobs", gameRoomManager.getUserJobs(roomNo));
+        } else {
+            model.addAttribute("userJobs", Collections.emptyMap());
+        }
 
 		model.addAttribute("room", room);
 		return "game/gameRoom";
@@ -372,6 +379,9 @@ public class GameRoomController {
 	@GetMapping("/userNickList")
 	@ResponseBody
 	public List<String> userNickList(@RequestParam String userList) {
+		if (userList == null || userList.trim().isEmpty() || "[]".equals(userList.trim())) {
+            return new ArrayList<>(); // 즉시 빈 리스트를 반환
+        }
 		return memberService.getUserNickList(userList);
 	}
 
@@ -385,7 +395,7 @@ public class GameRoomController {
 			return null;
 		}
 		String userName = loginUser.getUserName();
-		System.out.println(">> 로그인 유저: " + userName);
+		//System.out.println(">> 로그인 유저: " + userName);
 		Map<String, Object> result = gameRoomService.getRoomJob(roomNo);
 		String userListJson = clobToString((Clob) result.get("USERLIST"));
 		String jobJson = (String) result.get("JOB");

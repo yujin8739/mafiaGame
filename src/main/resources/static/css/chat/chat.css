@@ -35,7 +35,7 @@
   color: black;
 }
 
-/* ✨[핵심 수정] 말풍선 공통 스타일 */
+/*  말풍선 공통 스타일 */
 .chat-bubble, .mafia-bubble, .death-bubble, .lovers-bubble {
   max-width: 70%;
   padding: 10px 15px;
@@ -58,7 +58,7 @@
   font-size: 13px;
 }
 
-/* ✨ 다른 사람 메시지 (왼쪽) */
+/*  다른 사람 메시지 (왼쪽) */
 .chat-bubble.left, .mafia-bubble.left, .death-bubble.left, .lovers-bubble.left {
   background-color: #ffffff; /* 흰색 배경 */
   align-self: flex-start;
@@ -66,14 +66,14 @@
 }
 .chat-bubble.left .chat-sender { color: #0084ff; /* 파란색 */ }
 
-/* ✨ 본인 메시지 (오른쪽) */
+/*  본인 메시지 (오른쪽) */
 .chat-bubble.right, .mafia-bubble.right, .death-bubble.right, .lovers-bubble.right {
   background-color: #dcf8c6; /* 연두색 배경 */
   align-self: flex-end;
   border-bottom-right-radius: 4px;
 }
 
-/* ✨ 마피아 전용 채팅 스타일 */
+/*  마피아 전용 채팅 스타일 */
 .mafia-bubble {
   border: 1px solid #e53935; /* 붉은색 테두리 */
 }
@@ -84,7 +84,7 @@
     color: #c62828; /* 진한 붉은색 */
 }
 
-/* ✨ 사망자 전용 채팅 스타일 */
+/*  사망자 전용 채팅 스타일 */
 .death-bubble {
   border: 1px dashed #757575; /* 회색 점선 테두리 */
   opacity: 0.8;
@@ -107,7 +107,7 @@
     color: #d81b60; /* 진한 핑크색 */
 }
 
-/* ✨ 시스템 메시지 & 이벤트 스타일 */
+/*  시스템 메시지 & 이벤트 스타일 */
 .system-bubble {
   align-self: center;
   background-color: rgba(0, 0, 0, 0.1);

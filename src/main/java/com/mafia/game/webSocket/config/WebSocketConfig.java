@@ -20,39 +20,49 @@ import com.mafia.game.webSocket.server.HomeChatServer;
 
 @Configuration
 @EnableWebSocket
-public class WebSocketConfig implements WebSocketConfigurer{
-	
+public class WebSocketConfig implements WebSocketConfigurer {
+
 	@Bean
 	public WebSocketHandler homeChatServer() {
 		return new HomeChatServer();
 	}
 
-    @Bean
-    public WebSocketHandler gameRoomServer() {
-        return new GameRoomServer();
-    }
+	@Bean
+	public WebSocketHandler gameRoomServer() {
+		return new GameRoomServer();
+	}
 
-    @Bean
-    public WebSocketHandler gameChatServer() {
-        return new GameChatServer();
-    }
+	@Bean
+	public WebSocketHandler gameChatServer() {
+		return new GameChatServer();
+	}
 
-    @Bean
-    public WebSocketHandler gameEventServer() {
-        return new GameEventServer();
-    }
+	@Bean
+	public WebSocketHandler gameEventServer() {
+		return new GameEventServer();
+	}
 
-    @Bean
-    public WebSocketHandler voiceSignalServer() {
-        return new VoiceSignalServer();
-    }
-	
+	@Bean
+	public WebSocketHandler aliveVoiceHandler() {
+		return new VoiceSignalServer("ALIVE");
+	}
+
+	@Bean
+	public WebSocketHandler mafiaVoiceHandler() {
+		return new VoiceSignalServer("MAFIA");
+	}
+
+	@Bean
+	public WebSocketHandler deadVoiceHandler() {
+		return new VoiceSignalServer("DEAD");
+	}
+
 	/**
 	 * 요청 URL과 WebSocket 핸들러를 매핑하고, 인터셉터를 설정합니다.
 	 */
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		
+
 		// 1. 홈 채팅 핸들러
 		registry.addHandler(homeChatServer(), "/chat/homeChat")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
@@ -60,42 +70,46 @@ public class WebSocketConfig implements WebSocketConfigurer{
 		// 2. 게임 상태 핸들러 등록
 		registry.addHandler(gameRoomServer(), "/chat/gameRoom")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
-        
-        // 3. 게임 채팅 핸들러 등록
+
+		// 3. 게임 채팅 핸들러 등록
 		registry.addHandler(gameChatServer(), "/chat/gameChat")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 
-        // 4. 이벤트 핸들러 등록
+		// 4. 이벤트 핸들러 등록
 		registry.addHandler(gameEventServer(), "/chat/gameEvent")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 
-        // 5. 음성 시그널링 핸들러 등록 (기존 "/chat/gameMainVoice" -> "/signal/voice"로 변경)
-		registry.addHandler(voiceSignalServer(), "/chat/gameMainVoice")
+		// 5. 음성 시그널링 핸들러 등록
+		registry.addHandler(aliveVoiceHandler(), "/voice/alive")
+				.addInterceptors(new HttpSessionHandshakeInterceptor());
+		registry.addHandler(mafiaVoiceHandler(), "/voice/mafia")
+				.addInterceptors(new HttpSessionHandshakeInterceptor());
+		registry.addHandler(deadVoiceHandler(), "/voice/dead")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
-	
+
 	/**
 	 * WebSocket 메시지 버퍼 크기를 설정합니다.
 	 */
 	@Bean
-    public TomcatServletWebServerFactory tomcatFactory() {
-        return new TomcatServletWebServerFactory() {
-            @Override
-            protected void postProcessContext(Context context) {
-                context.addServletContainerInitializer((c, ctx) -> {
-                    Object serverContainerAttr = ctx.getAttribute("jakarta.websocket.server.ServerContainer");
-                    if (serverContainerAttr == null) {
-                         serverContainerAttr = ctx.getAttribute("javax.websocket.server.ServerContainer");
-                    }
+	public TomcatServletWebServerFactory tomcatFactory() {
+		return new TomcatServletWebServerFactory() {
+			@Override
+			protected void postProcessContext(Context context) {
+				context.addServletContainerInitializer((c, ctx) -> {
+					Object serverContainerAttr = ctx.getAttribute("jakarta.websocket.server.ServerContainer");
+					if (serverContainerAttr == null) {
+						serverContainerAttr = ctx.getAttribute("javax.websocket.server.ServerContainer");
+					}
 
-                    if (serverContainerAttr instanceof WsServerContainer wsContainer) {
-                        wsContainer.setDefaultMaxTextMessageBufferSize(1024 * 1024 * 5); // 5MB
-                        wsContainer.setDefaultMaxBinaryMessageBufferSize(1024 * 1024 * 5); // 5MB
-                        wsContainer.setAsyncSendTimeout(600000L); 
-                    }
-                }, null);
-            }
-        };
-    }	
+					if (serverContainerAttr instanceof WsServerContainer wsContainer) {
+						wsContainer.setDefaultMaxTextMessageBufferSize(1024 * 1024 * 5); // 5MB
+						wsContainer.setDefaultMaxBinaryMessageBufferSize(1024 * 1024 * 5); // 5MB
+						wsContainer.setAsyncSendTimeout(600000L);
+					}
+				}, null);
+			}
+		};
+	}
 
 }

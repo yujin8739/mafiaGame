@@ -1,25 +1,28 @@
 package com.mafia.game.webSocket.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mafia.game.game.model.service.GameRoomService;
 import com.mafia.game.game.model.service.RoomHintService;
+import com.mafia.game.game.model.vo.GameRoom;
 import com.mafia.game.game.model.vo.Hint;
+import com.mafia.game.game.model.vo.Kill;
 import com.mafia.game.game.model.vo.RoomHint;
 import com.mafia.game.job.model.vo.Job;
 import com.mafia.game.member.model.service.MemberService;
 import com.mafia.game.member.model.vo.Member;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mafia.game.webSocket.timer.PhaseBroadcaster;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 @Component
 public class AbilityManager {
@@ -31,7 +34,6 @@ public class AbilityManager {
 	private final MemberService memberService;
 	private final ObjectMapper mapper = new ObjectMapper();
 
-	// 밤 동안의 능력 사용 결과를 저장하는 임시 저장소
 	private final Map<Integer, NightlyAction> nightlyActions = new ConcurrentHashMap<>();
 
 	@Autowired
@@ -44,48 +46,44 @@ public class AbilityManager {
 		this.memberService = memberService;
 	}
 
-	/**
-	 * 새로운 게임이 시작될 때 호출되어 이전 기록을 초기화합니다.
-	 * 
-	 * @param roomNo 방 번호
-	 */
 	public void onGameStart(int roomNo) {
 		nightlyActions.put(roomNo, new NightlyAction());
 	}
 
-	/**
-	 * 클라이언트로부터 직업 능력 사용 요청을 처리합니다.
-	 * 
-	 * @param roomNo         방 번호
-	 * @param userName       능력 사용자
-	 * @param targetUserName 능력 대상
-	 */
 	public void useAbility(int roomNo, String userName, String targetUserName) {
+		PhaseBroadcaster broadcaster = roomManager.getPhaseBroadcaster(roomNo);
+		if (broadcaster == null || !"NIGHT".equals(broadcaster.getCurrentPhase())) {
+			notifyAbilityResult(roomNo, userName, "밤이 아닐 때는 능력을 사용할 수 없습니다.");
+			return;
+		}
+
 		Job userJob = roomManager.getJobForUser(roomNo, userName);
 		if (userJob == null)
 			return;
 
 		NightlyAction actions = nightlyActions.computeIfAbsent(roomNo, k -> new NightlyAction());
 		String jobName = userJob.getJobName();
+		Job targetJob = roomManager.getJobForUser(roomNo, targetUserName);
 
 		switch (jobName) {
 		case "mafia":
-			actions.addMafiaKill(userName, targetUserName);
+			actions.setMafiaKill(userName, targetUserName);
 			break;
 		case "doctor":
 			actions.setDoctorHeal(userName, targetUserName);
 			break;
 		case "police":
+			if (targetJob != null && targetJob.getJobName().toLowerCase().contains("ghost")) {
+				notifyAbilityResult(roomNo, userName, "죽은 플레이어는 조사할 수 없습니다.");
+				return;
+			}
 			actions.setPoliceCheck(userName, targetUserName);
-			Job targetJob = roomManager.getJobForUser(roomNo, targetUserName);
 			boolean isMafia = (targetJob != null && targetJob.getJobClass() == 1);
 			notifyAbilityResult(roomNo, userName,
 					String.format("[%s]님은 %s.", targetUserName, isMafia ? "마피아입니다" : "마피아가 아닙니다"));
 			break;
 		case "robber":
-			Job deadPersonJob = roomManager.getJobForUser(roomNo, targetUserName);
-			if (deadPersonJob != null
-					&& (deadPersonJob.getJobNo() == 0 || deadPersonJob.getJobName().contains("Ghost"))) {
+			if (targetJob != null && targetJob.getJobName().toLowerCase().contains("ghost")) {
 				actions.setRobberTarget(userName, targetUserName);
 			}
 			break;
@@ -99,91 +97,177 @@ public class AbilityManager {
 			break;
 		case "hacker":
 			Map<String, Job> allUserJobs = roomManager.getUserJobs(roomNo);
-
-			// 3. 모든 유저를 순회하며 새로운 힌트를 생성하고 DB에 INSERT
 			for (Map.Entry<String, Job> entry : allUserJobs.entrySet()) {
 				String currentUserName = entry.getKey();
 				Job currentUserJob = entry.getValue();
-
-				// 닉네임 조회를 위해 Member 정보 가져오기
 				Member member = memberService.getMemberByUserName(currentUserName);
 				if (member == null)
 					continue;
 				String currentUserNick = member.getNickName();
-
-				// 4. "기존" 메서드를 사용하여 새로운 힌트 조회
-				// 사망자의 경우 jobNo가 0 또는 *Ghost 계열이므로, 해당 직업 번호에 맞는 힌트가 조회됨
 				Hint newHint = roomHintService.selectRandomHintByJob(currentUserJob.getJobNo(), currentUserNick);
-
 				if (newHint != null) {
-					// 5. "기존" 메서드를 사용하여 조회된 힌트를 RoomHint 객체로 만들어 삽입
-					RoomHint roomHint = new RoomHint(roomNo, currentUserName, // 힌트의 주체
-							newHint.getHint(), currentUserNick);
-
+					RoomHint roomHint = new RoomHint(roomNo, currentUserName, newHint.getHint(), currentUserNick);
 					roomHintService.insertRoomHint(roomHint);
 				}
 			}
-
 			eventManager.broadcastSystemEvent(roomNo, "해커가 SNS 힌트를 교란시켰습니다!");
 			break;
 		}
+	}
 
-		// 투표 (투표 페이즈에만 동작하도록 PhaseBroadcaster에서 관리)
-		if (targetUserName != null && !targetUserName.isBlank()) {
-			actions.addVote(userName, targetUserName);
+	public void castVote(int roomNo, String voterName, String targetName) {
+		PhaseBroadcaster broadcaster = roomManager.getPhaseBroadcaster(roomNo);
+		if (broadcaster == null || !"VOTE".equals(broadcaster.getCurrentPhase())) {
+			notifyAbilityResult(roomNo, voterName, "투표 시간이 아닙니다.");
+			return;
+		}
+
+		Job voterJob = roomManager.getJobForUser(roomNo, voterName);
+		Job targetJob = roomManager.getJobForUser(roomNo, targetName);
+
+		if (voterJob == null || targetJob == null || voterJob.getJobName().toLowerCase().contains("ghost")
+				|| targetJob.getJobName().toLowerCase().contains("ghost")) {
+			notifyAbilityResult(roomNo, voterName, "죽은 플레이어에게는 투표할 수 없습니다.");
+			return;
+		}
+
+		GameRoom room = roomManager.selectRoom(roomNo);
+		if (room == null)
+			return;
+
+		int dayNo = room.getDayNo();
+		try {
+			Kill killData = gameRoomService.selectKill(roomNo, dayNo);
+			if (killData == null) {
+				killData = new Kill(roomNo, dayNo, "[]", "[]", "[]");
+				gameRoomService.insertKill(killData);
+			}
+
+			List<String> votes = mapper.readValue(killData.getVote(), new TypeReference<List<String>>() {
+			});
+			votes.add(targetName);
+			String voteJson = mapper.writeValueAsString(votes);
+			killData.setVote(voteJson);
+			gameRoomService.updateKill(killData);
+
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
-	/**
-	 * 밤이 끝날 때 PhaseBroadcaster에 의해 호출되어 밤 동안의 모든 행동을 처리합니다.
-	 * 
-	 * @param roomNo 방 번호
-	 */
+	private void handleLoverChainDeath(int roomNo, String deadUserName, Set<String> diedTonight,
+			Set<String> sacrifices) {
+		if (sacrifices.contains(deadUserName)) {
+			return;
+		}
+
+		Job deadUserJob = roomManager.getJobForUser(roomNo, deadUserName);
+		if (deadUserJob == null || (deadUserJob.getJobNo() != 5 && deadUserJob.getJobNo() != 6)) {
+			return;
+		}
+		int partnerJobNo = (deadUserJob.getJobNo() == 5) ? 6 : 5;
+
+		Optional<String> partnerOpt = roomManager.getUserJobs(roomNo).entrySet().stream().filter(e -> {
+			Job job = e.getValue();
+			return job.getJobNo() == partnerJobNo && !job.getJobName().toLowerCase().contains("ghost");
+		}).map(Map.Entry::getKey).findFirst();
+
+		if (partnerOpt.isPresent()) {
+			String partnerName = partnerOpt.get();
+			if (!diedTonight.contains(partnerName)) {
+				diedTonight.add(partnerName);
+			}
+		}
+	}
+
+	public void processVote(int roomNo) {
+		GameRoom room = roomManager.selectRoom(roomNo);
+		if (room == null)
+			return;
+
+		Kill killData = gameRoomService.selectKill(roomNo, room.getDayNo());
+		if (killData == null || killData.getVote() == null || killData.getVote().equals("[]")) {
+			eventManager.broadcastSystemEvent(roomNo, "아무도 지목되지 않았습니다. 밤이 찾아옵니다.");
+			return;
+		}
+
+		try {
+			List<String> votes = mapper.readValue(killData.getVote(), new TypeReference<List<String>>() {
+			});
+			Map<String, Long> voteCounts = votes.stream().collect(Collectors.groupingBy(v -> v, Collectors.counting()));
+			Optional<Map.Entry<String, Long>> mostVotedEntry = voteCounts.entrySet().stream()
+					.max(Map.Entry.comparingByValue());
+
+			if (mostVotedEntry.isPresent()) {
+				String mostVotedUser = mostVotedEntry.get().getKey();
+				Job targetJob = roomManager.getJobForUser(roomNo, mostVotedUser);
+				if (targetJob == null)
+					return;
+
+				boolean isPolitician = (targetJob.getJobNo() == 4);
+				if (!isPolitician) {
+					roomManager.updateJobToGhost(roomNo, mostVotedUser);
+				}
+
+				eventManager.broadcastVoteResultEvent(roomNo, mostVotedUser, isPolitician);
+
+				PhaseBroadcaster broadcaster = roomManager.getPhaseBroadcaster(roomNo);
+				if (broadcaster != null) {
+					broadcaster.broadcastCurrentPhaseState();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void processNightActions(int roomNo) {
 		NightlyAction actions = nightlyActions.get(roomNo);
 		if (actions == null)
 			return;
 
-		Set<String> killedByMafia = new HashSet<>();
+		Set<String> killedByMafia = new HashSet<>(actions.getKillTargets());
 		Set<String> healedByDoctor = new HashSet<>(actions.getHealTargets());
+
 		Set<String> diedTonight = new HashSet<>();
+		Set<String> sacrifices = new HashSet<>();
 
-		// 1. 마피아 킬 대상 결정
-		Optional<Map.Entry<String, Integer>> mostVotedEntry = actions.getKillVotes().entrySet().stream()
-			    .max(Map.Entry.comparingByValue());
-
-		if (mostVotedEntry.isPresent()) {
-			killedByMafia.add(mostVotedEntry.get().getKey());
-		}
-
-		// 2. 킬/힐/특수직 상호작용 처리
+		// 1. 희생 규칙 적용
 		for (String target : killedByMafia) {
-			Job targetJob = roomManager.getJobForUser(roomNo, target);
-			if (targetJob == null)
-				continue;
 			if (healedByDoctor.contains(target))
 				continue;
 
-			if (targetJob.getJobNo() == 9) { // 군인
+			Job targetJob = roomManager.getJobForUser(roomNo, target);
+			if (targetJob == null)
+				continue;
+
+			if (targetJob.getJobNo() == 5 || targetJob.getJobNo() == 6) { // 대상이 연인일 경우
+				int partnerJobNo = (targetJob.getJobNo() == 5) ? 6 : 5;
+				Optional<String> partnerOpt = roomManager.getUserJobs(roomNo).entrySet().stream().filter(e -> {
+					Job job = e.getValue();
+					return job.getJobNo() == partnerJobNo && !job.getJobName().toLowerCase().contains("ghost");
+				}).map(Map.Entry::getKey).findFirst();
+
+				if (partnerOpt.isPresent()) {
+					String partnerName = partnerOpt.get();
+					diedTonight.add(partnerName);
+					sacrifices.add(partnerName);
+					continue;
+				}
+			}
+			if (targetJob.getJobNo() == 9) {
 				roomManager.updateJob(roomNo, target, 1009);
 				continue;
 			}
-
-			if (targetJob.getJobNo() == 5 || targetJob.getJobNo() == 6) {
-				int partnerJobNo = (targetJob.getJobNo() == 5) ? 6 : 5;
-				Optional<String> partner = roomManager.getUserJobs(roomNo).entrySet().stream()
-						.filter(e -> e.getValue().getJobNo() == partnerJobNo).map(Map.Entry::getKey).findFirst();
-				if (partner.isPresent()) {
-					diedTonight.add(partner.get());
-				} else {
-					diedTonight.add(target);
-				}
-			} else {
-				diedTonight.add(target);
-			}
+			diedTonight.add(target);
 		}
 
-		// 3. 네크로맨서 부활 처리
+		// 2. 연쇄 죽음 규칙 적용 (희생자가 아닌 경우에만)
+		for (String deadUser : new HashSet<>(diedTonight)) {
+			handleLoverChainDeath(roomNo, deadUser, diedTonight, sacrifices);
+		}
+
+		// 3. 부활 처리
 		String revivedUser = actions.getRevivedTarget();
 		if (revivedUser != null && diedTonight.contains(revivedUser)) {
 			diedTonight.remove(revivedUser);
@@ -194,7 +278,7 @@ public class AbilityManager {
 			}
 		}
 
-		// 4. 스파이 마피아 접선 처리
+		// 4. 기타 능력 처리 (스파이, 도둑)
 		actions.getSpyChecks().forEach((spy, targets) -> {
 			for (String target : targets) {
 				Job targetJob = roomManager.getJobForUser(roomNo, target);
@@ -205,8 +289,6 @@ public class AbilityManager {
 				}
 			}
 		});
-
-		// 5. 도굴꾼 직업 변경 처리
 		String robber = actions.getRobber();
 		if (robber != null) {
 			Job stolenStartJob = roomManager.getStartJobForUser(roomNo, actions.getRobbedTarget());
@@ -216,46 +298,38 @@ public class AbilityManager {
 			}
 		}
 
-		// 6. 최종 사망자 처리
+		// 5. 최종 사망 처리
 		diedTonight.forEach(deadUser -> {
 			roomManager.updateJobToGhost(roomNo, deadUser);
 			eventManager.broadcastMafiaKillEvent(roomNo, deadUser);
 		});
 
-		actions.clearNightActions();
-	}
-
-	/**
-	 * 투표 결과를 처리합니다.
-	 * 
-	 * @param roomNo 방 번호
-	 */
-	public void processVote(int roomNo) {
-		NightlyAction actions = nightlyActions.get(roomNo);
-		if (actions == null)
-			return;
-
-		Optional<Map.Entry<String, Long>> mostVotedEntry = actions.getVoteCounts().entrySet().stream()
-				.max(Map.Entry.comparingByValue());
-
-		// Optional에 값이 있을 때 (즉, 한 명이라도 투표를 받았을 때)만 아래 로직을 실행합니다.
-		if (mostVotedEntry.isPresent()) {
-			String mostVotedUser = mostVotedEntry.get().getKey();
-			Job targetJob = roomManager.getJobForUser(roomNo, mostVotedUser);
-			if (targetJob == null) {
-				actions.clearVotes();
-				return;
+		// 6. DB 업데이트 및 상태 브로드캐스트
+		GameRoom room = roomManager.selectRoom(roomNo);
+		if (room != null) {
+			int dayNo = room.getDayNo();
+			try {
+				Kill killData = gameRoomService.selectKill(roomNo, dayNo);
+				if (killData == null) {
+					killData = new Kill(roomNo, dayNo, "[]", "[]", "[]");
+					gameRoomService.insertKill(killData);
+				}
+				String mafiaVoteJson = mapper.writeValueAsString(new ArrayList<>(actions.getKillTargets()));
+				String doctorHealJson = mapper.writeValueAsString(new ArrayList<>(actions.getHealTargets()));
+				killData.setKillUser(mafiaVoteJson);
+				killData.setHealUser(doctorHealJson);
+				gameRoomService.updateKill(killData);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-
-			boolean isPolitician = (targetJob.getJobNo() == 4);
-			if (!isPolitician) {
-				roomManager.updateJobToGhost(roomNo, mostVotedUser);
-			}
-			eventManager.broadcastVoteResultEvent(roomNo, mostVotedUser, isPolitician);
-		} else {
-			eventManager.broadcastSystemEvent(roomNo, "아무도 지목되지 않았습니다. 밤이 찾아옵니다.");
 		}
-		actions.clearVotes();
+
+		actions.clearNightActions();
+
+		PhaseBroadcaster broadcaster = roomManager.getPhaseBroadcaster(roomNo);
+		if (broadcaster != null) {
+			broadcaster.broadcastCurrentPhaseState();
+		}
 	}
 
 	private void notifyAbilityResult(int roomNo, String userName, String message) {
@@ -270,24 +344,20 @@ public class AbilityManager {
 		}
 	}
 
-	// =================================================================
-	// NightlyAction 내부 클래스: 밤 동안의 행동을 기록
-	// =================================================================
 	private static class NightlyAction {
-		private final Map<String, Integer> killVotes = new ConcurrentHashMap<>();
+		private final Map<String, String> mafiaKills = new ConcurrentHashMap<>();
 		private final Map<String, String> doctorHeals = new ConcurrentHashMap<>();
 		private final Map<String, String> policeChecks = new ConcurrentHashMap<>();
 		private final Map<String, List<String>> spyChecks = new ConcurrentHashMap<>();
 		private final Map<String, String> necromancerRevives = new ConcurrentHashMap<>();
 		private final Map<String, String> robberTargets = new ConcurrentHashMap<>();
-		private final Map<String, String> votes = new ConcurrentHashMap<>();
 
-		public void addMafiaKill(String mafia, String target) {
-			killVotes.merge(target, 1, Integer::sum);
+		public void setMafiaKill(String mafia, String target) {
+			mafiaKills.put(mafia, target);
 		}
 
-		public Map<String, Integer> getKillVotes() {
-			return killVotes;
+		public Set<String> getKillTargets() {
+			return new HashSet<>(mafiaKills.values());
 		}
 
 		public void setDoctorHeal(String doctor, String target) {
@@ -334,25 +404,13 @@ public class AbilityManager {
 			return robberTargets.keySet().stream().findFirst().orElse(null);
 		}
 
-		public void addVote(String voter, String target) {
-			votes.put(voter, target);
-		}
-
-		public Map<String, Long> getVoteCounts() {
-			return votes.values().stream().collect(Collectors.groupingBy(v -> v, Collectors.counting()));
-		}
-
 		public void clearNightActions() {
-			killVotes.clear();
+			mafiaKills.clear();
 			doctorHeals.clear();
 			policeChecks.clear();
 			spyChecks.clear();
 			necromancerRevives.clear();
 			robberTargets.clear();
-		}
-
-		public void clearVotes() {
-			votes.clear();
 		}
 	}
 }

@@ -38,4 +38,8 @@ public class RoomHintDao {
 	public List<RoomHint> selectRoomHintList(SqlSessionTemplate sqlSession, int roomNo) {
 		return sqlSession.selectList("gameRoomMapper.selectRoomHintList", roomNo);
 	}
+
+	public void deleteRoomHints(SqlSessionTemplate sqlSession, int roomNo) {
+		sqlSession.delete("gameRoomMapper.deleteRoomHints", roomNo);
+	}
 }

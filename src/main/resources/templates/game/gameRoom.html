@@ -2,6 +2,7 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
+    <title>우주하마피아 게임룸</title>
     <link rel="stylesheet" th:href="@{/css/common/header.css}" />
     <link rel="stylesheet" th:href="@{/css/common/footer.css}" />
     <link rel="stylesheet" th:href="@{/css/chat/chat.css}" />
@@ -9,9 +10,8 @@
     <link rel="stylesheet" th:href="@{/css/job/playerPanel.css}" />
     <link rel="stylesheet" th:href="@{/css/game/phoneModal.css}" />
     <link rel="stylesheet" th:href="@{/css/friend/friendList.css}" />
-    <title>우주하마피아 게임룸</title>
     <style>
-        #voiceRemoteContainer audio { display: block; margin: 4px 0; }
+        #voiceRemoteContainer audio { display: none; }
         .slot img.someNails:hover { transform: scale(1.05); filter: brightness(1.2); }
     </style>
 </head>
@@ -27,11 +27,10 @@
                 <div class="readyDiv" style="display: flex; align-items: center;">
                     <button class="startBtn" id="startBtn">Start</button>
                     <button class="readyBtn" id="readyBtn">Ready</button>
-                    <div id="readyCount">Ready: 0</div>
+                    <div id="readyCount">Ready: 0/0</div>
                 </div>
                 <div id="gamePhaseContainer" class="game-phase">
                     <div id="dayCount">일차 : 0</div>
-                    <div id="killCount">투표 : 0</div>
                     <div id="phaseDisplay">현재 단계: -</div>
                     <div id="timerDisplay">남은 시간: - 초</div>
                     <button id="startVoiceBtn">🎙 음성채팅 시작</button>
@@ -47,20 +46,17 @@
     <div th:replace="~{common/footer :: footer}"></div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script th:src="@{/js/game/voiceChat.js}"></script>
 
-    <!-- ✨ [핵심 수정] 모든 인라인 스크립트를 제거하고, 설정 객체와 메인 모듈만 남김 -->
     <script th:inline="javascript">
-        // 모듈 스크립트에서 Thymeleaf 변수를 사용할 수 있도록 window 객체에 설정
         window.MAFIA_GAME_CONFIG = {
-            roomNo: /*[[${roomNo}]]*/ 0,
-            nickName: /*[[${loginUser.nickName}]]*/ '익명',
-            userName: /*[[${loginUser.userName}]]*/ '',
-            initialRoom: /*[[${room}]]*/ null
+            roomNo: /*[[${room.roomNo}]]*/ 0,
+            nickName: /*[[${session.loginUser.nickName}]]*/ '익명',
+            userName: /*[[${session.loginUser.userName}]]*/ '',
+            initialRoom: /*[[${room}]]*/ null,
+            initialUserJobs: /*[[${userJobs}]]*/ null
         };
     </script>
-    
-    <!-- 모듈화된 메인 스크립트 로드. type="module"이 중요합니다. -->
+
     <script type="module" th:src="@{/js/game/main.js}"></script>
 </body>
 </html>

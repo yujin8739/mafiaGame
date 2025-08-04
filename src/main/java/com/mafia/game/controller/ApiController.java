@@ -62,8 +62,8 @@ public class ApiController {
 
 			Member loginUser =  mService.adminLoginDo(m.getUserName());
 
-			System.out.println(loginUser.toString());
-			System.out.println(m.toString());
+//			System.out.println(loginUser.toString());
+//			System.out.println(m.toString());
 
 			if (loginUser != null && bcrypt.matches(m.getPassword(), loginUser.getPassword())) { // 성공시
 

@@ -302,11 +302,11 @@ public class ShopController {
         }
 
         String userName = loginUser.getUserName(); // 또는 getId() 등, DB 컬럼에 맞춰 사용
-        System.out.println(">>> userName: " + userName); // 로그 확인용
+       // System.out.println(">>> userName: " + userName); // 로그 확인용
 
         try {
             int result = shopService.resetProfileImage(userName); // DB 업데이트 시도
-            System.out.println(">>> DB update result: " + result); // 디버깅용 로그
+            //System.out.println(">>> DB update result: " + result); // 디버깅용 로그
 
             if (result > 0) {
                 return ResponseEntity.ok().build(); // 성공 응답

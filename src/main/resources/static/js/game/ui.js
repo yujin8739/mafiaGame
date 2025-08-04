@@ -1,7 +1,8 @@
-import { state } from './state.js';
+import * as sockets from './sockets.js';
 
 export const elements = {};
 let phaseTimer = null;
+let syncCheckTimeout = null;
 
 export function cacheElements() {
     elements.chatArea = document.querySelector('#chatArea');
@@ -28,26 +29,32 @@ export function displayMessage(msg, isPrepended = false) {
         div.classList.add("system-bubble");
         div.textContent = msg.msg;
     } else if (msg.type === 'EVENT') {
+        //서버에서 보낸 JSON 문자열을 파싱하여 이미지와 텍스트를 올바르게 표시
         div.classList.add("system-bubble", "event-bubble");
         try {
             const eventData = JSON.parse(msg.msg);
             const wrapper = document.createElement("div");
             wrapper.classList.add("event-wrapper");
+            
             const img = document.createElement("img");
             img.src = eventData.imageUrl;
             img.alt = "event image";
             img.classList.add("event-image");
+            
             const contentDiv = document.createElement("div");
             contentDiv.classList.add("event-text");
             contentDiv.textContent = eventData.content;
+            
             const senderDiv = document.createElement("div");
             senderDiv.classList.add("chat-sender");
             senderDiv.textContent = msg.userName;
+            
             wrapper.appendChild(img);
             wrapper.appendChild(contentDiv);
             div.appendChild(senderDiv);
             div.appendChild(wrapper);
         } catch (e) {
+            // 파싱에 실패하면(일반 텍스트 이벤트일 경우) 그냥 텍스트만 표시
             const senderDiv = document.createElement("div");
             senderDiv.classList.add("chat-sender");
             senderDiv.textContent = msg.userName;
@@ -57,7 +64,7 @@ export function displayMessage(msg, isPrepended = false) {
             div.appendChild(contentDiv);
         }
     } else {
-        div.classList.add(msg.userName === state.nickName ? "right" : "left");
+        div.classList.add(msg.userName === window.MAFIA_GAME_STATE.nickName ? "right" : "left");
         div.classList.add(`${msg.type}-bubble`);
         const sender = document.createElement("div");
         sender.className = "chat-sender";
@@ -77,81 +84,137 @@ export function displayMessage(msg, isPrepended = false) {
     }
 }
 
+// 이하 코드는 변경 없음
 export function updateLobbyButtons() {
     const readyDiv = document.querySelector('.readyDiv');
-    if (state.isGaming) {
+    if (!readyDiv) return;
+
+    if (window.MAFIA_GAME_STATE.isGaming) {
         readyDiv.style.display = 'none';
     } else {
         readyDiv.style.display = 'flex';
-        if (state.isHost) {
-            elements.startBtn.style.display = 'block';
-            elements.readyBtn.style.display = 'none';
-        } else {
-            elements.startBtn.style.display = 'none';
-            elements.readyBtn.style.display = 'block';
+        if (elements.startBtn) {
+            elements.startBtn.style.display = window.MAFIA_GAME_STATE.isHost ? 'block' : 'none';
+        }
+        if (elements.readyBtn) {
+            elements.readyBtn.style.display = window.MAFIA_GAME_STATE.isHost ? 'none' : 'block';
         }
     }
 }
 
 export function updateReadyCount(count) {
-    const totalPlayers = state.userNickList.length;
-    elements.readyCount.textContent = `Ready: ${count}/${totalPlayers > 1 ? totalPlayers - 1 : 0}`;
+    const totalPlayers = window.MAFIA_GAME_STATE.userNickList.length > 0 ? window.MAFIA_GAME_STATE.userNickList.length - 1 : 0;
+    elements.readyCount.textContent = `Ready: ${count}/${totalPlayers}`;
 }
 
 export function updateTimerUI(phase, time) {
-    if(phaseTimer) clearInterval(phaseTimer);
+    if (phaseTimer) clearInterval(phaseTimer);
+    if (syncCheckTimeout) clearTimeout(syncCheckTimeout);
+
     let remaining = time;
     const phaseKR = { NIGHT: '밤', DAY: '낮', VOTE: '투표' }[phase] || '대기';
     elements.phaseDisplay.textContent = `현재 단계: ${phaseKR}`;
     elements.timerDisplay.textContent = `남은 시간: ${remaining}초`;
+
     if (time <= 0) return;
+
     phaseTimer = setInterval(() => {
         remaining--;
-        if(remaining < 0) remaining = 0;
+        if (remaining < 0) remaining = 0;
         elements.timerDisplay.textContent = `남은 시간: ${remaining}초`;
-        if (remaining <= 0) clearInterval(phaseTimer);
+
+        if (remaining <= 0) {
+            clearInterval(phaseTimer);
+            const phaseWhenTimerEnded = window.MAFIA_GAME_STATE.currentPhase;
+            syncCheckTimeout = setTimeout(() => {
+                if (window.MAFIA_GAME_STATE.currentPhase === phaseWhenTimerEnded) {
+                    sockets.requestStateSync();
+                }
+            }, 1000);
+        }
     }, 1000);
 }
 
 export function updateChatInputState(phase) {
-    const jobName = state.job ? state.job.jobName : '';
+    const state = window.MAFIA_GAME_STATE;
+    const myJob = state.job;
     let enabled = false;
     let placeholder = "대화할 수 없습니다.";
-    if (!state.isGaming || phase === 'DAY') {
-        enabled = true; placeholder = "메시지를 입력하세요...";
-    } else if (phase === 'NIGHT') {
-        if (state.job.jobClass === 1 || jobName.includes('marriage')) {
-            enabled = true; placeholder = "팀과 대화하세요...";
+
+    if (myJob && myJob.jobName) {
+        const isGhost = myJob.jobName.toLowerCase().includes('ghost');
+        if (isGhost) {
+            enabled = true;
+            placeholder = "사망자와 대화하세요...";
+        } else if (!state.isGaming || phase === 'DAY') {
+            enabled = true;
+            placeholder = "메시지를 입력하세요...";
+        } else if (phase === 'NIGHT') {
+            if (myJob.jobClass === 1 || myJob.jobName.includes('marriage')) {
+                enabled = true;
+                placeholder = "팀과 대화하세요...";
+            }
         }
+    } else if (!state.isGaming) {
+        enabled = true;
+        placeholder = "메시지를 입력하세요...";
     }
-    if (jobName.includes('Ghost') || jobName === 'spiritualists') {
-        enabled = true; placeholder = "사망자와 대화하세요...";
-    }
+    
     elements.chatInput.disabled = !enabled;
     elements.chatInput.placeholder = placeholder;
 }
 
-export function loadUserPanel(nicks, deaths) {
+export function loadUserPanel() {
+    const state = window.MAFIA_GAME_STATE;
+    const nicks = state.userNickList || [];
+    const userList = state.room && state.room.userList ? JSON.parse(state.room.userList) : [];
+    
     elements.playerPanelContainer.innerHTML = '';
-    const userList = JSON.parse(state.room.userList || '[]');
+
     nicks.forEach((name, index) => {
+        const userName = userList[index] || '';
+        const userJob = state.userJobs[userName];
+        
+        const isDead = userJob ? userJob.jobName.toLowerCase().includes('ghost') : false;
+
+        // 1. 전체 슬롯 컨테이너
         const div = document.createElement('div');
         div.className = 'slot';
-        div.dataset.userName = userList[index] || '';
-        const panels = document.createElement('div');
-        panels.className = 'panels';
-        const isDead = deaths[index] === 'dead';
-        const someNails = document.createElement('img');
-        someNails.className = 'someNails';
-        someNails.src = isDead ? '/godDaddy_etc/statusprofile/사망이미지.png' : '/godDaddy_etc/statusprofile/생존이미지.png';
+        div.dataset.userName = userName;
+        
+        // 2. 플레이어 이름 (상단)
         const input = document.createElement('input');
         input.className = 'player-name';
         input.type = 'text';
         input.readOnly = true;
         input.value = name;
-        panels.appendChild(someNails);
         div.appendChild(input);
+
+        // 3. 이미지 패널 (중단)
+        const panels = document.createElement('div');
+        panels.className = 'panels';
+        const someNails = document.createElement('img');
+        someNails.className = 'someNails';
+        someNails.src = isDead ? '/godDaddy_etc/statusprofile/사망이미지.png' : '/godDaddy_etc/statusprofile/생존이미지.png';
+        panels.appendChild(someNails);
         div.appendChild(panels);
+
+        // 4. 직업 표시 (하단) - 현재 로그인한 유저에게만 표시
+        if (state.isGaming && userName === state.userName && state.job) {
+            const jobDisplay = document.createElement('div');
+            jobDisplay.className = 'player-job';
+            jobDisplay.textContent = `[${state.job.jobVisible}]`;
+            
+            // 스타일 직접 지정
+            jobDisplay.style.color = '#ffc107'; // 강조되는 노란색
+            jobDisplay.style.fontWeight = 'bold';
+            jobDisplay.style.textAlign = 'center';
+            jobDisplay.style.width = '100%'; // 슬롯 너비에 맞춰 중앙 정렬
+            jobDisplay.style.marginTop = '4px'; // 이미지와의 간격
+            
+            div.appendChild(jobDisplay);
+        }
+        
         elements.playerPanelContainer.appendChild(div);
     });
 }
@@ -180,13 +243,16 @@ export function updateUserConnectionStatus(userName, status) {
 
 export function loadHintListUI(hintList) {
     elements.hintListContainer.empty();
-    hintList.forEach(hint => {
-        const div = $("<div>").addClass("slot-phone");
-        const panels = $("<div>").addClass("panels-phone").append($("<img>").addClass("someNails").attr("src", "/godDaddy_etc/statusprofile/생존이미지.png"));
-        const input = $("<input>").addClass("player-name-phone").attr({type: "text", readonly: true}).val(`${hint.userNick}: ${hint.hint}`);
-        div.append(panels).append(input);
-        elements.hintListContainer.append(div);
-    });
+
+    if (hintList && Array.isArray(hintList)) {
+        hintList.forEach(hint => {
+            const div = $("<div>").addClass("slot-phone");
+            const panels = $("<div>").addClass("panels-phone").append($("<img>").addClass("someNails").attr("src", "/godDaddy_etc/statusprofile/생존이미지.png"));
+            const input = $("<input>").addClass("player-name-phone").attr({ type: "text", readonly: true }).val(`${hint.userNick}: ${hint.hint}`);
+            div.append(panels).append(input);
+            elements.hintListContainer.append(div);
+        });
+    }
 }
 
 export function togglePhoneModal() {
