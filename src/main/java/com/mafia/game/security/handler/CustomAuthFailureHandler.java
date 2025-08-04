@@ -25,9 +25,9 @@ public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
 	    if (realCause instanceof EmailNotVerifiedException ex) {
 	        Member member = ex.getMember();
 	        request.getSession().setAttribute("unauthenticatedMember", member);
-	        System.out.println("Authentication failed: " + exception.getMessage());
+	        //System.out.println("Authentication failed: " + exception.getMessage());
 	        if (exception.getCause() != null) {
-	            System.out.println("Cause: " + exception.getCause().getClass().getName());
+	            //System.out.println("Cause: " + exception.getCause().getClass().getName());
 	        }
 	        response.sendRedirect("/login/verifyResult");
 	        

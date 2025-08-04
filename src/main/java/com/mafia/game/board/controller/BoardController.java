@@ -526,7 +526,7 @@ public class BoardController {
 			
 			//새로운 이미지들 저장하기 위한 로직
 			ArrayList<BoardFile> boardFiles = new ArrayList<>();
-			System.out.println("newFiles : " + newFiles);
+//			System.out.println("newFiles : " + newFiles);
 			if(newFiles != null) {
 				for(MultipartFile f : newFiles) {
 					if (!f.isEmpty()) {
@@ -796,7 +796,7 @@ public class BoardController {
 			String changeName = board.getFileList().get(0).getChangeName(); //ex) 123123123.mp4
 			
 			if(transferDeletedHLSFiles(changeName, new File(mp4Path))) {
-				System.out.println("게시글 파일 삭제 완료");
+//				System.out.println("게시글 파일 삭제 완료");
 			}else {
 				redirectAttributes.addFlashAttribute("msg","영상 삭제 중 오류가 발생하였습니다");
 				return "redirect:/board/video/detail/" + boardNo;

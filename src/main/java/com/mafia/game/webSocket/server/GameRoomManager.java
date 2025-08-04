@@ -75,61 +75,60 @@ public class GameRoomManager {
 	}
 
 	public void addSession(int roomNo, WebSocketSession session, String userName) {
-		boolean isReconnection = playerStates.containsKey(userName);
+		GameRoom room = gameRoomService.selectRoom(roomNo);
+		if (room == null)
+			return;
+		List<String> userList = parseJsonList(room.getUserList());
+		boolean isReconnection = userList.contains(userName);
 
 		if (pendingRemovals.containsKey(userName)) {
 			ScheduledFuture<?> pendingTask = pendingRemovals.remove(userName);
 			pendingTask.cancel(false);
-			System.out.println("[GameRoomManager] User '" + userName + "' reconnected. Removal cancelled.");
+			//System.out.println("[GameRoomManager] User '" + userName + "' reconnected. Removal cancelled.");
 		}
 		recordHeartbeat(userName);
 		roomGameSessions.computeIfAbsent(roomNo, k -> new ConcurrentHashMap<>()).put(userName, session);
-		
+
 		if (!isReconnection) {
-            addUserToRoom(roomNo, userName);
-        } else {
-            System.out.println("[Reconnect] User '" + userName + "' reconnected to room " + roomNo);
-            // 재연결 시 PhaseBroadcaster의 세션 목록을 갱신
-            PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
-            if (broadcaster != null) {
-                broadcaster.updateSessions(new ArrayList<>(roomGameSessions.get(roomNo).values()));
-            }
-        }
+			addUserToRoom(roomNo, userName);
+		} else {
+			//System.out.println("[Reconnect] User '" + userName + "' reconnected to room " + roomNo);
+			PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
+			if (broadcaster != null) {
+				broadcaster.updateSessions(new ArrayList<>(roomGameSessions.get(roomNo).values()));
+			}
+		}
 	}
 
 	public void removeSession(int roomNo, WebSocketSession session, String userName) {
-        Map<String, WebSocketSession> gameSessions = roomGameSessions.get(roomNo);
-        if (gameSessions != null) {
-            gameSessions.remove(userName);
-            PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
-            if (broadcaster != null) {
-                broadcaster.updateSessions(new ArrayList<>(gameSessions.values()));
-            }
-        }
+		Map<String, WebSocketSession> gameSessions = roomGameSessions.get(roomNo);
+		if (gameSessions != null) {
+			gameSessions.remove(userName);
+			PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
+			if (broadcaster != null) {
+				broadcaster.updateSessions(new ArrayList<>(gameSessions.values()));
+			}
+		}
 
-        if (pendingRemovals.containsKey(userName)) { return; }
-        System.out.println("[Network Drop] User '" + userName + "' disconnected. Scheduling removal in 5 seconds.");
-        ScheduledFuture<?> removalTask = removalScheduler.schedule(() -> {
-            System.out.println("[Network Drop] Grace period expired for '" + userName + "'. Executing final removal.");
-            handleUserLeave(roomNo, userName);
-            pendingRemovals.remove(userName);
-        }, 5, TimeUnit.SECONDS);
-        pendingRemovals.put(userName, removalTask);
-    }
-
-	public void leaveRoomImmediately(int roomNo, String userName) {
 		if (pendingRemovals.containsKey(userName)) {
 			return;
 		}
-		System.out.println(
-				"[Intentional Leave Signal] User '" + userName + "' is leaving. Scheduling removal in 2 seconds.");
+		//System.out.println("[Network Drop] User '" + userName + "' disconnected. Scheduling removal in 5 seconds.");
 		ScheduledFuture<?> removalTask = removalScheduler.schedule(() -> {
-			System.out.println(
-					"[Intentional Leave] Grace period expired for '" + userName + "'. Executing final removal.");
+			System.out.println("[Network Drop] Grace period expired for '" + userName + "'. Executing final removal.");
 			handleUserLeave(roomNo, userName);
 			pendingRemovals.remove(userName);
-		}, 2, TimeUnit.SECONDS);
+		}, 5, TimeUnit.SECONDS);
 		pendingRemovals.put(userName, removalTask);
+	}
+
+	public void leaveRoomImmediately(int roomNo, String userName) {
+		if (pendingRemovals.containsKey(userName)) {
+			ScheduledFuture<?> pendingTask = pendingRemovals.remove(userName);
+			pendingTask.cancel(false);
+		}
+		//System.out.println("[Intentional Leave] User '" + userName + "' is leaving immediately.");
+		handleUserLeave(roomNo, userName);
 	}
 
 	public void recordHeartbeat(String userName) {
@@ -145,11 +144,12 @@ public class GameRoomManager {
 				if (now - userHeartbeats.getOrDefault(userName, now) > timeout) {
 					WebSocketSession session = sessions.get(userName);
 					if (session != null && session.isOpen()) {
-						System.out.println("[Heartbeat Timeout] No response from '" + userName
-								+ "' for 5 minutes. Closing session.");
+//						System.out.println("[Heartbeat Timeout] No response from '" + userName
+//								+ "' for 1 minute. Closing session.");
 						try {
 							session.close(new CloseStatus(4008, "Heartbeat timeout"));
-						} catch (IOException e) { }
+						} catch (IOException e) {
+							/* Ignore */ }
 					}
 				}
 			});
@@ -159,39 +159,55 @@ public class GameRoomManager {
 	private void handleUserLeave(int roomNo, String userName) {
 		try {
 			userHeartbeats.remove(userName);
+			playerStates.remove(userName);
+
+			Map<String, WebSocketSession> gameSessions = roomGameSessions.get(roomNo);
+			if (gameSessions != null) {
+				gameSessions.remove(userName);
+			}
+			PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
+			if (broadcaster != null) {
+				broadcaster.updateSessions(new ArrayList<>(gameSessions.values()));
+			}
+
 			GameRoom room = gameRoomService.selectRoom(roomNo);
 			if (room == null)
 				return;
-			if (!"Y".equals(room.getIsGaming())) {
-				List<String> userList = parseJsonList(room.getUserList());
-				List<String> readyList = parseJsonList(room.getReadyUser());
-				String currentHost = room.getMaster();
-				boolean hostLeft = userName.equals(currentHost);
-				boolean removed = userList.remove(userName);
-				readyList.remove(userName);
-				if (removed) {
-					if (hostLeft && !userList.isEmpty()) {
-						String newHostUserName = userList.get(0);
-						gameRoomService.updateRoomMaster(roomNo, newHostUserName);
-						roomMasterCache.put(roomNo, newHostUserName);
-						readyList.remove(newHostUserName);
-					} else if (userList.isEmpty()) {
-						gameRoomService.updateRoomMaster(roomNo, null);
-						roomMasterCache.remove(roomNo);
-					}
-					gameRoomService.updateUserList(roomNo, mapper.writeValueAsString(userList));
-					gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(readyList));
-					Member member = memberService.getMemberByUserName(userName);
-					if (member != null) {
-						gameEventManager.broadcastLeaveEvent(roomNo, member.getNickName());
-					}
+
+			if ("Y".equals(room.getIsGaming())) {
+//				System.out.println("[In-Game Disconnect] User '" + userName
+//						+ "' connection lost. Player remains in game. No action taken.");
+				return;
+			}
+
+			List<String> userList = parseJsonList(room.getUserList());
+			List<String> readyList = parseJsonList(room.getReadyUser());
+			String currentHost = room.getMaster();
+			boolean hostLeft = userName.equals(currentHost);
+			boolean removed = userList.remove(userName);
+			readyList.remove(userName);
+			if (removed) {
+				if (hostLeft && !userList.isEmpty()) {
+					String newHostUserName = userList.get(0);
+					gameRoomService.updateRoomMaster(roomNo, newHostUserName);
+					roomMasterCache.put(roomNo, newHostUserName);
+					readyList.remove(newHostUserName);
+				} else if (userList.isEmpty()) {
+					gameRoomService.updateRoomMaster(roomNo, null);
+					roomMasterCache.remove(roomNo);
 				}
-				if (userList.isEmpty()) {
-					roomCleanupScheduler.scheduleIfEmpty(roomNo);
-					stopPhaseBroadcast(roomNo);
-				} else {
-					roomCleanupScheduler.cancel(roomNo);
+				gameRoomService.updateUserList(roomNo, mapper.writeValueAsString(userList));
+				gameRoomService.updateReadyList(roomNo, mapper.writeValueAsString(readyList));
+				Member member = memberService.getMemberByUserName(userName);
+				if (member != null) {
+					gameEventManager.broadcastLeaveEvent(roomNo, member.getNickName());
 				}
+			}
+			if (userList.isEmpty()) {
+				roomCleanupScheduler.scheduleIfEmpty(roomNo);
+				stopPhaseBroadcast(roomNo);
+			} else {
+				roomCleanupScheduler.cancel(roomNo);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -226,6 +242,11 @@ public class GameRoomManager {
 		return sessions == null ? Collections.emptyList() : sessions.values();
 	}
 
+	public Collection<WebSocketSession> getGameSessions(int roomNo) {
+		Map<String, WebSocketSession> sessions = roomGameSessions.get(roomNo);
+		return sessions == null ? Collections.emptyList() : sessions.values();
+	}
+
 	public WebSocketSession getGameSessionByUser(int roomNo, String userName) {
 		Map<String, WebSocketSession> gameSessions = roomGameSessions.get(roomNo);
 		return (gameSessions == null) ? null : gameSessions.get(userName);
@@ -240,6 +261,9 @@ public class GameRoomManager {
 		GameRoom room = gameRoomService.selectRoom(roomNo);
 		if (room == null)
 			return;
+
+		playerStates.put(userName, "lobby");
+
 		List<String> users = parseJsonList(room.getUserList());
 		if (!users.contains(userName)) {
 			users.add(userName);
@@ -318,21 +342,22 @@ public class GameRoomManager {
 			throw new RuntimeException("존재하지 않는 방 번호입니다: " + roomNo);
 		}
 		try {
+            roomHintService.deleteRoomHints(roomNo);
+            gameRoomService.deleteKillData(roomNo);
+
 			List<String> users = parseJsonList(room.getUserList());
+			users.forEach(userName -> playerStates.put(userName, "in-game"));
+
 			int totalPlayers = users.size();
 			List<Integer> jobCounts = null;
 			if (room.getCount() != null && !room.getCount().isBlank()) {
-				jobCounts = mapper.readValue(room.getCount(), new TypeReference<>() {
-				});
+				jobCounts = mapper.readValue(room.getCount(), new TypeReference<>() {});
 			}
 			int mafiaCount = 0, citizenCount = 0, neutralCount = 0, spyCount = 0;
 			if (jobCounts == null || jobCounts.isEmpty()) {
-				if (totalPlayers == 6) {
+				if (totalPlayers >= 6 && totalPlayers <= 7) {
 					mafiaCount = 2;
-					citizenCount = 4;
-				} else if (totalPlayers == 7) {
-					mafiaCount = 2;
-					citizenCount = 5;
+					citizenCount = totalPlayers - 2;
 				} else if (totalPlayers == 8) {
 					mafiaCount = 2;
 					citizenCount = 5;
@@ -341,35 +366,16 @@ public class GameRoomManager {
 					mafiaCount = 2;
 					citizenCount = 6;
 					spyCount = 1;
-				} else if (totalPlayers == 10) {
+				} else if (totalPlayers >= 10 && totalPlayers <= 15) {
 					mafiaCount = 3;
-					citizenCount = 6;
-					neutralCount = 1;
-					spyCount = 1;
-				} else if (totalPlayers == 11) {
-					mafiaCount = 3;
-					citizenCount = 7;
-					neutralCount = 1;
-					spyCount = 1;
-				} else if (totalPlayers == 12) {
-					mafiaCount = 3;
-					citizenCount = 8;
-					neutralCount = 1;
-				} else if (totalPlayers == 13) {
-					mafiaCount = 3;
-					citizenCount = 8;
-					neutralCount = 1;
-					spyCount = 1;
-				} else if (totalPlayers == 14) {
-					mafiaCount = 3;
-					citizenCount = 8;
-					neutralCount = 2;
-					spyCount = 1;
-				} else if (totalPlayers == 15) {
-					mafiaCount = 3;
-					citizenCount = 9;
-					neutralCount = 2;
-					spyCount = 1;
+					switch (totalPlayers) {
+					case 10: citizenCount = 6; neutralCount = 1; spyCount = 1; break;
+					case 11: citizenCount = 7; neutralCount = 1; spyCount = 1; break;
+					case 12: citizenCount = 8; neutralCount = 1; break;
+					case 13: citizenCount = 8; neutralCount = 1; spyCount = 1; break;
+					case 14: citizenCount = 8; neutralCount = 2; spyCount = 1; break;
+					case 15: citizenCount = 9; neutralCount = 2; spyCount = 1; break;
+					}
 				} else {
 					throw new IllegalArgumentException("게임은 6명에서 15명까지만 가능합니다.");
 				}
@@ -392,11 +398,27 @@ public class GameRoomManager {
 			gameRoomService.updateStart(roomNo, updatedJobJson);
 			addInitialJobsToUsers(roomNo, users, jobArr);
 			abilityManager.onGameStart(roomNo);
-			List<WebSocketSession> allGameSessions = new ArrayList<>(roomGameSessions.get(roomNo).values());
+
+			Map<String, Job> allUserJobs = getUserJobs(roomNo);
+			for (Map.Entry<String, Job> entry : allUserJobs.entrySet()) {
+				String currentUserName = entry.getKey();
+				Job currentUserJob = entry.getValue();
+				Member member = memberService.getMemberByUserName(currentUserName);
+				if (member == null) continue;
+				String currentUserNick = member.getNickName();
+				Hint newHint = roomHintService.selectRandomHintByJob(currentUserJob.getJobNo(), currentUserNick);
+				if (newHint != null) {
+					RoomHint roomHint = new RoomHint(roomNo, currentUserName, newHint.getHint(), currentUserNick);
+					roomHintService.insertRoomHint(roomHint);
+				}
+			}
+
 			if (phaseBroadcasters.containsKey(roomNo)) {
 				phaseBroadcasters.get(roomNo).stop();
 			}
-			PhaseBroadcaster broadcaster = new PhaseBroadcaster(allGameSessions, roomNo, this);
+
+			PhaseBroadcaster broadcaster = new PhaseBroadcaster(new ArrayList<>(roomGameSessions.get(roomNo).values()),
+					roomNo, this);
 			broadcaster.startPhases();
 			phaseBroadcasters.put(roomNo, broadcaster);
 		} catch (Exception e) {
@@ -430,56 +452,110 @@ public class GameRoomManager {
 		userJobs.put(roomNo, currentJobs);
 		userStartJobs.put(roomNo, startJobs);
 	}
-	
+
 	public void sendFullGameState(int roomNo, String userName) {
-        WebSocketSession session = getGameSessionByUser(roomNo, userName);
-        if (session == null || !session.isOpen()) return;
+		WebSocketSession session = getGameSessionByUser(roomNo, userName);
+		if (session == null || !session.isOpen())
+			return;
 
-        GameRoom room = selectRoom(roomNo);
-        if (room == null || !"Y".equals(room.getIsGaming())) return;
+		GameRoom room = selectRoom(roomNo);
+		if (room == null || !"Y".equals(room.getIsGaming()))
+			return;
 
-        PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
-        if (broadcaster != null) {
-            Map<String, Job> currentUserJobs = getUserJobs(roomNo);
-            
-            // PhaseBroadcaster의 새로운 getter들을 사용하여 현재 상태를 가져옵니다.
-            String currentPhase = broadcaster.getCurrentPhase();
-            int remainingTime = broadcaster.getRemainingTime();
-            int currentDayNo = broadcaster.getDayNo();
+		PhaseBroadcaster broadcaster = phaseBroadcasters.get(roomNo);
+		if (broadcaster != null) {
+			Map<String, Job> currentUserJobs = getUserJobs(roomNo);
 
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("type", "phase");
-            payload.put("phase", currentPhase);
-            payload.put("remaining", remainingTime);
-            payload.put("dayNo", currentDayNo);
-            payload.put("room", room);
-            payload.put("userJobs", currentUserJobs);
+			String currentPhase = broadcaster.getCurrentPhase();
+			int remainingTime = broadcaster.getRemainingTime();
+			int currentDayNo = broadcaster.getDayNo();
 
-            try {
-                session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
-                System.out.println("Sent full game state sync to " + userName);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+			Map<String, Object> payload = new HashMap<>();
+			payload.put("type", "phase");
+			payload.put("phase", currentPhase);
+			payload.put("remaining", remainingTime);
+			payload.put("dayNo", currentDayNo);
+			payload.put("room", room);
+			payload.put("userJobs", currentUserJobs);
+
+			try {
+				session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
+//				System.out.println("Sent full game state sync to " + userName);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void castVote(int roomNo, String userName, String targetUserName) {
+		PhaseBroadcaster broadcaster = getPhaseBroadcaster(roomNo);
+		if (broadcaster == null)
+			return;
+		abilityManager.castVote(roomNo, userName, targetUserName);
+	}
 
 	public void useAbility(int roomNo, String userName, String targetUserName) {
 		abilityManager.useAbility(roomNo, userName, targetUserName);
 	}
 
-	public void processNightActions(int roomNo) {
+	public void processNightActions(int roomNo, int dayNo) {
 		abilityManager.processNightActions(roomNo);
 	}
 
-	public void processVote(int roomNo) {
+	public void processVote(int roomNo, int dayNo) {
 		abilityManager.processVote(roomNo);
 	}
 
 	public void endGame(int roomNo, String winner) {
 		gameEventManager.broadcastGameEndEvent(roomNo, winner);
+
+		Map<String, Job> finalJobs = getUserJobs(roomNo);
+		Map<String, Job> startJobs = userStartJobs.get(roomNo);
+
+		if (finalJobs != null && startJobs != null) {
+			finalJobs.forEach((userName, finalJob) -> {
+				Job startJob = startJobs.get(userName);
+				if (startJob != null) {
+					saveGameResult(userName, finalJob.getJobNo(), winner, startJob.getJobNo());
+				}
+			});
+		}
+        
 		updateStop(roomNo);
 		stopPhaseBroadcast(roomNo);
+	}
+
+	private void saveGameResult(String userName, int jobNo, String type, int startJobNo) {
+		Map<String, Object> gameResultMap = new HashMap<>();
+		gameResultMap.put("resultNo", UUID.randomUUID().toString());
+		gameResultMap.put("userName", userName);
+		gameResultMap.put("jobNo", jobNo);
+
+		Job finalJob = gameRoomService.getJobDetail(jobNo);
+		int jobClass = finalJob.getJobClass();
+
+		String team = "기타";
+		switch (jobClass) {
+		case 1: case 5: team = "마피아팀"; break;
+		case 2: case 4: team = "시민팀"; break;
+		case 3: case 6: team = "중립팀"; break;
+		}
+		gameResultMap.put("team", team);
+
+		String result = "패배";
+		if (("MAFIA_WIN".equals(type) && (jobClass == 1 || jobClass == 5))
+				|| ("CITIZEN_WIN".equals(type) && (jobClass == 2 || jobClass == 4))
+				|| ("NEUTRALITY_WIN".equals(type) && (jobClass == 3 || jobClass == 6))) {
+			result = "승리";
+		}
+		gameResultMap.put("teamResult", result);
+		gameResultMap.put("date", new Date());
+
+		try {
+			gameRoomService.insertGameResult(gameResultMap);
+		} catch (Exception e) {
+			System.err.println("Error saving game result for " + userName + ": " + e.getMessage());
+		}
 	}
 
 	public void stopPhaseBroadcast(int roomNo) {
@@ -492,44 +568,65 @@ public class GameRoomManager {
 		Map<String, Job> currentJobs = userJobs.get(roomNo);
 		if (currentJobs == null || currentJobs.isEmpty())
 			return "CONTINUE";
+
+		GameRoom room = selectRoom(roomNo);
+		if (room != null && room.getDayNo() >= 7) {
+			boolean necromancerAlive = currentJobs.values().stream().anyMatch(job -> job.getJobNo() == 10);
+			if (necromancerAlive) {
+				return "NEUTRALITY_WIN";
+			}
+		}
+
 		for (Map.Entry<String, Job> entry : userStartJobs.get(roomNo).entrySet()) {
 			if (entry.getValue().getJobNo() == 7) {
 				String saboteurUser = entry.getKey();
 				Job saboteurCurrentJob = getJobForUser(roomNo, saboteurUser);
 				if (saboteurCurrentJob != null
 						&& (saboteurCurrentJob.getJobNo() == 0 || saboteurCurrentJob.getJobName().contains("Ghost"))) {
-					if (phaseIndex <= 1)
+					if (room != null && room.getDayNo() == 1 && phaseIndex == 2) {
 						return "NEUTRALITY_WIN";
+					}
 				}
 				break;
 			}
 		}
-		int aliveMafia = 0, aliveCitizen = 0, aliveNeutral = 0;
-		for (Job job : currentJobs.values()) {
-			if (job.getJobNo() != 0 && !job.getJobName().contains("Ghost")) {
+		
+        long aliveMafia = 0;
+		long aliveCitizen = 0;
+		long aliveNeutral = 0;
+        long totalAlive = 0;
+
+        for (Job job : currentJobs.values()) {
+			if (job.getJobNo() != 0 && !job.getJobName().toLowerCase().contains("Ghost")) {
+                totalAlive++;
 				int jobClass = job.getJobClass();
-				if (jobClass == 1 || jobClass == 5)
-					aliveMafia++;
-				else if (jobClass == 2 || jobClass == 4)
-					aliveCitizen++;
-				else if (jobClass == 3 || jobClass == 6)
-					aliveNeutral++;
+				switch (jobClass) {
+					case 1: case 5: aliveMafia++; break;
+					case 2: case 4: aliveCitizen++; break;
+					case 3: case 6: aliveNeutral++; break;
+				}
 			}
 		}
-		if (aliveMafia >= aliveCitizen + aliveNeutral)
-			return "MAFIA_WIN";
-		if (aliveMafia == 0 && aliveNeutral == 0 && aliveCitizen > 0)
-			return "CITIZEN_WIN";
-		if (aliveMafia == 0 && aliveCitizen == 0 && aliveNeutral > 0)
+
+		if (aliveMafia > 0 && aliveMafia >= (totalAlive - aliveMafia)) {
+            return "MAFIA_WIN";
+        }
+		
+		if (aliveMafia == 0) {
+            if (aliveCitizen > 0 && aliveNeutral == 0) return "CITIZEN_WIN";
+            if (aliveNeutral > 0 && aliveCitizen == 0) return "NEUTRALITY_WIN";
+            if (aliveCitizen > 0 && aliveNeutral > 0) return "CITIZEN_WIN";
+        }
+		
+		if (aliveMafia == 0 && aliveCitizen == 0 && aliveNeutral > 0) {
 			return "NEUTRALITY_WIN";
+		}
+
 		return "CONTINUE";
 	}
 
-	public void updateDayNo(int roomNo) {
-		GameRoom room = gameRoomService.selectRoom(roomNo);
-		if (room != null) {
-			gameRoomService.updateDayNo(roomNo, room.getDayNo() + 1);
-		}
+	public void updateDayNo(int roomNo, int dayNo) {
+		gameRoomService.updateDayNo(roomNo, dayNo);
 	}
 
 	public void updateStop(int roomNo) {
@@ -551,64 +648,64 @@ public class GameRoomManager {
 	}
 
 	public void updateJob(int roomNo, String userName, int newJobNo) {
-	    try {
-	        GameRoom room = gameRoomService.selectRoom(roomNo);
-	        if (room == null) return;
-	        
-	        List<String> userList = parseJsonList(room.getUserList());
-	        Map<String, Job> currentJobs = userJobs.get(roomNo);
+		try {
+			GameRoom room = gameRoomService.selectRoom(roomNo);
+			if (room == null)
+				return;
 
-	        if (userList == null || currentJobs == null) return;
+			List<String> userList = parseJsonList(room.getUserList());
+			Map<String, Job> currentJobs = userJobs.get(roomNo);
 
-	        // 1. 메모리 상의 직업 정보를 먼저 업데이트합니다.
-	        Job newJob = gameRoomService.getJobDetail(newJobNo);
-	        if (newJob != null) {
-	            currentJobs.put(userName, newJob);
-	        }
+			if (userList == null || currentJobs == null)
+				return;
 
-	        // 2. DB에 저장할 새로운 직업 번호(Integer) 리스트를 만듭니다.
-	        //    반드시 userList의 순서대로 만들어야 합니다.
-	        List<Integer> updatedJobNos = new ArrayList<>();
-	        for (String u : userList) {
-	            Job job = currentJobs.get(u);
-	            if (job != null) {
-	                updatedJobNos.add(job.getJobNo());
-	            } else {
-	                
-	                updatedJobNos.add(0);
-	            }
-	        }
+			Job newJob = gameRoomService.getJobDetail(newJobNo);
+			if (newJob != null) {
+				currentJobs.put(userName, newJob);
+			}
 
-	        String updatedJobJson = mapper.writeValueAsString(updatedJobNos);
-	        gameRoomService.updateJob(roomNo, updatedJobJson);
+			List<Integer> updatedJobNos = new ArrayList<>();
+			for (String u : userList) {
+				Job job = currentJobs.get(u);
+				if (job != null) {
+					updatedJobNos.add(job.getJobNo());
+				} else {
+					updatedJobNos.add(0);
+				}
+			}
 
-	        System.out.println("[DB Sync] Room " + roomNo + " job list updated: " + updatedJobJson);
+			String updatedJobJson = mapper.writeValueAsString(updatedJobNos);
+			gameRoomService.updateJob(roomNo, updatedJobJson);
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void updateJobToGhost(int roomNo, String userName) {
-	    Job startJob = getStartJobForUser(roomNo, userName);
-	    int ghostJobNo = 0; 
-	    if (startJob != null) {
-	        int startJobClass = startJob.getJobClass();
-	        if (startJobClass == 1 || startJobClass == 5) { 
-	            ghostJobNo = 1000;
-	        } else if (startJobClass == 3 || startJobClass == 6) { 
-	            ghostJobNo = 2000;
-	        }
-	    }
-	    updateJob(roomNo, userName, ghostJobNo);
+		Job startJob = getStartJobForUser(roomNo, userName);
+		int ghostJobNo = 0;
+		if (startJob != null) {
+			int startJobClass = startJob.getJobClass();
+			if (startJobClass == 1 || startJobClass == 5) {
+				ghostJobNo = 1000;
+			} else if (startJobClass == 3 || startJobClass == 6) {
+				ghostJobNo = 2000;
+			}
+		}
+		updateJob(roomNo, userName, ghostJobNo);
 	}
 
 	public RoomHintService getRoomHintService() {
 		return this.roomHintService;
 	}
 
+	public PhaseBroadcaster getPhaseBroadcaster(int roomNo) {
+		return phaseBroadcasters.get(roomNo);
+	}
+
 	public List<String> parseJsonList(String json) {
-		if (json == null || json.isBlank())
+		if (json == null || json.isBlank() || "[]".equals(json))
 			return new ArrayList<>();
 		try {
 			return mapper.readValue(json, new TypeReference<>() {

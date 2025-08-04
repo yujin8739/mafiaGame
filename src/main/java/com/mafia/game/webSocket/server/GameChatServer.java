@@ -107,7 +107,7 @@ public class GameChatServer extends TextWebSocketHandler {
         String jobName = (job != null) ? job.getJobName() : null;
 
         List<Message> messages = chatManager.loadPreviousMessages(roomNo, page, pageSize, jobName);
-        Collections.reverse(messages);
+        //Collections.reverse(messages);
 
         try {
             String payload = mapper.writeValueAsString(Map.of("type", "load", "messages", messages));
@@ -147,33 +147,32 @@ public class GameChatServer extends TextWebSocketHandler {
     }
     
     private boolean allowSend(String type, GameRoom room, Job senderJob, Job receiverJob) {
-        if (room == null || !"Y".equals(room.getIsGaming())) return true;
-        if (senderJob == null || receiverJob == null) return true;
-        
-        String senderJobName = senderJob.getJobName();
-        String receiverJobName = receiverJob.getJobName();
-        
-        // 마피아 채팅: 마피아 팀끼리만
-        if ("mafia".equals(type)) {
-            return senderJob.getJobClass() == 1 && receiverJob.getJobClass() == 1;
-        }
+        if (room == null || senderJob == null || receiverJob == null) return true;
+        if (!"Y".equals(room.getIsGaming())) return true;
 
-        // 사망자 채팅: 사망자, 영매사, 네크로맨서만
-        if ("death".equals(type)) {
-            boolean isSenderDead = senderJob.getJobNo() == 0 || senderJobName.contains("Ghost");
-            boolean isReceiverAllowed = (receiverJob.getJobNo() == 0 || receiverJobName.contains("Ghost") || "spiritualists".equals(receiverJobName));
-            return isSenderDead && isReceiverAllowed;
-        }
-
-        // 연인 채팅: 연인끼리만
-        if ("lovers".equals(type)) {
-            boolean isSenderLover = "marriage_man".equals(senderJobName) || "marriage_woman".equals(senderJobName);
-            boolean isReceiverLover = "marriage_man".equals(receiverJobName) || "marriage_woman".equals(receiverJobName);
-            return isSenderLover && isReceiverLover;
-        }
+        String senderJobName = senderJob.getJobName().toLowerCase();
+        String receiverJobName = receiverJob.getJobName().toLowerCase();
         
-        // 일반 채팅: 모든 생존자
-        return senderJob.getJobNo() != 0 && !senderJobName.contains("Ghost");
+        switch (type) {
+            case "mafia":
+                return senderJob.getJobClass() == 1 && receiverJob.getJobClass() == 1;
+
+            case "death":
+                boolean isSenderDead = senderJobName.contains("ghost");
+                if (!isSenderDead) return false;
+
+                boolean isReceiverDead = receiverJobName.contains("ghost");
+                boolean isReceiverSpiritualist = receiverJobName.equals("spiritualists");
+                return isReceiverDead || isReceiverSpiritualist;
+
+            case "lovers":
+                return senderJobName.contains("marriage") && receiverJobName.contains("marriage");
+
+            case "chat":
+            default:
+                // 발신자가 살아있다면, 모든 플레이어(생존자+사망자)가 이 채팅을 볼 수 있어야 함
+                return !senderJobName.contains("ghost");
+        }
     }
 
     private int extractRoomNo(WebSocketSession session) {

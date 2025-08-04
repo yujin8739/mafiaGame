@@ -35,7 +35,7 @@ public class GameEventServer extends TextWebSocketHandler {
         session.getAttributes().put("roomNo", roomNo);
 
         roomEventSessions.computeIfAbsent(roomNo, k -> new CopyOnWriteArrayList<>()).add(session);
-        System.out.println("[EventServer] Session " + session.getId() + " connected to event room " + roomNo);
+        //System.out.println("[EventServer] Session " + session.getId() + " connected to event room " + roomNo);
 
         String nickName = loginUser.getNickName();
         Map<String, String> enterPayload = Map.of(
@@ -61,7 +61,7 @@ public class GameEventServer extends TextWebSocketHandler {
         List<WebSocketSession> currentRoomSessions = roomEventSessions.get(roomNo);
         if (currentRoomSessions != null) {
             currentRoomSessions.remove(session);
-            System.out.println("[EventServer] Session " + session.getId() + " disconnected from event room " + roomNo);
+            //System.out.println("[EventServer] Session " + session.getId() + " disconnected from event room " + roomNo);
             
             String nickName = loginUser.getNickName();
             Map<String, String> leavePayload = Map.of(
@@ -73,7 +73,7 @@ public class GameEventServer extends TextWebSocketHandler {
 
             if (currentRoomSessions.isEmpty()) {
                 roomEventSessions.remove(roomNo);
-                System.out.println("[EventServer] Event room " + roomNo + " is empty and removed.");
+                //System.out.println("[EventServer] Event room " + roomNo + " is empty and removed.");
             }
         }
     }

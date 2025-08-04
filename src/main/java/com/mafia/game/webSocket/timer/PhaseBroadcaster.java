@@ -1,6 +1,7 @@
 package com.mafia.game.webSocket.timer;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -18,7 +19,7 @@ import com.mafia.game.webSocket.server.GameRoomManager;
 public class PhaseBroadcaster {
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private List<WebSocketSession> sessions; // [수정] final을 제거하여 갱신 가능하도록 변경
+    private List<WebSocketSession> sessions; // 이 필드는 현재 직접 사용되지 않음
     private final ObjectMapper mapper = new ObjectMapper();
     private final GameRoomManager gameRoomManager;
     private final int roomNo;
@@ -28,7 +29,6 @@ public class PhaseBroadcaster {
     private final String[] phases = { "NIGHT", "DAY", "VOTE" };
     private final int[] durations = { 60, 60, 30 };
 
-    // [추가] 현재 페이즈의 남은 시간을 추적하기 위한 필드
     private long phaseEndTime;
     private ScheduledFuture<?> nextPhaseFuture;
 
@@ -47,9 +47,9 @@ public class PhaseBroadcaster {
             if (phaseIndex != -1) {
                 String previousPhase = phases[phaseIndex];
                 if ("NIGHT".equals(previousPhase)) {
-                    gameRoomManager.processNightActions(roomNo);
+                    gameRoomManager.processNightActions(roomNo, dayNo);
                 } else if ("VOTE".equals(previousPhase)) {
-                    gameRoomManager.processVote(roomNo);
+                    gameRoomManager.processVote(roomNo, dayNo);
                 }
             }
 
@@ -59,19 +59,19 @@ public class PhaseBroadcaster {
                 return;
             }
         } catch (Exception e) {
-            System.out.println("CRITICAL ERROR during game logic processing in room " + roomNo + ". Forcing next phase."+ e);
+            //System.out.println("CRITICAL ERROR during game logic processing in room " + roomNo + ". Forcing next phase."+ e);
+            e.printStackTrace();
         }
 
         phaseIndex = (phaseIndex + 1) % phases.length;
         if (phaseIndex == 0) {
             dayNo++;
-            gameRoomManager.updateDayNo(roomNo);
+            gameRoomManager.updateDayNo(roomNo, dayNo);
         }
 
         String nextPhase = phases[phaseIndex];
         int nextDuration = durations[phaseIndex];
 
-        // [추가] 다음 페이즈가 끝나는 정확한 시간을 기록
         this.phaseEndTime = Instant.now().getEpochSecond() + nextDuration;
 
         broadcastPhaseInfo(nextPhase, nextDuration, dayNo);
@@ -99,8 +99,8 @@ public class PhaseBroadcaster {
 
     private void broadcast(String message) {
         TextMessage textMessage = new TextMessage(message);
-        // [중요] 항상 최신 세션 목록을 사용합니다.
-        List<WebSocketSession> currentSessions = this.sessions; 
+        Collection<WebSocketSession> currentSessions = gameRoomManager.getGameSessions(roomNo); 
+        
         currentSessions.stream()
                 .filter(WebSocketSession::isOpen)
                 .forEach(session -> {
@@ -118,11 +118,6 @@ public class PhaseBroadcaster {
         }
     }
 
-    public void updateSessions(List<WebSocketSession> newSessions) {
-        this.sessions = newSessions;
-        System.out.println("Room " + roomNo + " broadcaster sessions updated. New count: " + newSessions.size());
-    }
-
     public String getCurrentPhase() {
         return (phaseIndex >= 0 && phaseIndex < phases.length) ? phases[phaseIndex] : "WAITING";
     }
@@ -130,13 +125,28 @@ public class PhaseBroadcaster {
     public int getRemainingTime() {
         long now = Instant.now().getEpochSecond();
         int remaining = (int) (this.phaseEndTime - now);
-        return Math.max(0, remaining); // 남은 시간이 음수가 되지 않도록 보장
+        return Math.max(0, remaining);
     }
 
     public int getDayNo() {
         return this.dayNo;
     }
 
+    public void updateSessions(List<WebSocketSession> newSessions) {
+        this.sessions = newSessions;
+        //System.out.println("Room " + roomNo + " broadcaster sessions updated. New count: " + newSessions.size());
+    }
+    
+    /**
+     * 외부에서 현재 게임 상태를 강제로 다시 브로드캐스팅하기 위한 메서드입니다.
+     * 존재하지 않는 필드(this.currentPhase, this.remainingTime)를 호출하는 대신,
+     * getter 메서드(getCurrentPhase(), getRemainingTime())를 사용하도록 수정했습니다.
+     */
+    public void broadcastCurrentPhaseState() {
+        broadcastPhaseInfo(this.getCurrentPhase(), this.getRemainingTime(), this.getDayNo());
+    }
+
+    // JSON으로 변환될 메시지 객체
     private static class PhaseMessage {
         public String type = "phase";
         public String phase;

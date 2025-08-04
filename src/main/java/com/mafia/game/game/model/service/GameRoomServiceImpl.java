@@ -168,5 +168,10 @@ public class GameRoomServiceImpl implements GameRoomService {
 		return gameRoomDao.getRecodeList(sqlSession, pi, userName);
 	}
 
+	@Override
+	public void deleteKillData(int roomNo) {
+		gameRoomDao.deleteKillData(sqlSession, roomNo);
+	}
+
 	
 }

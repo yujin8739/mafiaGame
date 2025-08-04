@@ -1,5 +1,3 @@
-import { state } from './state.js';
-
 async function ajaxRequest(url, data) {
     try {
         return await $.ajax({ url, data });
@@ -11,13 +9,13 @@ async function ajaxRequest(url, data) {
 
 export const api = {
     getUserNickList: (userList) => ajaxRequest('/room/userNickList', { userList }),
-    getUserDeathList: () => ajaxRequest('/room/userDeathList', { roomNo: state.roomNo }),
-    getHintList: () => ajaxRequest('/room/getRoomHintList', { roomNo: state.roomNo }),
-    reloadRoom: () => ajaxRequest('/room/reloadRoom', { roomNo: state.roomNo }),
+    getUserDeathList: () => ajaxRequest('/room/userDeathList', { roomNo: window.MAFIA_GAME_STATE.roomNo }),
+    getHintList: () => ajaxRequest('/room/getRoomHint', { roomNo: window.MAFIA_GAME_STATE.roomNo }),
+    reloadRoom: () => ajaxRequest('/room/reloadRoom', { roomNo: window.MAFIA_GAME_STATE.roomNo }),
     saveGameResult: (winner) => ajaxRequest('/room/saveGameResult', {
-        userName: state.userName,
-        jobNo: state.startJob ? state.startJob.jobNo : 0,
+        userName: window.MAFIA_GAME_STATE.userName,
+        jobNo: window.MAFIA_GAME_STATE.startJob ? window.MAFIA_GAME_STATE.startJob.jobNo : 0,
         type: winner,
-        startJobNo: state.startJob ? state.startJob.jobNo : 0,
+        startJobNo: window.MAFIA_GAME_STATE.startJob ? window.MAFIA_GAME_STATE.startJob.jobNo : 0,
     }),
 };

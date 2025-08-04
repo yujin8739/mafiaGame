@@ -33,16 +33,27 @@ public class GameRoomServer extends TextWebSocketHandler {
         session.getAttributes().put("roomNo", roomNo);
         
         roomManager.addSession(roomNo, session, loginUser.getUserName());
-        System.out.println("[GameRoomServer] User '" + loginUser.getUserName() + "' connected to room " + roomNo);
+//        System.out.println("[GameRoomServer] User '" + loginUser.getUserName() + "' connected to room " + roomNo);
     }
+
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Map<String, Object> raw = mapper.readValue(message.getPayload(), new TypeReference<Map<String, Object>>() {});
-        String type = (String) raw.get("type");
-        int roomNo = (int) session.getAttributes().get("roomNo");
+        // 모든 속성 접근 전에 Null 체크를 수행하여 안정성 확보
+        Integer roomNo = (Integer) session.getAttributes().get("roomNo");
         Member loginUser = (Member) session.getAttributes().get("loginUser");
+
+        if (roomNo == null || loginUser == null) {
+            System.err.println("Session attributes are missing. Closing session.");
+            session.close(new CloseStatus(4002, "Session attributes missing"));
+            return;
+        }
+        
         String userName = loginUser.getUserName();
+        Map<String, Object> raw = mapper.readValue(message.getPayload(), new TypeReference<>() {});
+        String type = (String) raw.get("type");
+        
+        if (type == null) return;
 
         switch (type) {
         	case "requestSync":
@@ -67,7 +78,10 @@ public class GameRoomServer extends TextWebSocketHandler {
                     sendError(session, "게임 시작 중 알 수 없는 오류가 발생했습니다.");
                 }
                 break;
-            // 직업 능력 사용 요청을 이 서버로 통합
+            case "vote":
+                String votedName = (String) raw.get("targetName");
+                if (votedName != null) roomManager.castVote(roomNo, userName, votedName);
+                break;
             case "useAbility":
                 String targetName = (String) raw.get("targetName");
                 roomManager.useAbility(roomNo, userName, targetName);
@@ -83,7 +97,7 @@ public class GameRoomServer extends TextWebSocketHandler {
         if (roomNo == null || loginUser == null) return;
 
         roomManager.removeSession(roomNo, session, loginUser.getUserName());
-        System.out.println("[GameRoomServer] User '" + loginUser.getUserName() + "' disconnected from room " + roomNo);
+//        System.out.println("[GameRoomServer] User '" + loginUser.getUserName() + "' disconnected from room " + roomNo);
     }
     
     private void sendError(WebSocketSession session, String message) throws IOException {

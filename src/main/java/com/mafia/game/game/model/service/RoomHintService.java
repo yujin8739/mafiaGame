@@ -13,4 +13,5 @@ public interface RoomHintService {
 	Hint selectRandomHintByJob(int jobNo, String userNick);
 	int insertRoomHint(RoomHint roomHint);
 	List<RoomHint> selectRoomHintList(int roomNo);
+	void deleteRoomHints(int roomNo);
 }

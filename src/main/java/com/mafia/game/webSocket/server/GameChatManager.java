@@ -5,7 +5,7 @@ import com.mafia.game.game.model.vo.Message;
 
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy; // ✨ @Lazy 임포트
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -25,7 +25,7 @@ public class GameChatManager {
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     @Autowired
-    public GameChatManager(ChatService chatService, @Lazy GameRoomManager gameRoomManager) { // ✨ @Lazy 추가
+    public GameChatManager(ChatService chatService, @Lazy GameRoomManager gameRoomManager) {
         this.chatService = chatService;
         this.gameRoomManager = gameRoomManager;
     }
@@ -48,43 +48,45 @@ public class GameChatManager {
         }
     }
     
+    /**
+     * 과거 채팅 메시지를 불러오는 로직을 전면 수정합니다.
+     * 모든 플레이어는 기본적으로 일반 채팅('chat')을 볼 수 있고,
+     * 자신의 역할(사망자, 마피아, 연인)에 따라 추가적인 채팅을 볼 수 있도록
+     * 메시지를 누적하여 합산하는 방식으로 변경합니다.
+     */
     public List<Message> loadPreviousMessages(int roomNo, int page, int size, String jobName) {
-        // RowBounds는 메모리에서 페이징하므로, 원하는 페이지의 데이터를 얻으려면 
-        // 충분한 데이터를 미리 가져와야 합니다. (page * size)
         int offset = 0;
         int limit = page * size;
         RowBounds rowBounds = new RowBounds(offset, limit);
         
         List<Message> allMessages = new ArrayList<>();
         
-        // 1. 볼 수 있는 모든 타입의 채팅을 충분히 가져옵니다.
-        // selectTypeMessagesByRoom 쿼리는 'chat', 'EVENT' 등을 포함하므로,
-        // 각 타입별로만 호출하면 됩니다.
+        // 1. 모든 플레이어는 기본적으로 일반 채팅('chat' 타입)과 이벤트('EVENT')를 볼 수 있습니다.
+        allMessages.addAll(chatService.getMessages(roomNo, rowBounds));
+
+        // 2. 역할에 따라 볼 수 있는 채팅을 추가합니다.
         if (jobName != null) {
-            if (jobName.contains("Ghost") || "spiritualists".equals(jobName)) {
+            // 사망자 또는 영매사는 사망자 채팅을 추가로 볼 수 있습니다.
+            if (jobName.toLowerCase().contains("ghost") || jobName.equals("spiritualists")) {
                 allMessages.addAll(chatService.getMessages(roomNo, "death", rowBounds));
             }
+            // 마피아는 마피아 채팅을 추가로 볼 수 있습니다.
             if (jobName.equals("mafia")) {
                 allMessages.addAll(chatService.getMessages(roomNo, "mafia", rowBounds));
             }
+            // 연인은 연인 채팅을 추가로 볼 수 있습니다.
             if (jobName.contains("marriage")) {
                 allMessages.addAll(chatService.getMessages(roomNo, "lovers", rowBounds));
             }
         }
         
-        // 만약 위 특수 타입에 해당하지 않는다면, 기본 채팅만 조회
-        // (영매사 등은 기본 채팅도 봐야하므로, 아래 조건문은 항상 실행되도록 조정 가능)
-        if (allMessages.isEmpty() || "spiritualists".equals(jobName) || "mafia".equals(jobName) || "marriage".equals(jobName)) {
-             allMessages.addAll(chatService.getMessages(roomNo, rowBounds));
-        }
-
-        // 2. 중복 제거 및 시간순으로 재정렬
+        // 3. 합쳐진 모든 메시지에서 중복을 제거하고, 날짜 역순으로 정렬합니다.
         List<Message> distinctMessages = allMessages.stream()
-                .distinct()
+                .distinct() // 혹시 모를 중복 제거
                 .sorted(Comparator.comparing(Message::getChatDate).reversed())
                 .collect(Collectors.toList());
         
-        // 3. 메모리에서 정확한 페이징 처리
+        // 4. 메모리에서 정확한 페이징 처리를 수행합니다.
         int start = (page - 1) * size;
         int end = Math.min(start + size, distinctMessages.size());
 
